@@ -96,10 +96,13 @@ const Login = () => {
 
                     <button
                         type="submit"
-                        className="w-full bg-[#6667DD] text-white py-3 rounded-lg hover:bg-[#5556cc] transition duration-300 p-medium mt-2 cursor-pointer"
+                        disabled={loading} // disable when loading
+                        className={`w-full bg-[#6667DD] text-white py-3 rounded-lg transition duration-300 p-medium mt-2 
+        ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
                     >
                         {loading ? "Logging..." : "Login"}
                     </button>
+
                 </form>
 
                 <p className="text-center text-gray-600 mt-4 p-regular">

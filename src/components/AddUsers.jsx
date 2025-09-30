@@ -4,22 +4,23 @@ import { toast } from "sonner";
 
 const AddUsers = () => {
     const [emails, setEmails] = useState([""]);
-    const API_URL = import.meta.env.VITE_API_URL
-    console.log("token in frontend:", localStorage.getItem("token"));
+    const [sending, setSending] = useState(false); // loading state
+    const API_URL = import.meta.env.VITE_API_URL;
 
-    // handle input change
     const handleChange = (index, value) => {
         const newEmails = [...emails];
         newEmails[index] = value;
         setEmails(newEmails);
     };
 
-    // add new email field
-    const addEmailField = () => {
-        setEmails([...emails, ""]);
-    };
+    const addEmailField = () => setEmails([...emails, ""]);
 
     const handleSendInvite = async () => {
+        if (!emails[0]) {
+            toast.error("Email is required!");
+            return;
+        }
+        setSending(true); // start loader
         try {
             const res = await fetch(`${API_URL}/api/invite`, {
                 method: "POST",
@@ -27,7 +28,7 @@ const AddUsers = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
-                body: JSON.stringify({ email: emails[0] }),
+                body: JSON.stringify({ email: emails[0] }), // sending only first email for now
             });
 
             const data = await res.json();
@@ -41,18 +42,18 @@ const AddUsers = () => {
         } catch (error) {
             console.error("⚠️ API error:", error);
             toast.error("Something went wrong while sending invite");
+        } finally {
+            setSending(false); // stop loader
         }
     };
 
     return (
         <div className="flex justify-center items-center pt-6">
-            <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg">
-                {/* Heading */}
+            <div className="bg-[#F6F9FC] shadow-lg rounded-2xl p-8 w-full max-w-lg">
                 <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center">
                     Invite Friend To Your Finance
                 </h2>
 
-                {/* Email Inputs */}
                 <div className="space-y-4">
                     {emails.map((email, index) => (
                         <input
@@ -60,13 +61,13 @@ const AddUsers = () => {
                             type="email"
                             placeholder={`Friend's Email ${index + 1}`}
                             value={email}
+                            required
                             onChange={(e) => handleChange(index, e.target.value)}
                             className="p-regular w-full px-4 py-2 rounded-lg outline-none border-2 border-[#6667DD] text-gray-700"
                         />
                     ))}
                 </div>
 
-                {/* Buttons in same row */}
                 <div className="mt-6 flex items-center justify-between gap-3">
                     <button
                         onClick={addEmailField}
@@ -77,9 +78,11 @@ const AddUsers = () => {
 
                     <button
                         onClick={handleSendInvite}
-                        className="flex items-center justify-center gap-2 flex-1 py-2 rounded-lg bg-green-500 text-white p-medium hover:bg-green-600 transition-all duration-300 cursor-pointer hover:scale-95"
+                        disabled={sending}
+                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 ${sending ? "bg-green-300 hover:cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+                            }`}
                     >
-                        <Send size={18} /> Send Invites
+                        <Send size={18} /> {sending ? "Sending..." : "Send Invites"}
                     </button>
                 </div>
             </div>

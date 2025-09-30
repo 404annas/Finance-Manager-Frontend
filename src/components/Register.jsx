@@ -146,15 +146,15 @@ const Register = () => {
                         />
                     </div>
 
-                    <div className="md:col-span-2">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-[#6667DD] text-white py-3 rounded-lg hover:bg-[#5556cc] transition duration-300 mt-2 cursor-pointer p-regular"
-                        >
-                            {loading ? "Creating..." : "Create Account"}
-                        </button>
-                    </div>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full bg-[#6667DD] text-white py-3 rounded-lg transition duration-300 mt-2 p-regular
+        ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
+                    >
+                        {loading ? "Creating..." : "Create Account"}
+                    </button>
+
 
                     <div className="md:col-span-2 text-center mt-2">
                         <p className="text-gray-600 p-regular">

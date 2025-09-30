@@ -109,10 +109,14 @@ const Contact = () => {
                     <button
                         type="submit"
                         disabled={loading} // ✅ disable when sending
-                        className="w-full py-3 bg-[#6667DD] cursor-pointer hover:scale-95 text-white rounded-lg shadow-md hover:bg-[#5253b8] transition-all duration-500 p-regular"
+                        className={`w-full py-3 text-white rounded-lg shadow-md transition-all duration-500 p-regular
+        ${loading
+                                ? "bg-[#6667DD] opacity-70 cursor-not-allowed"
+                                : "bg-[#6667DD] hover:bg-[#5253b8] hover:scale-97 cursor-pointer"}`}
                     >
-                        {loading ? "Sending..." : "Send Message"} {/* ✅ change text */}
+                        {loading ? "Sending..." : "Send Message"}
                     </button>
+
                 </form>
             </div>
         </div>
