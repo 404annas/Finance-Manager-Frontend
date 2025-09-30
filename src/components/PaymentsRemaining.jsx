@@ -14,9 +14,11 @@ const PaymentsRemaining = () => {
     const [message, setMessage] = useState("");
     const [schedules, setSchedules] = useState([]);
 
+    const API_URL = import.meta.env.VITE_API_URL
+
     const fetchSchedules = async () => {
         try {
-            const res = await axios.get("/api/schedules");
+            const res = await axios.get(`${API_URL}/api/schedules`);
             setSchedules(res.data.schedules);
         } catch (err) {
             console.error(err);
@@ -29,7 +31,7 @@ const PaymentsRemaining = () => {
     const handleSchedule = async () => {
         if (!selectedDate) return toast.error("Please fill all fields");
         try {
-            await axios.post("/api/schedule-payment", { title, message, scheduledDate: selectedDate });
+            await axios.post(`${API_URL}/api/schedule-payment`, { title, message, scheduledDate: selectedDate });
             setTitle(""); setMessage(""); setSelectedDate(null);
             toast.success("Payment Scheduled Successfully");
             fetchSchedules();
@@ -40,7 +42,7 @@ const PaymentsRemaining = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`/api/schedule/${id}`);
+            await axios.delete(`${API_URL}/api/schedule/${id}`);
             toast.success("Schedule deleted");
             fetchSchedules();
         } catch (err) {
@@ -50,7 +52,7 @@ const PaymentsRemaining = () => {
 
     const handleDeleteAll = async () => {
         try {
-            await axios.delete("/api/schedules");
+            await axios.delete(`${API_URL}/api/schedules`);
             toast.success("All schedules deleted");
             fetchSchedules();
         } catch (err) {

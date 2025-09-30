@@ -12,6 +12,8 @@ const Contact = () => {
     });
     const [loading, setLoading] = useState(false); // ✅ track submitting state
 
+    const API_URL = import.meta.env.VITE_API_URL
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -20,7 +22,7 @@ const Contact = () => {
         e.preventDefault();
         setLoading(true); // ✅ start loading
         try {
-            await axios.post("/api/contact", formData);
+            await axios.post(`${API_URL}/api/contact`, formData);
             toast.success("Your message has been sent!");
             setFormData({ name: "", email: "", type: "support", message: "" });
         } catch (err) {

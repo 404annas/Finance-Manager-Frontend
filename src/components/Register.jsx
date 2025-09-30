@@ -17,6 +17,8 @@ const Register = () => {
     });
     const [loading, setLoading] = useState(false);
 
+    const API_URL = import.meta.env.VITE_API_URL
+
     useEffect(() => {
         const tokenFromUrl = searchParams.get('token');
         if (tokenFromUrl) {
@@ -49,7 +51,7 @@ const Register = () => {
                 form.append("token", formData.inviteToken);
             }
 
-            const res = await fetch("http://localhost:5000/api/register", {
+            const res = await fetch(`${API_URL}/api/register`, {
                 method: "POST",
                 body: form,
                 credentials: 'include'

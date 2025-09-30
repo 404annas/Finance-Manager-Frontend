@@ -19,6 +19,8 @@ const Reminder = () => {
 
     const [loading, setLoading] = useState(false); // loading state
 
+    const API_URL = import.meta.env.VITE_API_URL
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -28,7 +30,7 @@ const Reminder = () => {
         setLoading(true); // start loading
 
         try {
-            const res = await fetch("http://localhost:5000/api/send-reminder", {
+            const res = await fetch(`${API_URL}/api/send-reminder`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

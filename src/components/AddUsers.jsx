@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 const AddUsers = () => {
     const [emails, setEmails] = useState([""]);
+    const API_URL = import.meta.env.VITE_API_URL
     console.log("token in frontend:", localStorage.getItem("token"));
 
     // handle input change
@@ -20,7 +21,7 @@ const AddUsers = () => {
 
     const handleSendInvite = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/invite", {
+            const res = await fetch(`${API_URL}/api/invite`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

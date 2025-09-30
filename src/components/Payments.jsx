@@ -8,6 +8,8 @@ const Payments = () => {
     const token = localStorage.getItem("token");
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
+    const API_URL = import.meta.env.VITE_API_URL
+
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
@@ -19,7 +21,7 @@ const Payments = () => {
 
     // Fetch payments
     const fetchPayments = async () => {
-        const res = await axios.get("/api/payments-done");
+        const res = await axios.get(`${API_URL}/api/payments-done`);
         setPayments(Array.isArray(res.data.payments) ? res.data.payments : []);
     };
 
@@ -34,7 +36,7 @@ const Payments = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("/api/payments-done", formData);
+            await axios.post(`${API_URL}/api/payments-done`, formData);
             setFormData({ title: "", receiver: "", amount: "", message: "" });
             setIsOpen(false);
             fetchPayments();
@@ -44,12 +46,12 @@ const Payments = () => {
     };
 
     const handleDelete = async (id) => {
-        await axios.delete(`/api/payments-done/${id}`);
+        await axios.delete(`${API_URL}/api/payments-done/${id}`);
         fetchPayments();
     };
 
     const handleDeleteAll = async () => {
-        await axios.delete(`/api/payments-done`);
+        await axios.delete(`${API_URL}/api/payments-done`);
         fetchPayments();
     };
 

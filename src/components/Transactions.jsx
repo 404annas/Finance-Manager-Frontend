@@ -40,11 +40,13 @@ const Transactions = () => {
   });
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+  const API_URL = import.meta.env.VITE_API_URL
+
   const token = localStorage.getItem("token");
 
   const fetchTransactions = async () => {
     try {
-      const { data } = await axios.get("/api/transactions", {
+      const { data } = await axios.get(`${API_URL}/api/transactions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(data);
@@ -79,7 +81,7 @@ const Transactions = () => {
       body.append("type", formData.type);
       if (formData.image) body.append("image", formData.image);
 
-      const { data } = await axios.post("/api/transactions", body, {
+      const { data } = await axios.post(`${API_URL}/api/transactions`, body, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -105,7 +107,7 @@ const Transactions = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/transactions/${id}`, {
+      await axios.delete(`${API_URL}/api/transactions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions(transactions.filter((t) => t._id !== id));
@@ -118,7 +120,7 @@ const Transactions = () => {
 
   const handleDeleteAll = async () => {
     try {
-      await axios.delete("/api/transactions", {
+      await axios.delete(`${API_URL}/api/transactions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTransactions([]);
@@ -236,8 +238,8 @@ const Transactions = () => {
             key={cat}
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-1 rounded-full p-regular cursor-pointer transition-all duration-300 ${selectedCategory === cat
-                ? categoryButtonColors[cat] || "bg-[#6667DD] text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ? categoryButtonColors[cat] || "bg-[#6667DD] text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
           >
             {cat}
@@ -341,8 +343,8 @@ const Transactions = () => {
                   type="button"
                   onClick={() => setFormData({ ...formData, type: "income" })}
                   className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "income"
-                      ? "bg-green-500 text-white border-green-500"
-                      : "bg-white text-gray-700 border-gray-300"
+                    ? "bg-green-500 text-white border-green-500"
+                    : "bg-white text-gray-700 border-gray-300"
                     }`}
                 >
                   Income
@@ -351,8 +353,8 @@ const Transactions = () => {
                   type="button"
                   onClick={() => setFormData({ ...formData, type: "expense" })}
                   className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "expense"
-                      ? "bg-red-500 text-white border-red-500"
-                      : "bg-white text-gray-700 border-gray-300"
+                    ? "bg-red-500 text-white border-red-500"
+                    : "bg-white text-gray-700 border-gray-300"
                     }`}
                 >
                   Expense
