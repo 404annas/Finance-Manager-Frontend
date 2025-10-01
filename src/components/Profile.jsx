@@ -12,7 +12,7 @@ const Profile = () => {
     }
 
     return (
-        <div className="flex flex-col justify-center items-center pt-10">
+        <div className="flex flex-col justify-center items-center p-10 rounded-3xl shadow-sm bg-[#F6F9FC]">
             <img
                 src={
                     user.profileImage ||
@@ -27,7 +27,7 @@ const Profile = () => {
             <p className="text-lg text-gray-600 mt-2 p-regular">{user.email}</p>
 
             <span className="p-regular mt-4 px-5 py-2 text-sm rounded-full bg-[#6667DD]/10 text-[#6667DD] uppercase tracking-wide">
-                {user.role}
+                I'm a User
             </span>
         </div>
     );

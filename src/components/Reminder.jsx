@@ -52,7 +52,7 @@ const Reminder = () => {
     };
 
     return (
-        <div className="bg-[#F6F9FC] p-6 rounded-2xl shadow-lg max-w-4xl mx-auto">
+        <div className="bg-[#F6F9FC] p-6 rounded-2xl shadow-sm max-w-4xl mx-auto">
             {/* Heading */}
             <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center">
                 Send Payment Reminder
