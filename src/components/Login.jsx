@@ -33,8 +33,7 @@ const Login = () => {
                 toast.error("Invalid Credentials");
             } else {
                 toast.success("Login Successful");
-                if (data?.user?.role === "admin") navigate("/admin-dashboard");
-                else navigate("/");
+                navigate("/");
                 setUser(data.user);
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("token", data.token);

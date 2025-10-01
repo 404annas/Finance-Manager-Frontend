@@ -64,12 +64,14 @@ const Register = () => {
             } else {
                 toast.success(data.message || "Registered successfully!");
                 setUser(data.user);
+
+                // *** ADD THIS PART ***
+                // Save the user and token to localStorage
+                localStorage.setItem("user", JSON.stringify(data.user));
+                localStorage.setItem("token", data.token);
+
                 setFormData({ file: null, name: "", email: "", password: "", inviteToken: "" });
-                if (data.user.role === "admin") {
-                    navigate("/admin-dashboard")
-                } else {
-                    navigate("/");
-                }
+                navigate("/");
             }
         } catch (error) {
             toast.error(error.message || "Something went wrong!");
@@ -146,14 +148,17 @@ const Register = () => {
                         />
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full bg-[#6667DD] text-white py-3 rounded-lg transition duration-300 mt-2 p-regular
+                    <div className='w-full md:col-span-2'>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`w-full bg-[#6667DD] text-white py-3 rounded-lg transition duration-300 mt-2 p-regular
         ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
-                    >
-                        {loading ? "Creating..." : "Create Account"}
-                    </button>
+                        >
+                            {loading ? "Creating..." : "Create Account"}
+                        </button>
+                    </div>
+
 
 
                     <div className="md:col-span-2 text-center mt-2">

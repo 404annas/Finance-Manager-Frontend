@@ -3,47 +3,49 @@ import { Plus, Send } from "lucide-react";
 import { toast } from "sonner";
 
 const AddUsers = () => {
-    const [emails, setEmails] = useState([""]);
+    const [emails, setEmails] = useState([""]); // dynamic email fields
     const [sending, setSending] = useState(false); // loading state
     const API_URL = import.meta.env.VITE_API_URL;
 
+    // handle input changes
     const handleChange = (index, value) => {
         const newEmails = [...emails];
         newEmails[index] = value;
         setEmails(newEmails);
     };
 
+    // add new email field
     const addEmailField = () => setEmails([...emails, ""]);
 
+    // send invites
     const handleSendInvite = async () => {
-        if (!emails[0]) {
-            toast.error("Email is required!");
+        if (emails.some((email) => !email)) {
+            toast.error("All email fields must be filled!");
             return;
         }
-        setSending(true); // start loader
+
+        setSending(true);
         try {
             const res = await fetch(`${API_URL}/api/invite`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    Authorization: `Bearer ${localStorage.getItem("token")}`, // only logged-in user
                 },
-                body: JSON.stringify({ email: emails[0] }), // sending only first email for now
+                body: JSON.stringify({ emails }), // send array of emails
             });
 
             const data = await res.json();
             if (res.ok) {
-                console.log("✅ Invite success:", data);
-                toast.success("Invite sent successfully!");
+                toast.success("Invites sent successfully!");
+                setEmails([""]); // reset fields
             } else {
-                console.error("❌ Invite failed:", data.message);
-                toast.error(data.message);
+                toast.error(data.message || "Invite failed");
             }
         } catch (error) {
-            console.error("⚠️ API error:", error);
             toast.error("Something went wrong while sending invite");
         } finally {
-            setSending(false); // stop loader
+            setSending(false);
         }
     };
 
@@ -51,7 +53,7 @@ const AddUsers = () => {
         <div className="flex justify-center items-center pt-6">
             <div className="bg-[#F6F9FC] shadow-lg rounded-2xl p-8 w-full max-w-lg">
                 <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center">
-                    Invite Friend To Your Finance
+                    Invite Friends to Your Finance
                 </h2>
 
                 <div className="space-y-4">
@@ -79,7 +81,9 @@ const AddUsers = () => {
                     <button
                         onClick={handleSendInvite}
                         disabled={sending}
-                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 ${sending ? "bg-green-300 hover:cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 ${sending
+                            ? "bg-green-300 hover:cursor-not-allowed"
+                            : "bg-green-500 hover:bg-green-600"
                             }`}
                     >
                         <Send size={18} /> {sending ? "Sending..." : "Send Invites"}
