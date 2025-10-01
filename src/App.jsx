@@ -14,6 +14,7 @@ import Transactions from "./components/Transactions";
 import Reminder from "./components/Reminder";
 import Payments from "./components/Payments";
 import Contact from "./components/Contact";
+import Recipients from "./components/Recipients";
 
 function App() {
   const { user } = useAppContext();
@@ -36,6 +37,7 @@ function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="users" element={<AddUsers />} />
           <Route path="all-users" element={<Users />} />
+          <Route path="recipients" element={<Recipients />} />
         </Route>
 
         {/* Auth Routes */}

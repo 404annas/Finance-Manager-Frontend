@@ -7,7 +7,7 @@ const AdminDashboard = () => {
         <div className="flex h-screen">
             <Sidebar role="admin" />
             <div className="flex-1 flex flex-col">
-                <HeroNav role="admin"/>
+                <HeroNav role="admin" />
                 <div className="p-4 flex-1 overflow-y-auto">
                     <Outlet />
                 </div>
