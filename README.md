@@ -1,61 +1,116 @@
-# FINANCE-APP
+# 💰 FINANCE-APP
 
-A cutting-edge, intuitive React-based application designed to streamline your financial management.
+**FINANCE-APP** is a modern **Finance Manager Web Platform** designed for secure, seamless, and efficient financial management.  
+A **mobile application** built with **React Native** will be released soon for users on the go.  
 
-## ✨ About the Project
+The project leverages **React 19 + Tailwind CSS 4** and modern libraries to provide a sleek, responsive, and interactive **dashboard system**.  
+The backend is powered by **Node.js, Express, and MongoDB**, ensuring speed, scalability, and reliability.  
 
-FINANCE-APP is a modern, single-page application built to provide a seamless and user-friendly experience for managing personal and administrative financial tasks. The project leverages the power of React's component-based architecture and the speed of Vite's development environment to deliver a robust and scalable solution.
+Users can **create accounts, log in securely, manage payments, transactions, reminders, and collaborations** from a beautifully designed, real-time dashboard.  
 
-The application is architected with a strong emphasis on modularity and separation of concerns. By organizing the codebase into distinct directories for components, context, routes, and screens, the project remains highly maintainable and easy to extend. This structure allows for independent development and testing of UI elements, ensuring that the application can grow in complexity without sacrificing code quality.
+---
 
-At the heart of its state management is the React Context API, implemented through `AppContext.jsx`. This acts as a centralized data store, providing a single source of truth for the application's state. This approach simplifies data flow, eliminates the need for excessive prop drilling, and ensures data consistency across all components, from the main user dashboard to the smallest UI element. With distinct, role-based dashboards, FINANCE-APP offers a tailored and efficient experience for both end-users and administrators.
+## ✨ Key Features
 
-## 🚀 Key Features
+### 👤 User Dashboards
+- Personalized and responsive dashboards for **dynamic financial insights**.  
+- Interactive charts using **Recharts, React-ChartJS-2, Nivo (Pie & Radial Bar)**.  
+- Real-time updates with **TanStack Query** (⚡ fast, cache-efficient, reactive data fetching).
 
-*   **👤 Role-Based Dashboards:** Separate, feature-rich interfaces for both regular users and administrators (`UserDashboard.jsx`, `AdminDashboard.jsx`).
-*   **💳 Comprehensive Payment Management:** Intuitive tools for tracking, viewing, and administering all payments (`Payments.jsx`, `AdminPayments.jsx`).
-*   **👥 Centralized User Administration:** Secure functionality for administrators to add, view, and manage application users (`AddUsers.jsx`, `Users.jsx`).
-*   **💱 Integrated Currency Tools:** Built-in features for handling and displaying currency exchange information (`CurrencyExchange.jsx`, `currencies.js`).
-*   **🔐 Secure User Authentication:** A complete and secure login and registration system to protect user data (`Login.jsx`, `Register.jsx`).
-*   **📱 Fully Responsive Design:** A sleek, modern UI meticulously crafted for a flawless experience on desktops, tablets, and mobile devices.
+### 💳 Payment Management
+- Add and track payments with statuses: **Completed, Pending, Processing, or Custom**.  
+- Schedule payments with **date & time reminders**.  
+- Automated email reminders via **Nodemailer**.  
+
+### 💱 Transactions
+- Categorized transactions management.  
+- Modern, interactive tables using **React Data Table Component**.  
+- Always synced in real-time with backend updates.
+
+### 📧 Reminders & Notifications
+- Send reminders to specific users via email.  
+- Keep business partners or team members aligned on deadlines.
+
+### 🫂 Collaborative Payments
+- Invite users or business partners to contribute to payments.  
+- Manage participants via **Users** and **Recipients** menus.  
+- Create shared categories for group payments.  
+- Automatic email notifications for all participants.
+
+### 🔐 Authentication & Security
+- Finance apps require **robust security** — FINANCE-APP ensures data protection and safe authentication.  
+- Secure login/registration using:  
+  - **JWT (JSON Web Tokens)** for authentication.  
+  - **bcrypt** for password hashing.  
+  - **Role-Based Access Control (RBAC)** for Admin and User privileges.  
+  - **Secure cookies & HTTPS** for encrypted communication.  
+- Guarantees credentials, transactions, and records remain **private and tamper-proof**.
+
+### 📞 Contact & Support
+- Built-in **Contact Us form** for queries, bug reports, or feedback.  
+- Direct support channel for timely issue resolution.
+
+---
+
+## 🛠️ Tech Stack
+
+### Core
+- **Frontend**: React 19, Tailwind CSS 4 (`@tailwindcss/vite`)  
+- **Backend**: Node.js, Express, MongoDB  
+- **Mobile (upcoming)**: React Native  
+
+### Libraries & Tools
+- **UI & Styling**: Tailwind CSS, Lucide-React, React Icons  
+- **Charts & Visualization**: Recharts, React-ChartJS-2, @nivo/pie, @nivo/radial-bar  
+- **Animations**: Framer Motion  
+- **Forms & Inputs**: React Datepicker  
+- **Tables**: React Data Table Component  
+- **State & Data Management**: TanStack Query, React Context API  
+- **Routing**: React Router DOM  
+- **Utilities**: Axios, Sonner (toast notifications)  
+- **Communication**: Nodemailer  
+
+---
 
 ## 📂 Project Structure
 
-The project's architecture is organized for clarity, scalability, and ease of maintenance:
-
-```
 FINANCE-APP/
 |
-├── public/              # Static assets available to the browser
+├── public/ # Static assets
 ├── src/
-│   ├── assets/          # Images, icons, and other media
-│   ├── components/      # Reusable UI components (e.g., Sidebar, Hero)
-│   ├── context/         # Global state management (AppContext.jsx)
-│   ├── routes/          # Application routing configuration
-│   ├── screens/         # Top-level screen components (Dashboards)
-│   ├── App.jsx          # Main application component and router setup
-│   └── main.jsx         # Application's primary entry point
+│ ├── assets/ # Media files
+│ ├── components/ # Reusable UI components
+│ ├── context/ # Global state (AppContext.jsx)
+│ ├── routes/ # Routing configuration
+│ ├── screens/ # Dashboard and screen components
+│ ├── App.jsx # Main application component
+│ └── main.jsx # Entry point
 |
-├── .env                 # Environment variables configuration
-├── .gitignore           # Specifies intentionally untracked files
-├── index.html           # The main HTML template for Vite
-├── package.json         # Project metadata and dependencies
-└── vite.config.js       # Vite build and server configuration
-```
+├── .env # Environment variables
+├── index.html # Vite HTML template
+├── package.json # Dependencies & metadata
+└── vite.config.js # Vite configuration
 
-## 🛠️ Technologies Used
+---
 
-This project is built with a modern and powerful tech stack focused on performance and developer experience:
+## 🖥️ Usage Flow
 
-*   **React:** A JavaScript library for building dynamic and interactive user interfaces.
-*   **Vite:** A next-generation frontend build tool that provides an exceptionally fast development environment and optimized builds.
-*   **JavaScript (ES6+):** The core programming language used to build the application's logic.
-*   **CSS3:** Utilized for advanced styling, layout, and creating a responsive design.
+1. 🔑 **User Authentication** → Register/Login securely with encrypted credentials.  
+2. 📊 **Dashboard Access** → View charts, tables, and real-time financial data.  
+3. 💳 **Manage Payments** → Add, track, and schedule payments with reminders.  
+4. 🔔 **Notifications** → Receive automated email alerts/reminders.  
+5. 💱 **Transactions** → Add categorized transactions with live updates.  
+6. 🫂 **Collaboration** → Invite users, manage group payments, and share dashboards.  
+7. 📧 **Reminders** → Send emails for specific payment/transaction cases.  
+8. 📞 **Support** → Contact management for queries, bugs, or issues.  
 
-## 🖥️ Usage
-
-To use the application, an individual would first register or log in through the secure authentication portal. Upon successful login, users are directed to their personal dashboard, which provides a comprehensive overview of their financial data and access to user-specific features. Administrators are granted access to a separate, more powerful dashboard that includes additional privileges for system-wide user and payment management.
+---
 
 ## 📬 Contact
 
-Project Link: FINANCE-APP Repository
+For any queries, suggestions, or issues, feel free to reach out:  
+
+📧 **Email**: annasking601@gmail.com  
+🌐 **Project Link**: [FINANCE-APP](https://finance-manage-kappa.vercel.app/)
+
+---
