@@ -76,20 +76,20 @@ Users can **create accounts, log in securely, manage payments, transactions, rem
 
 FINANCE-APP/
 |
-├── public/ # Static assets
+├── public/              # Static assets
 ├── src/
-│ ├── assets/ # Media files
-│ ├── components/ # Reusable UI components
-│ ├── context/ # Global state (AppContext.jsx)
-│ ├── routes/ # Routing configuration
-│ ├── screens/ # Dashboard and screen components
-│ ├── App.jsx # Main application component
-│ └── main.jsx # Entry point
+│   ├── assets/          # Media files
+│   ├── components/      # Reusable UI components
+│   ├── context/         # Global state (AppContext.jsx)
+│   ├── routes/          # Routing configuration
+│   ├── screens/         # Dashboard and screen components
+│   ├── App.jsx          # Main application component
+│   └── main.jsx         # Entry point
 |
-├── .env # Environment variables
-├── index.html # Vite HTML template
-├── package.json # Dependencies & metadata
-└── vite.config.js # Vite configuration
+├── .env                 # Environment variables
+├── index.html           # Vite HTML template
+├── package.json         # Dependencies & metadata
+└── vite.config.js       # Vite configuration
 
 ---
 
