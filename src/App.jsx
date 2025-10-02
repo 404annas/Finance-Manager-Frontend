@@ -15,6 +15,7 @@ import Reminder from "./components/Reminder";
 import Payments from "./components/Payments";
 import Contact from "./components/Contact";
 import Recipients from "./components/Recipients";
+import RecipientsData from "./components/RecipientsData";
 
 function App() {
   const { user } = useAppContext();
@@ -38,6 +39,7 @@ function App() {
           <Route path="users" element={<AddUsers />} />
           <Route path="all-users" element={<Users />} />
           <Route path="recipients" element={<Recipients />} />
+          <Route path="recipient/:id" element={<RecipientsData />} />
         </Route>
 
         {/* Auth Routes */}

@@ -161,7 +161,7 @@ const Transactions = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative animate-scaleUp border-2 border-[#6667DD]">
+          <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative animate-scaleUp border-2 border-[#6667DD]">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 cursor-pointer transition-all duration-300"><X size={22} /></button>
             <h2 className="text-xl p-semibold text-gray-800 mb-6">Add New Transaction</h2>
             <form onSubmit={handleAddTransaction} className="space-y-4">

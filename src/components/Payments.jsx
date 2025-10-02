@@ -117,7 +117,7 @@ const Payments = () => {
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
-                                className="w-full max-w-lg rounded-2xl bg-white border-2 border-[#6667DD] shadow-lg p-6"
+                                className="w-full max-w-lg rounded-2xl bg-[#F6F9FC] border-2 border-[#6667DD] shadow-lg p-6"
                             >
                                 <Dialog.Title className="text-xl p-semibold text-[#6667DD] mb-4">
                                     Add New Payment
