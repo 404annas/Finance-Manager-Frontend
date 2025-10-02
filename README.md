@@ -31,7 +31,7 @@ Users can **create accounts, log in securely, manage payments, transactions, rem
 - Send reminders to specific users via email.  
 - Keep business partners or team members aligned on deadlines.
 
-### 🫂 Collaborative Payments
+### 🤝🏻 Collaborative Payments
 - Invite users or business partners to contribute to payments.  
 - Manage participants via **Users** and **Recipients** menus.  
 - Create shared categories for group payments.  
@@ -74,6 +74,7 @@ Users can **create accounts, log in securely, manage payments, transactions, rem
 
 ## 📂 Project Structure
 
+```
 FINANCE-APP/
 |
 ├── public/              # Static assets available to the browser
@@ -91,6 +92,7 @@ FINANCE-APP/
 ├── index.html           # The main HTML template for Vite
 ├── package.json         # Project metadata and dependencies
 └── vite.config.js       # Vite build and server configuration
+```
 
 ---
 
@@ -101,7 +103,7 @@ FINANCE-APP/
 3. 💳 **Manage Payments** → Add, track, and schedule payments with reminders.  
 4. 🔔 **Notifications** → Receive automated email alerts/reminders.  
 5. 💱 **Transactions** → Add categorized transactions with live updates.  
-6. 🫂 **Collaboration** → Invite users, manage group payments, and share dashboards.  
+6. 🤝🏻 **Collaboration** → Invite users, manage group payments, and share dashboards.  
 7. 📧 **Reminders** → Send emails for specific payment/transaction cases.  
 8. 📞 **Support** → Contact management for queries, bugs, or issues.  
 
