@@ -101,7 +101,6 @@ const RecipientsData = () => {
     };
 
     const handleDelete = async (paymentId) => {
-        if (!window.confirm("Are you sure you want to delete this payment?")) return;
         try {
             const res = await fetch(`${API_URL}/api/payments/${paymentId}`, {
                 method: 'DELETE',
