@@ -54,3 +54,7 @@
   font-weight: 900;
   font-style: normal;
 }
+
+.recharts-wrapper svg {
+  outline: none;
+}
