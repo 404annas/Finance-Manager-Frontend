@@ -17,6 +17,7 @@ const Transactions = () => {
   const [loadingTransactions, setLoadingTransactions] = useState(true); // for fetch
   const [deleteLoading, setDeleteLoading] = useState({}); // ✅ for trash icon loader
   const [deleteAllLoading, setDeleteAllLoading] = useState(false); // ✅ for delete all
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
@@ -103,7 +104,7 @@ const Transactions = () => {
     { name: "Category", selector: (row) => row.category, sortable: true, cell: (row) => <span className={`p-regular px-2 py-1 rounded ${categoryColors[row.category] || "bg-gray-200"}`}>{row.category || "Other"}</span> },
     { name: "Type", selector: (row) => row.type, sortable: true, cell: (row) => <span className={`p-regular ${row.type === "income" ? "text-green-500" : "text-red-500"}`}>{row.type.charAt(0).toUpperCase() + row.type.slice(1)}</span> },
     { name: "Amount", selector: (row) => row.amount, sortable: true, cell: (row) => <span className="p-regular text-gray-900">{row.type === "income" ? "+" : "-"} {currencySymbols[row.currency]} {row.amount} ({row.currency})</span> },
-    { name: "Image", selector: (row) => row.imageUrl, cell: (row) => row.imageUrl ? <img loading="lazy" src={row.imageUrl} alt="txn" className="w-16 h-16 rounded-lg object-cover" /> : <span className="p-regular text-gray-500">No Image</span> },
+    { name: "Image", selector: (row) => row.imageUrl, cell: (row) => row.imageUrl ? <img loading="lazy" src={row.imageUrl} alt="txn" onClick={() => setSelectedImage(row.imageUrl)} className="w-16 h-16 rounded-lg object-cover cursor-pointer" /> : <span className="p-regular text-gray-500">No Image</span> },
     {
       name: "Action", cell: (row) => (
         <button
@@ -199,6 +200,18 @@ const Transactions = () => {
               </button>
             </form>
           </div>
+        </div>
+      )}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img
+            src={selectedImage}
+            alt="Full View"
+            className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20"
+          />
         </div>
       )}
     </div>

@@ -16,7 +16,6 @@ const RecipientsData = () => {
 
     // --- Data State ---
     const [payments, setPayments] = useState([]);
-    const [shareInfo, setShareInfo] = useState(null); // Optional: to display share title
 
     // --- Form State ---
     const [title, setTitle] = useState("");
@@ -24,11 +23,13 @@ const RecipientsData = () => {
     const [currency, setCurrency] = useState("USD");
     const [amount, setAmount] = useState("");
     const [status, setStatus] = useState("To Pay");
-    const [image, setImage] = useState(null);
+    const [imageFile, setImageFile] = useState(null); // <-- 1. STORE THE ACTUAL FILE
+    const [imagePreview, setImagePreview] = useState(null); // <-- For UI preview
+    const [selectedImage, setSelectedImage] = useState(null);
 
     const API_URL = import.meta.env.VITE_API_URL;
 
-    // --- Data Fetching ---
+    // --- Data Fetching (No changes needed) ---
     useEffect(() => {
         const fetchPayments = async () => {
             setLoading(true);
@@ -41,7 +42,7 @@ const RecipientsData = () => {
                 setPayments(data.payments || []);
             } catch (err) {
                 toast.error(err.message);
-                navigate("/recipients"); // Redirect if user is not authorized or share doesn't exist
+                navigate("/recipients");
             } finally {
                 setLoading(false);
             }
@@ -56,11 +57,27 @@ const RecipientsData = () => {
             return;
         }
         setIsAdding(true);
+
+        // <-- 2. CREATE FORMDATA
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("category", category);
+        formData.append("currency", currency);
+        formData.append("amount", amount);
+        formData.append("status", status);
+        if (imageFile) {
+            // The key 'image' MUST match upload.single('image') on the backend
+            formData.append("image", imageFile);
+        }
+
         try {
             const res = await fetch(`${API_URL}/api/shares/${shareId}/payments`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem("token")}` },
-                body: JSON.stringify({ title, category, currency, amount, status, image }),
+                headers: {
+                    // 3. DO NOT set Content-Type; the browser handles it for FormData
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                },
+                body: formData, // 4. SEND THE FORMDATA
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed to add payment.");
@@ -74,7 +91,8 @@ const RecipientsData = () => {
             setCurrency("USD");
             setAmount("");
             setStatus("To Pay");
-            setImage(null);
+            setImageFile(null);
+            setImagePreview(null);
         } catch (err) {
             toast.error(err.message);
         } finally {
@@ -84,7 +102,6 @@ const RecipientsData = () => {
 
     const handleDelete = async (paymentId) => {
         if (!window.confirm("Are you sure you want to delete this payment?")) return;
-
         try {
             const res = await fetch(`${API_URL}/api/payments/${paymentId}`, {
                 method: 'DELETE',
@@ -92,7 +109,6 @@ const RecipientsData = () => {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed to delete.");
-
             setPayments(prev => prev.filter(p => p._id !== paymentId));
             toast.success("Payment deleted!");
         } catch (err) {
@@ -107,11 +123,10 @@ const RecipientsData = () => {
         { name: <span className="p-semibold">Amount</span>, selector: row => row.amount, cell: row => <span className="p-regular">{`${row.currency} ${row.amount}`}</span>, sortable: true },
         { name: <span className="p-semibold">Status</span>, cell: row => <StatusBadge status={row.status} />, sortable: true },
         { name: <span className="p-semibold">Added By</span>, selector: row => row.createdBy.name, cell: row => <span className="p-regular">{row.createdBy.name}</span>, sortable: true },
-        { name: <span className="p-semibold">Image</span>, cell: row => row.image ? <img src={row.image} alt="payment" className="w-12 h-12 rounded-md object-cover" /> : <span className="text-gray-400 p-regular text-sm">No Image</span> },
+        { name: <span className="p-semibold">Image</span>, cell: row => row.image ? <img src={row.image} alt={row.title} onClick={() => setSelectedImage(row.image)} className="w-12 h-12 rounded-md object-cover cursor-pointer" /> : <span className="text-gray-400 p-regular text-sm">No Image</span> },
         {
             name: <span className="p-semibold">Actions</span>,
             cell: (row) => (
-                // Security: Only show delete button if the logged-in user created this payment
                 row.createdBy._id === currentUser.id && (
                     <button onClick={() => handleDelete(row._id)} className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer">
                         <Trash2 size={18} />
@@ -151,28 +166,18 @@ const RecipientsData = () => {
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative">
-                        <button
-                            onClick={() => setIsOpen(false)}
-                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
-                        >
-                            <X size={22} />
-                        </button>
+                        <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"><X size={22} /></button>
                         <h3 className="text-xl p-semibold text-[#6667DD] mb-4">Add New Payment</h3>
                         <div className="flex gap-4 mb-4">
                             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Payment Title" className="flex-1 outline-none rounded-lg px-3 py-2 p-regular border-2 border-[#6667DD]" />
                             <select value={category} onChange={(e) => setCategory(e.target.value)} className="flex-1 rounded-lg px-3 py-2 border-2 border-[#6667DD] p-regular cursor-pointer outline-none">
                                 <option value="">Select Category</option>
-                                <option value="Personal">Personal</option>
-                                <option value="Business">Business</option>
-                                <option value="Family">Family</option>
-                                <option value="Friends">Friends</option>
+                                <option value="Personal">Personal</option><option value="Business">Business</option><option value="Family">Family</option><option value="Friends">Friends</option>
                             </select>
                         </div>
                         <div className="flex gap-4 mb-4">
                             <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="flex-1 rounded-lg px-3 py-2 border-2 border-[#6667DD] cursor-pointer outline-none p-regular">
-                                <option value="USD">$ USD</option>
-                                <option value="PKR">₨ PKR</option>
-                                <option value="EUR">€ EUR</option>
+                                <option value="USD">$ USD</option><option value="PKR">₨ PKR</option><option value="EUR">€ EUR</option>
                             </select>
                             <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" className="flex-1 p-regular outline-none rounded-lg px-3 py-2 border-2 border-[#6667DD]" />
                         </div>
@@ -183,24 +188,32 @@ const RecipientsData = () => {
                         </div>
                         <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#6667DD] rounded-lg cursor-pointer hover:bg-gray-100 transition mb-4">
                             <Upload size={24} className="mb-2 text-gray-600" />
-                            <span className="text-gray-600 p-regular">{image ? "Image Selected ✅" : "Upload Image (optional)"}</span>
+                            <span className="text-gray-600 p-regular">{imagePreview ? "Image Selected ✅" : "Upload Image (optional)"}</span>
                             <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                // <-- 5. UPDATE ONCHANGE TO STORE THE FILE
                                 if (e.target.files && e.target.files[0]) {
                                     const file = e.target.files[0];
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => setImage(reader.result);
-                                    reader.readAsDataURL(file);
+                                    setImageFile(file); // Store the actual file object
+                                    setImagePreview(URL.createObjectURL(file)); // Create a temporary URL for UI preview
                                 }
                             }} />
                         </label>
-                        <button
-                            onClick={handleAddPayment}
-                            disabled={isAdding}
-                            className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAdding ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}
-                        >
+                        <button onClick={handleAddPayment} disabled={isAdding} className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAdding ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}>
                             {isAdding ? "Adding..." : "Add Payment"}
                         </button>
                     </div>
+                </div>
+            )}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <img
+                        src={selectedImage}
+                        alt="Full View"
+                        className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20"
+                    />
                 </div>
             )}
         </div>
@@ -211,24 +224,12 @@ const RecipientsData = () => {
 const statusColors = { Paid: "#A0EDBC", "To Pay": "#F7CE7C", Want: "#83C8F2" };
 const selectedColors = { Paid: "#6fd49f", "To Pay": "#e6b23c", Want: "#4ea3d9" };
 
-const StatusBadge = ({ status }) => (
-    <span className="px-3 py-1 rounded-full text-sm p-medium" style={{ backgroundColor: statusColors[status] }}>
-        {status}
-    </span>
-);
+const StatusBadge = ({ status }) => (<span className="px-3 py-1 rounded-full text-sm p-medium" style={{ backgroundColor: statusColors[status] }}>{status}</span>);
 
 const StatusButton = ({ currentStatus, onSelectStatus, statusName }) => {
     const isSelected = currentStatus === statusName;
     return (
-        <button
-            onClick={() => onSelectStatus(statusName)}
-            className={`flex-1 cursor-pointer py-2 rounded-lg border-2 p-medium transition-all duration-300`}
-            style={{
-                backgroundColor: isSelected ? selectedColors[statusName] : statusColors[statusName],
-                color: isSelected ? "#fff" : "#000",
-                borderColor: statusColors[statusName],
-            }}
-        >
+        <button onClick={() => onSelectStatus(statusName)} className={`flex-1 cursor-pointer py-2 rounded-lg border-2 p-medium transition-all duration-300`} style={{ backgroundColor: isSelected ? selectedColors[statusName] : statusColors[statusName], color: isSelected ? "#fff" : "#000", borderColor: statusColors[statusName] }}>
             {statusName}
         </button>
     );
