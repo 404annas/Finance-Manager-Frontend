@@ -28,7 +28,7 @@ const Payments = () => {
                 setPayments(Array.isArray(res.data.payments) ? res.data.payments : []);
             } catch (err) {
                 console.error(err);
-                toast.error("Can't ablr to Fetch Payments")
+                toast.error("Can't able to Fetch Payments")
             } finally {
                 setLoadingPayments(false);
             }

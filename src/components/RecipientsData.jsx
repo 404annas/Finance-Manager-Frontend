@@ -22,7 +22,7 @@ const RecipientsData = () => {
     const [category, setCategory] = useState("");
     const [currency, setCurrency] = useState("USD");
     const [amount, setAmount] = useState("");
-    const [status, setStatus] = useState("To Pay");
+    const [status, setStatus] = useState("Request");
     const [imageFile, setImageFile] = useState(null); // <-- 1. STORE THE ACTUAL FILE
     const [imagePreview, setImagePreview] = useState(null); // <-- For UI preview
     const [selectedImage, setSelectedImage] = useState(null);
@@ -182,8 +182,8 @@ const RecipientsData = () => {
                         </div>
                         <div className="flex gap-4 mb-4">
                             <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Paid" />
-                            <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="To Pay" />
-                            <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Want" />
+                            <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Request" />
+                            <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Pending" />
                         </div>
                         <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#6667DD] rounded-lg cursor-pointer hover:bg-gray-100 transition mb-4">
                             <Upload size={24} className="mb-2 text-gray-600" />
@@ -220,8 +220,8 @@ const RecipientsData = () => {
 };
 
 // Helper components for styling
-const statusColors = { Paid: "#A0EDBC", "To Pay": "#F7CE7C", Want: "#83C8F2" };
-const selectedColors = { Paid: "#6fd49f", "To Pay": "#e6b23c", Want: "#4ea3d9" };
+const statusColors = { Paid: "#A0EDBC", "Request": "#F7CE7C", Pending: "#83C8F2" };
+const selectedColors = { Paid: "#6fd49f", "Request": "#e6b23c", Pending: "#4ea3d9" };
 
 const StatusBadge = ({ status }) => (<span className="px-3 py-1 rounded-full text-sm p-medium" style={{ backgroundColor: statusColors[status] }}>{status}</span>);
 

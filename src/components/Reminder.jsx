@@ -1,12 +1,7 @@
-import React, { useState } from "react";
-import { Toaster, toast } from "sonner";
-
-const currencySymbols = {
-    USD: "$",
-    EUR: "€",
-    PKR: "₨",
-    INR: "₹",
-};
+import { useState } from "react";
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { sendReminder } from "../hooks/reminder";
 
 const Reminder = () => {
     const [formData, setFormData] = useState({
@@ -17,9 +12,17 @@ const Reminder = () => {
         message: "",
     });
 
-    const [loading, setLoading] = useState(false); // loading state
-
-    const API_URL = import.meta.env.VITE_API_URL
+    const { mutate, isPending } = useMutation({
+        mutationFn: sendReminder,
+        onSuccess: (data) => {
+            toast.success(data.message || "Reminder sent successfully!");
+            setFormData({ subject: "", email: "", amount: "", currency: "USD", message: "" });
+        },
+        onError: (err) => {
+            const errorMessage = err.response?.data?.message || "Error occurred while sending the reminder.";
+            toast.error(errorMessage);
+        }
+    })
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,28 +30,7 @@ const Reminder = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true); // start loading
-
-        try {
-            const res = await fetch(`${API_URL}/api/send-reminder`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                toast.success(data.message);
-                setFormData({ subject: "", email: "", amount: "", currency: "USD", message: "" });
-            } else {
-                toast.error(data.message);
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Error sending reminder");
-        } finally {
-            setLoading(false); // stop loading
-        }
+        mutate(formData)
     };
 
     return (
@@ -120,11 +102,11 @@ const Reminder = () => {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    disabled={loading} // disable button during loading
-                    className={`w-full ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"
+                    disabled={isPending} // disable button during loading
+                    className={`w-full ${isPending ? "bg-gray-400 hover:cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"
                         } text-white py-3 rounded-lg shadow transition-all duration-300 cursor-pointer p-regular`}
                 >
-                    {loading ? "Reminding..." : "Send Reminder"} {/* show loading text */}
+                    {isPending ? "Reminding..." : "Send Reminder"} {/* show loading text */}
                 </button>
             </form>
         </div>

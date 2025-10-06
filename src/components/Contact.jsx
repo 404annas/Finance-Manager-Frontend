@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Mail, MessageSquare, User } from "lucide-react";
-import axios from "axios";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { sendContactMessage } from "../hooks/contact";
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -10,9 +11,18 @@ const Contact = () => {
         type: "support",
         message: "",
     });
-    const [loading, setLoading] = useState(false); // ✅ track submitting state
 
-    const API_URL = import.meta.env.VITE_API_URL
+    const { mutate, isPending } = useMutation({
+        mutationFn: sendContactMessage,
+        onSuccess: (data) => {
+            toast.success(data.message || "Your message has been sent!");
+            setFormData({ name: "", email: "", type: "support", message: "" });
+        },
+        onError: (err) => {
+            const errorMessage = err.response?.data?.message || "Failed to send message. Please try again.";
+            toast.error(errorMessage);
+        }
+    })
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,17 +30,7 @@ const Contact = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true); // ✅ start loading
-        try {
-            await axios.post(`${API_URL}/api/contact`, formData);
-            toast.success("Your message has been sent!");
-            setFormData({ name: "", email: "", type: "support", message: "" });
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to send message");
-        } finally {
-            setLoading(false); // ✅ stop loading
-        }
+        mutate(formData)
     };
 
     return (
@@ -108,13 +108,13 @@ const Contact = () => {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={loading} // ✅ disable when sending
+                        disabled={isPending} // ✅ disable when sending
                         className={`w-full py-3 text-white rounded-lg shadow-md transition-all duration-500 p-regular
-        ${loading
+        ${isPending
                                 ? "bg-[#6667DD] opacity-70 cursor-not-allowed"
                                 : "bg-[#6667DD] hover:bg-[#5253b8] hover:scale-97 cursor-pointer"}`}
                     >
-                        {loading ? "Sending..." : "Send Message"}
+                        {isPending ? "Sending..." : "Send Message"}
                     </button>
 
                 </form>
