@@ -19,7 +19,7 @@ const Sidebar = () => {
 
     return (
         <div className="w-[20%] h-screen border-r border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-2">
-            <h2 className="text-xl p-bold text-[#6667DD] mb-6">FinSync</h2>
+            <h2 className="text-xl p-bold text-[#6667DD] mb-6">FinSync - <span className="text-sm p-medium">Track Finances</span></h2>
 
             {menuItems.map((item, index) => {
                 const isActive = location.pathname === item.path;
