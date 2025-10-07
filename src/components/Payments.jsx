@@ -1,92 +1,63 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import { Plus, Trash2 } from "lucide-react";
 import PaymentsRemaining from "./PaymentsRemaining";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchPaymentsDone, addPaymentDone, deletePaymentDone, deleteAllPaymentsDone } from "../hooks/payments";
 
 const Payments = () => {
-    const token = localStorage.getItem("token");
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    const API_URL = import.meta.env.VITE_API_URL;
-
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({ title: "", receiver: "", amount: "", message: "" });
-    const [payments, setPayments] = useState([]);
-    const [loadingPayments, setLoadingPayments] = useState(true);
-    const [addingPayment, setAddingPayment] = useState(false);
-    const [deleteLoading, setDeleteLoading] = useState({});
-    const [deleteAllLoading, setDeleteAllLoading] = useState(false);
 
-    // Fetch initial payments
-    useEffect(() => {
-        const fetchPayments = async () => {
-            setLoadingPayments(true);
-            try {
-                const res = await axios.get(`${API_URL}/api/payments-done`);
-                setPayments(Array.isArray(res.data.payments) ? res.data.payments : []);
-            } catch (err) {
-                console.error(err);
-                toast.error("Can't able to Fetch Payments")
-            } finally {
-                setLoadingPayments(false);
-            }
-        };
-        fetchPayments();
-    }, []);
+    const queryClient = useQueryClient();
+
+    const { data: payments = [], isPending: isLoadingPayments } = useQuery({
+        queryKey: ["paymentsDone"],
+        queryFn: fetchPaymentsDone,
+        onError: () => toast.error("Could Not Able To Fetch Payments")
+    })
+
+    const { mutate: addPaymentMutate, isPending: isAddingPayment } = useMutation({
+        mutationFn: addPaymentDone,
+        onSuccess: () => {
+            toast.success("Payment Added Successfully")
+            queryClient.invalidateQueries({ queryKey: ["paymentsDone"] })
+            setIsOpen(false)
+            setFormData({ title: "", receiver: "", amount: "", message: "" });
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to add payment."),
+    })
+
+    const { mutate: deletePaymentMutate, isPending: isDeleting, variables: deletingId } = useMutation({
+        mutationFn: deletePaymentDone,
+        onSuccess: () => {
+            toast.success("Payment deleted.");
+            queryClient.invalidateQueries({ queryKey: ["paymentsDone"] });
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete payment."),
+    });
+
+    const { mutate: deleteAllMutate, isPending: isDeletingAll } = useMutation({
+        mutationFn: deleteAllPaymentsDone,
+        onSuccess: () => {
+            toast.success("All payments have been cleared.");
+            queryClient.invalidateQueries({ queryKey: ["paymentsDone"] });
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete payments."),
+    });
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    // Add new payment directly to state
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setAddingPayment(true);
-        try {
-            const res = await axios.post(`${API_URL}/api/payments-done`, formData);
-            const newPayment = res.data.payment; // Assuming backend returns added payment
-            setPayments((prev) => [...prev, newPayment]);
-            setFormData({ title: "", receiver: "", amount: "", message: "" });
-            setIsOpen(false);
-            toast.success("Payment Added")
-        } catch (err) {
-            console.error(err);
-            toast.error("Can't able to Add Payment")
-        } finally {
-            setAddingPayment(false);
-        }
-    };
-
-    // Delete directly from state
-    const handleDelete = async (id) => {
-        setDeleteLoading((prev) => ({ ...prev, [id]: true }));
-        setTimeout(async () => {
-            try {
-                await axios.delete(`${API_URL}/api/payments-done/${id}`);
-                setPayments((prev) => prev.filter((p) => p._id !== id));
-                toast.success("Payment Deleted")
-            } catch (err) {
-                console.error(err);
-                toast.error("Can't able to Delete Payment")
-            } finally {
-                setDeleteLoading((prev) => ({ ...prev, [id]: false }));
-            }
-        }, 1000);
+        addPaymentMutate(formData)
     };
 
     // Delete All
     const handleDeleteAll = async () => {
-        setDeleteAllLoading(true);
-        try {
-            await axios.delete(`${API_URL}/api/payments-done`);
-            setPayments([]);
-            toast.success("All Payments Deleted")
-        } catch (err) {
-            console.error(err);
-            toast.error("Can't able to Delete Payments")
-        } finally {
-            setDeleteAllLoading(false);
-        }
+        deleteAllMutate();
     };
 
     return (
@@ -131,10 +102,10 @@ const Payments = () => {
                                         <button type="button" onClick={() => setIsOpen(false)} className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg text-gray-700 p-regular cursor-pointer transition-all duration-300">Cancel</button>
                                         <button
                                             type="submit"
-                                            disabled={addingPayment}
-                                            className={`px-5 py-2 rounded-lg shadow-md transition-all duration-300 p-regular cursor-pointer text-white ${addingPayment ? "bg-gray-400 hover:cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"}`}
+                                            disabled={isAddingPayment}
+                                            className={`px-5 py-2 rounded-lg shadow-md transition-all duration-300 p-regular cursor-pointer text-white ${isAddingPayment ? "bg-gray-400 hover:cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"}`}
                                         >
-                                            {addingPayment ? "Adding..." : "Add"}
+                                            {isAddingPayment ? "Adding..." : "Add"}
                                         </button>
                                     </div>
                                 </form>
@@ -145,8 +116,8 @@ const Payments = () => {
             </AnimatePresence>
 
             {/* Data Table */}
-            <div className="overflow-x-auto bg-white rounded-lg shadow p-4">
-                {loadingPayments ? (
+            <div className="overflow-x-auto bg-transparent rounded-lg shadow p-4">
+                {isLoadingPayments ? (
                     <p className="text-[#6667DD] text-center text-lg p-regular animate-pulse">Loading Payments...</p>
                 ) : (
                     <>
@@ -162,27 +133,30 @@ const Payments = () => {
                             </thead>
                             <tbody>
                                 {payments.length > 0 ? (
-                                    payments.map((p) => (
-                                        <tr key={p._id} className="border-b hover:bg-gray-50 transition-all duration-300 p-regular">
-                                            <td className="px-4 py-2 text-left">{p.title}</td>
-                                            <td className="px-4 py-2 text-left">{p.receiver}</td>
-                                            <td className="px-4 py-2 text-left">{p.amount}</td>
-                                            <td className="px-4 py-2 text-left">{p.message}</td>
-                                            <td className="px-4 py-2 text-left">
-                                                <button
-                                                    onClick={() => handleDelete(p._id)}
-                                                    disabled={deleteLoading[p._id]}
-                                                    className="p-2 flex items-center justify-center transition-all duration-300 cursor-pointer"
-                                                >
-                                                    {deleteLoading[p._id] ? (
-                                                        <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                                                    ) : (
-                                                        <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer" />
-                                                    )}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    payments.map((p) => {
+                                        const isCurrentlyDeleting = isDeleting && deletingId === p._id;
+                                        return (
+                                            <tr key={p._id} className="border-b hover:bg-gray-50 transition-all duration-300 p-regular">
+                                                <td className="px-4 py-2 text-left">{p.title}</td>
+                                                <td className="px-4 py-2 text-left">{p.receiver}</td>
+                                                <td className="px-4 py-2 text-left">{p.amount}</td>
+                                                <td className="px-4 py-2 text-left">{p.message}</td>
+                                                <td className="px-4 py-2 text-left">
+                                                    <button
+                                                        onClick={() => deletePaymentMutate(p._id)}
+                                                        disabled={isCurrentlyDeleting}
+                                                        className="p-2 flex items-center justify-center transition-all duration-300 cursor-pointer"
+                                                    >
+                                                        {isCurrentlyDeleting ? (
+                                                            <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                                        ) : (
+                                                            <Trash2 className="w-5 h-5 text-red-500 hover:text-red-700 transition-all duration-300" />
+                                                        )}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })
                                 ) : (
                                     <tr>
                                         <td colSpan="5" className="text-center py-4 text-gray-500 p-regular">No payments added yet.</td>
@@ -195,10 +169,10 @@ const Payments = () => {
                             <div className="flex justify-end mt-4">
                                 <button
                                     onClick={handleDeleteAll}
-                                    disabled={deleteAllLoading}
-                                    className={`px-5 py-2 rounded-lg shadow-md transition-all duration-300 p-regular text-white ${deleteAllLoading ? "bg-red-300 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 cursor-pointer"}`}
+                                    disabled={isDeletingAll}
+                                    className={`px-5 py-2 rounded-lg shadow-md transition-all duration-300 p-regular text-white ${isDeletingAll ? "bg-red-300 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 cursor-pointer"}`}
                                 >
-                                    {deleteAllLoading ? "Deleting..." : "Delete All"}
+                                    {isDeletingAll ? "Deleting..." : "Delete All"}
                                 </button>
                             </div>
                         )}

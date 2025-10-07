@@ -1,11 +1,23 @@
 import React, { useState } from "react";
 import { Plus, Send } from "lucide-react";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import { sendInvite } from "../hooks/invite";
 
 const AddUsers = () => {
     const [emails, setEmails] = useState([""]); // dynamic email fields
-    const [sending, setSending] = useState(false); // loading state
-    const API_URL = import.meta.env.VITE_API_URL;
+
+    const { mutate, isPending } = useMutation({
+        mutationFn: sendInvite,
+        onSuccess: (data) => {
+            toast.success("Invites sent successfully!");
+            setEmails([""]);
+        },
+        onError: (err) => {
+            const errorMessage = err.response?.data?.message || "Something went wrong while sending invites.";
+            toast.error(errorMessage);
+        }
+    })
 
     // handle input changes
     const handleChange = (index, value) => {
@@ -23,30 +35,7 @@ const AddUsers = () => {
             toast.error("All email fields must be filled!");
             return;
         }
-
-        setSending(true);
-        try {
-            const res = await fetch(`${API_URL}/api/invite`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`, // only logged-in user
-                },
-                body: JSON.stringify({ emails }), // send array of emails
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                toast.success("Invites sent successfully!");
-                setEmails([""]); // reset fields
-            } else {
-                toast.error(data.message || "Invite failed");
-            }
-        } catch (error) {
-            toast.error("Something went wrong while sending invite");
-        } finally {
-            setSending(false);
-        }
+        mutate({ emails })
     };
 
     return (
@@ -80,13 +69,13 @@ const AddUsers = () => {
 
                     <button
                         onClick={handleSendInvite}
-                        disabled={sending}
-                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 ${sending
+                        disabled={isPending}
+                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 ${isPending
                             ? "bg-green-300 hover:cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
                             }`}
                     >
-                        <Send size={18} /> {sending ? "Sending..." : "Send Invites"}
+                        <Send size={18} /> {isPending ? "Sending..." : "Send Invites"}
                     </button>
                 </div>
             </div>

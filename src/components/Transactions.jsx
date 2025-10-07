@@ -1,98 +1,71 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Plus, X, Upload, Trash2 } from "lucide-react";
 import DataTable from "react-data-table-component";
-import axios from "axios";
 import { toast } from "sonner";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { fetchTransactions, addTransactions, deleteTransaction, deleteAllTransactions } from "../hooks/transactions";
 
 const currencySymbols = { USD: "$", EUR: "€", PKR: "₨", INR: "₹" };
 const categoryColors = { Food: "bg-red-200", Rent: "bg-yellow-200", Shopping: "bg-blue-200", Salary: "bg-green-200", Other: "bg-gray-200" };
 const categoryButtonColors = { Food: "bg-red-500 text-white", Rent: "bg-yellow-500 text-white", Shopping: "bg-blue-500 text-white", Salary: "bg-green-500 text-white", Other: "bg-gray-500 text-white" };
 
 const Transactions = () => {
-  const [transactions, setTransactions] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: "", amount: "", category: "", currency: "USD", type: "income", image: null });
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [loading, setLoading] = useState(false); // for Add
-  const [loadingTransactions, setLoadingTransactions] = useState(true); // for fetch
-  const [deleteLoading, setDeleteLoading] = useState({}); // ✅ for trash icon loader
-  const [deleteAllLoading, setDeleteAllLoading] = useState(false); // ✅ for delete all
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem("token");
+  const queryClient = useQueryClient()
 
-  const fetchTransactions = async () => {
-    setLoadingTransactions(true);
-    try {
-      const { data } = await axios.get(`${API_URL}/api/transactions`, { headers: { Authorization: `Bearer ${token}` } });
-      setTransactions(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch transactions");
-    } finally {
-      setLoadingTransactions(false);
-    }
-  };
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: fetchTransactions,
+  })
 
-  useEffect(() => { fetchTransactions(); }, []);
+  const { mutate: addTransactionMutate, isPending: isAdding } = useMutation({
+    mutationFn: addTransactions,
+    onSuccess: () => {
+      toast.success("Transaction added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      setIsModalOpen(false);
+      setFormData({ title: "", amount: "", category: "", currency: "USD", type: "income", image: null });
+    },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to add transaction"),
+  });
+
+  const { mutate: deleteTransactionMutate, isLoading: isDeleting, variables: deletingId } = useMutation({
+    mutationFn: deleteTransaction,
+    onSuccess: () => {
+      toast.success("Transaction deleted.");
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete transaction"),
+  });
+
+  const { mutate: deleteAllMutate, isLoading: isDeletingAll } = useMutation({
+    mutationFn: deleteAllTransactions,
+    onSuccess: () => {
+      toast.success("All transactions have been deleted.");
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete all transactions"),
+  });
 
   const handleChange = (e) => {
     if (e.target.name === "image") setFormData({ ...formData, image: e.target.files[0] });
     else setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAddTransaction = async (e) => {
+  const handleAddTransaction = (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.amount) return;
-    setLoading(true);
-    try {
-      const body = new FormData();
-      body.append("title", formData.title);
-      body.append("amount", formData.amount);
-      body.append("category", formData.category);
-      body.append("currency", formData.currency);
-      body.append("type", formData.type);
-      if (formData.image) body.append("image", formData.image);
-      const { data } = await axios.post(`${API_URL}/api/transactions`, body, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
-      });
-      setTransactions([data, ...transactions]);
-      setIsModalOpen(false);
-      setFormData({ title: "", amount: "", category: "", currency: "USD", type: "income", image: null });
-      toast.success("Transaction added");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to add transaction");
-    } finally { setLoading(false); }
-  };
-
-  // ✅ Trash delete with 1s loader
-  const handleDelete = async (id) => {
-    setDeleteLoading((prev) => ({ ...prev, [id]: true }));
-    setTimeout(async () => {
-      try {
-        await axios.delete(`${API_URL}/api/transactions/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-        setTransactions(transactions.filter((t) => t._id !== id));
-        toast.success("Transaction deleted");
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to delete transaction");
-      } finally { setDeleteLoading((prev) => ({ ...prev, [id]: false })); }
-    }, 1000);
-  };
-
-  // ✅ Delete All with loader text
-  const handleDeleteAll = async () => {
-    setDeleteAllLoading(true);
-    try {
-      await axios.delete(`${API_URL}/api/transactions`, { headers: { Authorization: `Bearer ${token}` } });
-      setTransactions([]);
-      toast.success("All transactions deleted");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to delete all transactions");
-    } finally { setDeleteAllLoading(false); }
+    if (!formData.title || !formData.amount || !formData.category) {
+      return toast.error("Title, amount and category are required.");
+    }
+    const body = new FormData();
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) body.append(key, formData[key]);
+    });
+    addTransactionMutate(body);
   };
 
   const filteredTransactions = selectedCategory === "All"
@@ -106,18 +79,18 @@ const Transactions = () => {
     { name: "Amount", selector: (row) => row.amount, sortable: true, cell: (row) => <span className="p-regular text-gray-900">{row.type === "income" ? "+" : "-"} {currencySymbols[row.currency]} {row.amount} ({row.currency})</span> },
     { name: "Image", selector: (row) => row.imageUrl, cell: (row) => row.imageUrl ? <img loading="lazy" src={row.imageUrl} alt="txn" onClick={() => setSelectedImage(row.imageUrl)} className="w-16 h-16 rounded-lg object-cover cursor-pointer" /> : <span className="p-regular text-gray-500">No Image</span> },
     {
-      name: "Action", cell: (row) => (
-        <button
-          onClick={() => handleDelete(row._id)}
-          className="transition-colors duration-300"
-        >
-          {deleteLoading[row._id] ? (
-            <div className="w-5 h-5 rounded-full bg-red-500 animate-pulse mx-auto" />
-          ) : (
-            <Trash2 size={18} className="text-red-500 hover:text-red-700 cursor-pointer" />
-          )}
-        </button>
-      ), ignoreRowClick: true, allowOverflow: true, button: true
+      name: "Action", cell: (row) => {
+        const isCurrentlyDeleting = isDeleting && deletingId === row._id;
+        return (
+          <button onClick={() => deleteTransactionMutate(row._id)} disabled={isCurrentlyDeleting} className="transition-colors duration-300">
+            {isCurrentlyDeleting ? (
+              <div className="w-5 h-5 rounded-full bg-red-500 animate-pulse mx-auto" />
+            ) : (
+              <Trash2 size={18} className="text-red-500 hover:text-red-700 cursor-pointer" />
+            )}
+          </button>
+        );
+      },
     },
   ];
 
@@ -144,14 +117,14 @@ const Transactions = () => {
       {/* Delete All */}
       {transactions.length > 0 && (
         <div className="mb-4 text-right">
-          <button onClick={handleDeleteAll} disabled={deleteAllLoading} className={`bg-red-500 hover:bg-red-600 cursor-pointer text-white px-4 py-1 rounded transition-all duration-300 p-regular`}>
-            {deleteAllLoading ? "Deleting..." : "Delete All"}
+          <button onClick={() => deleteAllMutate()} disabled={isDeletingAll} className={`bg-red-500 hover:bg-red-600 cursor-pointer text-white px-4 py-1 rounded transition-all duration-300 p-regular`}>
+            {isDeletingAll ? "Deleting..." : "Delete All"}
           </button>
         </div>
       )}
 
       {/* Data Table */}
-      {loadingTransactions ? (
+      {isLoadingTransactions ? (
         <p className="text-[#6667DD] text-center mt-20 text-lg p-regular animate-pulse">Loading Transactions...</p>
       ) : transactions.length > 0 ? (
         <DataTable columns={columns} data={filteredTransactions} pagination highlightOnHover striped customStyles={customStyles} />
@@ -195,8 +168,8 @@ const Transactions = () => {
                 <span className="text-gray-600 p-regular">{formData.image ? formData.image.name : "Upload Image (optional)"}</span>
                 <input type="file" name="image" accept="image/*" className="hidden" onChange={handleChange} />
               </label>
-              <button type="submit" disabled={loading} className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8] cursor-pointer"}`}>
-                {loading ? "Adding..." : "Add Transaction"}
+              <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding ? "bg-gray-400 cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8] cursor-pointer"}`}>
+                {isAdding ? "Adding..." : "Add Transaction"}
               </button>
             </form>
           </div>

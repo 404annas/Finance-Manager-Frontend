@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Plus, Upload, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import DataTable from "react-data-table-component";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchPaymentsForShare, addPaymentToShare, deletePayment } from "../hooks/paymentsShareData";
 
 const RecipientsData = () => {
     const navigate = useNavigate();
     const { id: shareId } = useParams();
+    const queryClient = useQueryClient();
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
     // --- Component State ---
     const [isOpen, setIsOpen] = useState(false);
-    const [isAdding, setIsAdding] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    // --- Data State ---
-    const [payments, setPayments] = useState([]);
 
     // --- Form State ---
     const [title, setTitle] = useState("");
@@ -27,92 +25,56 @@ const RecipientsData = () => {
     const [imagePreview, setImagePreview] = useState(null); // <-- For UI preview
     const [selectedImage, setSelectedImage] = useState(null);
 
-    const API_URL = import.meta.env.VITE_API_URL;
+    // 3. READ payments for this specific share with useQuery
+    const { data: payments = [], isPending: isLoadingPayments } = useQuery({
+        // The query key is dynamic and includes the shareId
+        queryKey: ["sharePayments", shareId],
+        queryFn: () => fetchPaymentsForShare(shareId),
+        onError: (err) => {
+            toast.error(err.response?.data?.message || "Failed to load payments.");
+            navigate("/recipients");
+        },
+    });
 
-    // --- Data Fetching (No changes needed) ---
-    useEffect(() => {
-        const fetchPayments = async () => {
-            setLoading(true);
-            try {
-                const res = await fetch(`${API_URL}/api/shares/${shareId}/payments`, {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || "Failed to load data.");
-                setPayments(data.payments || []);
-            } catch (err) {
-                toast.error(err.message);
-                navigate("/recipients");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPayments();
-    }, [shareId, API_URL, navigate]);
+    // 4. CREATE a payment with useMutation
+    const { mutate: addPaymentMutate, isPending: isAddingPayment } = useMutation({
+        mutationFn: addPaymentToShare,
+        onSuccess: () => {
+            toast.success("Payment added successfully!");
+            // Invalidate the query for this specific share to refetch data
+            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
+            setIsOpen(false);
+            // Reset form
+            setTitle(""); setCategory(""); setCurrency("USD"); setAmount(""); setStatus("Request"); setImageFile(null); setImagePreview(null);
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to add payment."),
+    });
+
+    // 5. DELETE a payment with useMutation
+    const { mutate: deletePaymentMutate } = useMutation({
+        mutationFn: deletePayment,
+        onSuccess: () => {
+            toast.success("Payment deleted!");
+            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete payment."),
+    });
 
     // --- CRUD Operations ---
-    const handleAddPayment = async () => {
+    const handleAddPayment = () => {
         if (!title || !category || !currency || !amount || !status) {
-            toast.error("Please fill all fields!");
-            return;
+            return toast.error("Please fill all required fields!");
         }
-        setIsAdding(true);
-
-        // <-- 2. CREATE FORMDATA
-        const formData = new FormData();
-        formData.append("title", title);
-        formData.append("category", category);
-        formData.append("currency", currency);
-        formData.append("amount", amount);
-        formData.append("status", status);
+        const paymentFormData = new FormData();
+        paymentFormData.append("title", title);
+        paymentFormData.append("category", category);
+        paymentFormData.append("currency", currency);
+        paymentFormData.append("amount", amount);
+        paymentFormData.append("status", status);
         if (imageFile) {
-            // The key 'image' MUST match upload.single('image') on the backend
-            formData.append("image", imageFile);
+            paymentFormData.append("image", imageFile);
         }
-
-        try {
-            const res = await fetch(`${API_URL}/api/shares/${shareId}/payments`, {
-                method: 'POST',
-                headers: {
-                    // 3. DO NOT set Content-Type; the browser handles it for FormData
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                },
-                body: formData, // 4. SEND THE FORMDATA
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to add payment.");
-
-            setPayments(prev => [...prev, data.payment]);
-            toast.success("Payment added successfully!");
-            setIsOpen(false);
-            // Reset form fields
-            setTitle("");
-            setCategory("");
-            setCurrency("USD");
-            setAmount("");
-            setStatus("To Pay");
-            setImageFile(null);
-            setImagePreview(null);
-        } catch (err) {
-            toast.error(err.message);
-        } finally {
-            setIsAdding(false);
-        }
-    };
-
-    const handleDelete = async (paymentId) => {
-        try {
-            const res = await fetch(`${API_URL}/api/payments/${paymentId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to delete.");
-            setPayments(prev => prev.filter(p => p._id !== paymentId));
-            toast.success("Payment deleted!");
-        } catch (err) {
-            toast.error(err.message);
-        }
+        addPaymentMutate({ shareId, paymentFormData });
     };
 
     // --- DataTable Configuration ---
@@ -127,16 +89,15 @@ const RecipientsData = () => {
             name: <span className="p-semibold">Actions</span>,
             cell: (row) => (
                 row.createdBy._id === currentUser.id && (
-                    <button onClick={() => handleDelete(row._id)} className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer">
+                    <button onClick={() => deletePaymentMutate(row._id)} className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer">
                         <Trash2 size={18} />
                     </button>
                 )
             ),
-            ignoreRowClick: true, allowOverflow: true, button: true,
         },
     ];
 
-    if (loading) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading Payments...</div>;
+    if (isLoadingPayments) return <div className="p-6 ...">Loading Payments...</div>;
 
     return (
         <div className="w-full px-6 py-6 bg-[#F6F9FC]">
@@ -197,8 +158,8 @@ const RecipientsData = () => {
                                 }
                             }} />
                         </label>
-                        <button onClick={handleAddPayment} disabled={isAdding} className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAdding ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}>
-                            {isAdding ? "Adding..." : "Add Payment"}
+                        <button onClick={handleAddPayment} disabled={isAddingPayment} className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAddingPayment ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}>
+                            {isAddingPayment ? "Adding..." : "Add Payment"}
                         </button>
                     </div>
                 </div>

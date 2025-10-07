@@ -1,141 +1,116 @@
-import React, { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Share2, X, Trash2, UsersRound } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchShares, createShare, deleteShare, fetchRecipients } from "../hooks/shares";
 
 const Recipients = () => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
     const [isOpen, setIsOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    // --- Data from Backend ---
-    const [sharedCards, setSharedCards] = useState([]);
-    const [potentialRecipients, setPotentialRecipients] = useState([]);
-
     // --- Form State ---
     const [selectedUserIds, setSelectedUserIds] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("");
     const [title, setTitle] = useState("");
 
-    // --- UI State ---
-    const [deletingShareIds, setDeletingShareIds] = useState({});
-    const [isSharing, setIsSharing] = useState(false);
-
-    const API_URL = import.meta.env.VITE_API_URL;
     const categories = ["Personal", "Business", "Family", "Friends", "Loan", "Other"];
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const [sharesRes, recipientsRes] = await Promise.all([
-                    fetch(`${API_URL}/api/shares`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }),
-                    fetch(`${API_URL}/api/shares/recipients`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }),
-                ]);
-                const sharesData = await sharesRes.json();
-                const recipientsData = await recipientsRes.json();
-                if (sharesRes.ok) setSharedCards(sharesData.shares || []);
-                if (recipientsRes.ok) setPotentialRecipients(recipientsData.recipients || []);
-            } catch (err) {
-                toast.error("Failed to load data.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [API_URL]);
+    // 3. FETCH data with two separate useQuery hooks
+    const { data: sharedCards = [], isPending: isLoadingShares } = useQuery({
+        queryKey: ["shares"],
+        queryFn: fetchShares,
+    });
 
-    // Split cards into two groups for rendering
-    const sharedByMe = sharedCards.filter(card => card.sharedBy._id === currentUser.id);
-    const sharedWithMe = sharedCards.filter(card => card.sharedBy._id !== currentUser.id);
+    const { data: potentialRecipients = [], isPending: isLoadingRecipients } = useQuery({
+        queryKey: ["recipients"],
+        queryFn: fetchRecipients,
+    });
 
-    const handleCardClick = (card) => {
-        navigate(`/recipient/${card._id}`);
-    };
-
-    const handleShare = async () => {
-        if (!title || !selectedCategory || selectedUserIds.length === 0) {
-            toast.error("Please fill all fields and select at least one user!");
-            return;
-        }
-        setIsSharing(true);
-        try {
-            const res = await fetch(`${API_URL}/api/shares`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-                body: JSON.stringify({ title, category: selectedCategory, sharedWith: selectedUserIds }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to share.");
-
-            // Refetch all shares to get the most up-to-date list
-            const updatedSharesRes = await fetch(`${API_URL}/api/shares`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
-            const updatedSharesData = await updatedSharesRes.json();
-            setSharedCards(updatedSharesData.shares || []);
-
+    // 4. CREATE a share with useMutation
+    const { mutate: createShareMutate, isPending: isSharing } = useMutation({
+        mutationFn: createShare,
+        onSuccess: () => {
             toast.success("Shared successfully!");
+            queryClient.invalidateQueries({ queryKey: ["shares"] });
             resetAndCloseModal();
-        } catch (err) {
-            toast.error(err.message);
-        } finally {
-            setIsSharing(false);
-        }
-    };
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to share."),
+    });
 
-    const handleDeleteShare = async (shareId) => {
-        setDeletingShareIds(prev => ({ ...prev, [shareId]: true }));
-        try {
-            const res = await fetch(`${API_URL}/api/shares/${shareId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to delete.");
-            setSharedCards(current => current.filter(card => card._id !== shareId));
+    // 5. DELETE a share with useMutation
+    const { mutate: deleteShareMutate, isPending: isDeleting, variables: deletingId } = useMutation({
+        mutationFn: deleteShare,
+        onSuccess: () => {
             toast.success("Deleted successfully!");
-        } catch (err) {
-            toast.error(err.message);
-        } finally {
-            setDeletingShareIds(prev => ({ ...prev, [shareId]: false }));
+            queryClient.invalidateQueries({ queryKey: ["shares"] });
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete."),
+    });
+
+    const handleShare = () => {
+        if (!title || !selectedCategory || selectedUserIds.length === 0) {
+            return toast.error("Please fill all fields and select at least one user!");
         }
+        createShareMutate({ title, category: selectedCategory, sharedWith: selectedUserIds });
     };
 
-    const toggleUser = (userId) => {
-        setSelectedUserIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
+    const handleDeleteShare = (e, shareId) => {
+        e.stopPropagation(); // Prevent navigation when clicking delete
+        deleteShareMutate(shareId);
     };
 
+    // 7. Memoize derived data to prevent re-filtering on every render
+    const { sharedByMe, sharedWithMe } = useMemo(() => {
+        const byMe = sharedCards.filter(card => card.sharedBy._id === currentUser.id);
+        const withMe = sharedCards.filter(card => card.sharedBy._id !== currentUser.id);
+        return { sharedByMe: byMe, sharedWithMe: withMe };
+    }, [sharedCards, currentUser.id]);
+
+    // Helper functions remain the same
+    const toggleUser = (userId) => setSelectedUserIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
     const resetAndCloseModal = () => {
+        setIsOpen(false);
         setTitle("");
         setSelectedCategory("");
         setSelectedUserIds([]);
-        setIsOpen(false);
     };
 
-    if (loading) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading...</div>;
+    if (isLoadingShares || isLoadingRecipients) {
+        return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading...</div>;
+    }
 
     // Helper component to render a grid of cards
     const CardGrid = ({ cards, showDelete }) => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {cards.map((card) => (
-                <div
-                    key={card._id}
-                    onClick={() => handleCardClick(card)}
-                    className="bg-transparent p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-all duration-300"
-                >
-                    <div className="flex justify-between items-center">
-                        <h3 className="p-semibold text-[#6667DD] mb-2 text-lg">{card.title}</h3>
-                        {showDelete && (
-                            <p onClick={(e) => { e.stopPropagation(); handleDeleteShare(card._id); }} className="text-red-500 hover:text-red-700 cursor-pointer transition-all duration-300 p-1">
-                                {deletingShareIds[card._id] ? <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div> : <Trash2 size={20} />}
-                            </p>
-                        )}
+            {cards.map((card) => {
+                const isCurrentlyDeleting = isDeleting && deletingId === card._id;
+                return (
+                    <div
+                        key={card._id}
+                        onClick={() => navigate(`/recipient/${card._id}`)}
+                        className="bg-transparent p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-all duration-300"
+                    >
+                        <div className="flex justify-between items-center">
+                            <h3 className="p-semibold text-[#6667DD] mb-2 text-lg">{card.title}</h3>
+                            {showDelete && (
+                                <p onClick={(e) => handleDeleteShare(e, card._id)} className="text-red-500 hover:text-red-700 cursor-pointer transition-all duration-300 p-1">
+                                    {isCurrentlyDeleting ? (
+                                        <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <Trash2 size={20} />
+                                    )}
+                                </p>
+                            )}
+                        </div>
+                        <p className="p-medium text-gray-700 text-sm">Category: {card.category}</p>
+                        <p className="p-medium text-gray-700 text-sm mt-1">Users: {card.sharedWith.map(u => u.name).join(", ")}</p>
+                        {!showDelete && <p className="p-medium text-gray-500 text-xs mt-1">By: {card.sharedBy.name}</p>}
                     </div>
-                    <p className="p-medium text-gray-700 text-sm">Category: {card.category}</p>
-                    <p className="p-medium text-gray-700 text-sm mt-1">Users: {card.sharedWith.map(u => u.name).join(", ")}</p>
-                    {!showDelete && <p className="p-medium text-gray-500 text-xs mt-1">By: {card.sharedBy.name}</p>}
-                </div>
-            ))}
+                )
+            })}
         </div>
     );
 
