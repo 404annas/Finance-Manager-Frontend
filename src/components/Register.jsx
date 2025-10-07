@@ -94,7 +94,7 @@ const Register = () => {
             {/* Register Box */}
             <div className="w-full max-w-4xl bg-[#F6F9FC] p-8 rounded-xl shadow-md relative z-10">
 
-                <h1 className="text-[#6667DD] text-3xl p-bold mb-8 text-center">Register into Finance</h1>
+                <h1 className="text-[#6667DD] text-3xl p-bold mb-8 text-center">Register into FinSync</h1>
 
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col">

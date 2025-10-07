@@ -64,7 +64,7 @@ const Login = () => {
             {/* Login Box */}
             <div className="w-full max-w-lg bg-[#F6F9FC] p-8 rounded-xl shadow-md relative z-10">
 
-                <h1 className="text-[#6667DD] text-3xl p-bold mb-6 text-center">Login into Finance</h1>
+                <h1 className="text-[#6667DD] text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div className="flex flex-col">
