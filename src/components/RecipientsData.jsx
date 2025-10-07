@@ -97,7 +97,7 @@ const RecipientsData = () => {
         },
     ];
 
-    if (isLoadingPayments) return <div className="p-6 ...">Loading Payments...</div>;
+    if (isLoadingPayments) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading Payments...</div>;
 
     return (
         <div className="w-full px-6 py-6 bg-[#F6F9FC]">
