@@ -14,6 +14,8 @@ const RecipientsData = () => {
 
     // --- Component State ---
     const [isOpen, setIsOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [paymentToDelete, setPaymentToDelete] = useState(null);
 
     // --- Form State ---
     const [title, setTitle] = useState("");
@@ -21,13 +23,12 @@ const RecipientsData = () => {
     const [currency, setCurrency] = useState("USD");
     const [amount, setAmount] = useState("");
     const [status, setStatus] = useState("Request");
-    const [imageFile, setImageFile] = useState(null); // <-- 1. STORE THE ACTUAL FILE
-    const [imagePreview, setImagePreview] = useState(null); // <-- For UI preview
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
 
-    // 3. READ payments for this specific share with useQuery
+    // --- Fetch Payments ---
     const { data: payments = [], isPending: isLoadingPayments } = useQuery({
-        // The query key is dynamic and includes the shareId
         queryKey: ["sharePayments", shareId],
         queryFn: () => fetchPaymentsForShare(shareId),
         onError: (err) => {
@@ -36,31 +37,30 @@ const RecipientsData = () => {
         },
     });
 
-    // 4. CREATE a payment with useMutation
+    // --- Add Payment ---
     const { mutate: addPaymentMutate, isPending: isAddingPayment } = useMutation({
         mutationFn: addPaymentToShare,
         onSuccess: () => {
             toast.success("Payment added successfully!");
-            // Invalidate the query for this specific share to refetch data
             queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
             setIsOpen(false);
-            // Reset form
             setTitle(""); setCategory(""); setCurrency("USD"); setAmount(""); setStatus("Request"); setImageFile(null); setImagePreview(null);
         },
         onError: (err) => toast.error(err.response?.data?.message || "Failed to add payment."),
     });
 
-    // 5. DELETE a payment with useMutation
-    const { mutate: deletePaymentMutate } = useMutation({
+    // --- Delete Payment ---
+    const { mutate: deletePaymentMutate, isPending: isDeleting } = useMutation({
         mutationFn: deletePayment,
         onSuccess: () => {
             toast.success("Payment deleted!");
             queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
+            setIsDeleteModalOpen(false);
+            setPaymentToDelete(null);
         },
         onError: (err) => toast.error(err.response?.data?.message || "Failed to delete payment."),
     });
 
-    // --- CRUD Operations ---
     const handleAddPayment = () => {
         if (!title || !category || !currency || !amount || !status) {
             return toast.error("Please fill all required fields!");
@@ -71,13 +71,11 @@ const RecipientsData = () => {
         paymentFormData.append("currency", currency);
         paymentFormData.append("amount", amount);
         paymentFormData.append("status", status);
-        if (imageFile) {
-            paymentFormData.append("image", imageFile);
-        }
+        if (imageFile) paymentFormData.append("image", imageFile);
         addPaymentMutate({ shareId, paymentFormData });
     };
 
-    // --- DataTable Configuration ---
+    // --- DataTable Columns ---
     const columns = [
         { name: <span className="p-semibold">Title</span>, selector: row => row.title, cell: row => <span className="p-regular">{row.title}</span>, sortable: true },
         { name: <span className="p-semibold">Category</span>, selector: row => row.category, cell: row => <span className="p-regular">{row.category}</span>, sortable: true },
@@ -87,13 +85,17 @@ const RecipientsData = () => {
         { name: <span className="p-semibold">Image</span>, cell: row => row.image ? <img src={row.image} alt={row.title} onClick={() => setSelectedImage(row.image)} className="w-12 h-12 rounded-md object-cover cursor-pointer" /> : <span className="text-gray-400 p-regular text-sm">No Image</span> },
         {
             name: <span className="p-semibold">Actions</span>,
-            cell: (row) => (
-                row.createdBy._id === currentUser.id && (
-                    <button onClick={() => deletePaymentMutate(row._id)} className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer">
-                        <Trash2 size={18} />
-                    </button>
-                )
-            ),
+            cell: row => row.createdBy._id === currentUser.id && (
+                <button
+                    onClick={() => {
+                        setPaymentToDelete(row._id);
+                        setIsDeleteModalOpen(true);
+                    }}
+                    className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer"
+                >
+                    <Trash2 size={18} />
+                </button>
+            )
         },
     ];
 
@@ -101,6 +103,7 @@ const RecipientsData = () => {
 
     return (
         <div className="w-full px-6 py-6 bg-[#F6F9FC]">
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
                     <button onClick={() => navigate("/recipients")} className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-300 cursor-pointer">
@@ -113,6 +116,7 @@ const RecipientsData = () => {
                 </button>
             </div>
 
+            {/* DataTable */}
             <DataTable
                 columns={columns}
                 data={payments}
@@ -123,6 +127,7 @@ const RecipientsData = () => {
                 noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
             />
 
+            {/* Add Payment Modal */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative">
@@ -132,12 +137,17 @@ const RecipientsData = () => {
                             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Payment Title" className="flex-1 outline-none rounded-lg px-3 py-2 p-regular border-2 border-[#6667DD]" />
                             <select value={category} onChange={(e) => setCategory(e.target.value)} className="flex-1 rounded-lg px-3 py-2 border-2 border-[#6667DD] p-regular cursor-pointer outline-none">
                                 <option value="">Select Category</option>
-                                <option value="Personal">Personal</option><option value="Business">Business</option><option value="Family">Family</option><option value="Friends">Friends</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Business">Business</option>
+                                <option value="Family">Family</option>
+                                <option value="Friends">Friends</option>
                             </select>
                         </div>
                         <div className="flex gap-4 mb-4">
                             <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="flex-1 rounded-lg px-3 py-2 border-2 border-[#6667DD] cursor-pointer outline-none p-regular">
-                                <option value="USD">$ USD</option><option value="PKR">₨ PKR</option><option value="EUR">€ EUR</option>
+                                <option value="USD">$ USD</option>
+                                <option value="PKR">₨ PKR</option>
+                                <option value="EUR">€ EUR</option>
                             </select>
                             <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" className="flex-1 p-regular outline-none rounded-lg px-3 py-2 border-2 border-[#6667DD]" />
                         </div>
@@ -150,11 +160,10 @@ const RecipientsData = () => {
                             <Upload size={24} className="mb-2 text-gray-600" />
                             <span className="text-gray-600 p-regular">{imagePreview ? "Image Selected ✅" : "Upload Image (optional)"}</span>
                             <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                // <-- 5. UPDATE ONCHANGE TO STORE THE FILE
                                 if (e.target.files && e.target.files[0]) {
                                     const file = e.target.files[0];
-                                    setImageFile(file); // Store the actual file object
-                                    setImagePreview(URL.createObjectURL(file)); // Create a temporary URL for UI preview
+                                    setImageFile(file);
+                                    setImagePreview(URL.createObjectURL(file));
                                 }
                             }} />
                         </label>
@@ -164,32 +173,73 @@ const RecipientsData = () => {
                     </div>
                 </div>
             )}
+
+            {/* Image Preview Modal */}
             {selectedImage && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs"
-                    onClick={() => setSelectedImage(null)}
-                >
-                    <img
-                        src={selectedImage}
-                        alt="Full View"
-                        className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20"
-                    />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs" onClick={() => setSelectedImage(null)}>
+                    <img src={selectedImage} alt="Full View" className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20" />
                 </div>
             )}
+
+            {/* Delete Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
+                        <X
+                            size={20}
+                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                        />
+                        <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
+                            <Trash2 size={20} className="text-red-500" />
+                        </div>
+                        <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
+                        <p className="text-gray-600 mb-6 p-regular text-sm">
+                            Do you really want to delete this payment? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-center gap-3">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => deletePaymentMutate(paymentToDelete)}
+                                disabled={isDeleting}
+                                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular"
+                            >
+                                {isDeleting ? "Deleting..." : "Delete"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };
 
-// Helper components for styling
+// Helper components
 const statusColors = { Paid: "#A0EDBC", "Request": "#F7CE7C", Pending: "#83C8F2" };
 const selectedColors = { Paid: "#6fd49f", "Request": "#e6b23c", Pending: "#4ea3d9" };
 
-const StatusBadge = ({ status }) => (<span className="px-3 py-1 rounded-full text-sm p-medium" style={{ backgroundColor: statusColors[status] }}>{status}</span>);
+const StatusBadge = ({ status }) => (
+    <span className="px-3 py-1 rounded-full text-sm p-medium" style={{ backgroundColor: statusColors[status] }}>{status}</span>
+);
 
 const StatusButton = ({ currentStatus, onSelectStatus, statusName }) => {
     const isSelected = currentStatus === statusName;
     return (
-        <button onClick={() => onSelectStatus(statusName)} className={`flex-1 cursor-pointer py-2 rounded-lg border-2 p-medium transition-all duration-300`} style={{ backgroundColor: isSelected ? selectedColors[statusName] : statusColors[statusName], color: isSelected ? "#fff" : "#000", borderColor: statusColors[statusName] }}>
+        <button
+            onClick={() => onSelectStatus(statusName)}
+            className={`flex-1 cursor-pointer py-2 rounded-lg border-2 p-medium transition-all duration-300`}
+            style={{
+                backgroundColor: isSelected ? selectedColors[statusName] : statusColors[statusName],
+                color: isSelected ? "#fff" : "#000",
+                borderColor: statusColors[statusName]
+            }}
+        >
             {statusName}
         </button>
     );

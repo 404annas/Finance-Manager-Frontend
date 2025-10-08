@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import PaymentsRemaining from "./PaymentsRemaining";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,25 +10,28 @@ import { fetchPaymentsDone, addPaymentDone, deletePaymentDone, deleteAllPayments
 const Payments = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({ title: "", receiver: "", amount: "", message: "" });
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [paymentToDelete, setPaymentToDelete] = useState(null);
+    const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
     const queryClient = useQueryClient();
 
     const { data: payments = [], isPending: isLoadingPayments } = useQuery({
         queryKey: ["paymentsDone"],
         queryFn: fetchPaymentsDone,
-        onError: () => toast.error("Could Not Able To Fetch Payments")
-    })
+        onError: () => toast.error("Could Not Fetch Payments")
+    });
 
     const { mutate: addPaymentMutate, isPending: isAddingPayment } = useMutation({
         mutationFn: addPaymentDone,
         onSuccess: () => {
-            toast.success("Payment Added Successfully")
-            queryClient.invalidateQueries({ queryKey: ["paymentsDone"] })
-            setIsOpen(false)
+            toast.success("Payment Added Successfully");
+            queryClient.invalidateQueries({ queryKey: ["paymentsDone"] });
+            setIsOpen(false);
             setFormData({ title: "", receiver: "", amount: "", message: "" });
         },
         onError: (err) => toast.error(err.response?.data?.message || "Failed to add payment."),
-    })
+    });
 
     const { mutate: deletePaymentMutate, isPending: isDeleting, variables: deletingId } = useMutation({
         mutationFn: deletePaymentDone,
@@ -52,12 +55,7 @@ const Payments = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        addPaymentMutate(formData)
-    };
-
-    // Delete All
-    const handleDeleteAll = async () => {
-        deleteAllMutate();
+        addPaymentMutate(formData);
     };
 
     return (
@@ -73,7 +71,7 @@ const Payments = () => {
                 </button>
             </div>
 
-            {/* Modal */}
+            {/* Add Payment Modal */}
             <AnimatePresence>
                 {isOpen && (
                     <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
@@ -115,7 +113,7 @@ const Payments = () => {
                 )}
             </AnimatePresence>
 
-            {/* Data Table */}
+            {/* Payments Table */}
             <div className="overflow-x-auto bg-transparent rounded-lg shadow p-4">
                 {isLoadingPayments ? (
                     <p className="text-[#6667DD] text-center text-lg p-regular animate-pulse">Loading Payments...</p>
@@ -143,7 +141,10 @@ const Payments = () => {
                                                 <td className="px-4 py-2 text-left">{p.message}</td>
                                                 <td className="px-4 py-2 text-left">
                                                     <button
-                                                        onClick={() => deletePaymentMutate(p._id)}
+                                                        onClick={() => {
+                                                            setPaymentToDelete(p._id);
+                                                            setIsDeleteModalOpen(true);
+                                                        }}
                                                         disabled={isCurrentlyDeleting}
                                                         className="p-2 flex items-center justify-center transition-all duration-300 cursor-pointer"
                                                     >
@@ -168,7 +169,7 @@ const Payments = () => {
                         {payments.length > 0 && (
                             <div className="flex justify-end mt-4">
                                 <button
-                                    onClick={handleDeleteAll}
+                                    onClick={() => setIsDeleteAllModalOpen(true)}
                                     disabled={isDeletingAll}
                                     className={`px-5 py-2 rounded-lg shadow-md transition-all duration-300 p-regular text-white ${isDeletingAll ? "bg-red-300 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 cursor-pointer"}`}
                                 >
@@ -181,6 +182,42 @@ const Payments = () => {
             </div>
 
             <PaymentsRemaining />
+
+            {/* Individual Delete Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
+                        <X size={20} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition" onClick={() => setIsDeleteModalOpen(false)} />
+                        <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
+                            <Trash2 size={20} className="text-red-500" />
+                        </div>
+                        <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
+                        <p className="text-gray-600 mb-6 p-regular text-sm">Do you really want to delete this payment? This action cannot be undone.</p>
+                        <div className="flex justify-center gap-3">
+                            <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular">Cancel</button>
+                            <button onClick={() => { deletePaymentMutate(paymentToDelete); setIsDeleteModalOpen(false); }} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete All Modal */}
+            {isDeleteAllModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
+                        <X size={20} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition" onClick={() => setIsDeleteAllModalOpen(false)} />
+                        <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
+                            <Trash2 size={20} className="text-red-500" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-2">Are you sure?</h2>
+                        <p className="text-gray-600 mb-6 p-regular text-sm">Do you really want to delete all payments? This action cannot be undone.</p>
+                        <div className="flex justify-center gap-3">
+                            <button onClick={() => setIsDeleteAllModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular">Cancel</button>
+                            <button onClick={() => { deleteAllMutate(); setIsDeleteAllModalOpen(false); }} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular">Delete All</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

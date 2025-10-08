@@ -1,26 +1,55 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Plus, X, Upload, Trash2 } from "lucide-react";
 import DataTable from "react-data-table-component";
 import { toast } from "sonner";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { fetchTransactions, addTransactions, deleteTransaction, deleteAllTransactions } from "../hooks/transactions";
+import {
+  fetchTransactions,
+  addTransactions,
+  deleteTransaction,
+  deleteAllTransactions,
+} from "../hooks/transactions";
 
 const currencySymbols = { USD: "$", EUR: "€", PKR: "₨", INR: "₹" };
-const categoryColors = { Food: "bg-red-200", Rent: "bg-yellow-200", Shopping: "bg-blue-200", Salary: "bg-green-200", Other: "bg-gray-200" };
-const categoryButtonColors = { Food: "bg-red-500 text-white", Rent: "bg-yellow-500 text-white", Shopping: "bg-blue-500 text-white", Salary: "bg-green-500 text-white", Other: "bg-gray-500 text-white" };
+const categoryColors = {
+  Food: "bg-red-200",
+  Rent: "bg-yellow-200",
+  Shopping: "bg-blue-200",
+  Salary: "bg-green-200",
+  Other: "bg-gray-200",
+};
+const categoryButtonColors = {
+  Food: "bg-red-500 text-white",
+  Rent: "bg-yellow-500 text-white",
+  Shopping: "bg-blue-500 text-white",
+  Salary: "bg-green-500 text-white",
+  Other: "bg-gray-500 text-white",
+};
 
 const Transactions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ title: "", amount: "", category: "", currency: "USD", type: "income", image: null });
+  const [formData, setFormData] = useState({
+    title: "",
+    amount: "",
+    category: "",
+    currency: "USD",
+    type: "income",
+    image: null,
+  });
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const queryClient = useQueryClient()
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
+
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery({
     queryKey: ["transactions"],
     queryFn: fetchTransactions,
-  })
+  });
 
   const { mutate: addTransactionMutate, isPending: isAdding } = useMutation({
     mutationFn: addTransactions,
@@ -28,12 +57,19 @@ const Transactions = () => {
       toast.success("Transaction added successfully!");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       setIsModalOpen(false);
-      setFormData({ title: "", amount: "", category: "", currency: "USD", type: "income", image: null });
+      setFormData({
+        title: "",
+        amount: "",
+        category: "",
+        currency: "USD",
+        type: "income",
+        image: null,
+      });
     },
     onError: (err) => toast.error(err.response?.data?.message || "Failed to add transaction"),
   });
 
-  const { mutate: deleteTransactionMutate, isLoading: isDeleting, variables: deletingId } = useMutation({
+  const { mutate: deleteTransactionMutate } = useMutation({
     mutationFn: deleteTransaction,
     onSuccess: () => {
       toast.success("Transaction deleted.");
@@ -42,7 +78,7 @@ const Transactions = () => {
     onError: (err) => toast.error(err.response?.data?.message || "Failed to delete transaction"),
   });
 
-  const { mutate: deleteAllMutate, isLoading: isDeletingAll } = useMutation({
+  const { mutate: deleteAllMutate } = useMutation({
     mutationFn: deleteAllTransactions,
     onSuccess: () => {
       toast.success("All transactions have been deleted.");
@@ -62,15 +98,16 @@ const Transactions = () => {
       return toast.error("Title, amount and category are required.");
     }
     const body = new FormData();
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       if (formData[key]) body.append(key, formData[key]);
     });
     addTransactionMutate(body);
   };
 
-  const filteredTransactions = selectedCategory === "All"
-    ? transactions
-    : transactions.filter((t) => t.category === selectedCategory);
+  const filteredTransactions =
+    selectedCategory === "All"
+      ? transactions
+      : transactions.filter((t) => t.category === selectedCategory);
 
   const columns = [
     { name: "Title", selector: (row) => row.title, sortable: true, cell: (row) => <span className="p-regular text-gray-800">{row.title}</span> },
@@ -80,14 +117,18 @@ const Transactions = () => {
     { name: "Image", selector: (row) => row.imageUrl, cell: (row) => row.imageUrl ? <img loading="lazy" src={row.imageUrl} alt="txn" onClick={() => setSelectedImage(row.imageUrl)} className="w-16 h-16 rounded-lg object-cover cursor-pointer" /> : <span className="p-regular text-gray-500">No Image</span> },
     {
       name: "Action", cell: (row) => {
-        const isCurrentlyDeleting = isDeleting && deletingId === row._id;
         return (
-          <button onClick={() => deleteTransactionMutate(row._id)} disabled={isCurrentlyDeleting} className="transition-colors duration-300">
-            {isCurrentlyDeleting ? (
-              <div className="w-5 h-5 rounded-full bg-red-500 animate-pulse mx-auto" />
-            ) : (
-              <Trash2 size={18} className="text-red-500 hover:text-red-700 cursor-pointer" />
-            )}
+          <button
+            onClick={() => {
+              setTransactionToDelete(row._id);
+              setIsDeleteModalOpen(true);
+            }}
+            className="transition-colors duration-300"
+          >
+            <Trash2
+              size={18}
+              className="text-red-500 hover:text-red-700 cursor-pointer"
+            />
           </button>
         );
       },
@@ -117,8 +158,11 @@ const Transactions = () => {
       {/* Delete All */}
       {transactions.length > 0 && (
         <div className="mb-4 text-right">
-          <button onClick={() => deleteAllMutate()} disabled={isDeletingAll} className={`bg-red-500 hover:bg-red-600 cursor-pointer text-white px-4 py-1 rounded transition-all duration-300 p-regular`}>
-            {isDeletingAll ? "Deleting..." : "Delete All"}
+          <button
+            onClick={() => setIsDeleteAllModalOpen(true)}
+            className={`bg-red-500 hover:bg-red-600 cursor-pointer text-white px-4 py-1 rounded transition-all duration-300 p-regular`}
+          >
+            Delete All
           </button>
         </div>
       )}
@@ -132,16 +176,31 @@ const Transactions = () => {
         <p className="text-gray-500 text-center mt-20 text-lg p-regular">No Current Transactions</p>
       )}
 
-      {/* Modal */}
+      {/* Add Transaction Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative animate-scaleUp border-2 border-[#6667DD]">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 cursor-pointer transition-all duration-300"><X size={22} /></button>
             <h2 className="text-xl p-semibold text-gray-800 mb-6">Add New Transaction</h2>
             <form onSubmit={handleAddTransaction} className="space-y-4">
+              {/* Title & Category */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input type="text" name="title" placeholder="Transaction Title" required value={formData.title} onChange={handleChange} className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular" />
-                <select name="category" required value={formData.category} onChange={handleChange} className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular cursor-pointer">
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Transaction Title"
+                  required
+                  value={formData.title}
+                  onChange={handleChange}
+                  className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular"
+                />
+                <select
+                  name="category"
+                  required
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular cursor-pointer"
+                >
                   <option value="">Select Category</option>
                   <option value="Food">Food</option>
                   <option value="Rent">Rent</option>
@@ -150,41 +209,121 @@ const Transactions = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
+
+              {/* Currency & Amount */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-regular">
-                <select name="currency" value={formData.currency} onChange={handleChange} className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] cursor-pointer">
+                <select
+                  name="currency"
+                  value={formData.currency}
+                  onChange={handleChange}
+                  className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] cursor-pointer"
+                >
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
                   <option value="PKR">PKR (₨)</option>
                   <option value="INR">INR (₹)</option>
                 </select>
-                <input type="number" name="amount" placeholder="Amount" required value={formData.amount} onChange={handleChange} className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD]" />
+                <input
+                  type="number"
+                  name="amount"
+                  placeholder="Amount"
+                  required
+                  value={formData.amount}
+                  onChange={handleChange}
+                  className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD]"
+                />
               </div>
+
+              {/* Type: Income or Expense */}
               <div className="flex gap-4">
-                <button type="button" onClick={() => setFormData({ ...formData, type: "income" })} className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "income" ? "bg-green-500 text-white border-green-500" : "bg-white text-gray-700 border-gray-300"}`}>Income</button>
-                <button type="button" onClick={() => setFormData({ ...formData, type: "expense" })} className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "expense" ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-700 border-gray-300"}`}>Expense</button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: "income" })}
+                  className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "income" ? "bg-green-500 text-white border-green-500" : "bg-white text-gray-700 border-gray-300"
+                    }`}
+                >
+                  Income
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, type: "expense" })}
+                  className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "expense" ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-700 border-gray-300"
+                    }`}
+                >
+                  Expense
+                </button>
               </div>
+
+              {/* Image Upload */}
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#6667DD] rounded-lg cursor-pointer hover:bg-gray-100 transition">
                 <Upload size={24} className="mb-2 text-gray-600" />
                 <span className="text-gray-600 p-regular">{formData.image ? formData.image.name : "Upload Image (optional)"}</span>
                 <input type="file" name="image" accept="image/*" className="hidden" onChange={handleChange} />
               </label>
-              <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding ? "bg-gray-400 cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8] cursor-pointer"}`}>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isAdding}
+                className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding ? "bg-gray-400 cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8] cursor-pointer"
+                  }`}
+              >
                 {isAdding ? "Adding..." : "Add Transaction"}
               </button>
             </form>
+
           </div>
         </div>
       )}
+
+      {/* Delete Single Transaction Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
+            <X
+              size={20}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
+              onClick={() => setIsDeleteModalOpen(false)}
+            />
+            <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
+              <Trash2 size={20} className="text-red-500" />
+            </div>
+            <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
+            <p className="text-gray-600 mb-6 p-regular text-sm">Do you really want to delete this transaction? This action cannot be undone.</p>
+            <div className="flex justify-center gap-3">
+              <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 outline-none cursor-pointer text-sm text-gray-700 p-regular">Cancel</button>
+              <button onClick={() => { deleteTransactionMutate(transactionToDelete); setIsDeleteModalOpen(false); }} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all outline-none duration-300 cursor-pointer text-sm p-regular">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Modal */}
+      {isDeleteAllModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
+            <X
+              size={20}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
+              onClick={() => setIsDeleteAllModalOpen(false)}
+            />
+            <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
+              <Trash2 size={20} className="text-red-500" />
+            </div>
+            <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
+            <p className="text-gray-600 mb-6 p-regular text-sm">Do you really want to delete <strong className="text-[#6667DD]">all transactions</strong>? This action cannot be undone.</p>
+            <div className="flex justify-center gap-3">
+              <button onClick={() => setIsDeleteAllModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 outline-none cursor-pointer text-sm text-gray-700 p-regular">Cancel</button>
+              <button onClick={() => { deleteAllMutate(); setIsDeleteAllModalOpen(false); }} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 outline-none cursor-pointer text-sm p-regular">Delete All</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
       {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs"
-          onClick={() => setSelectedImage(null)}
-        >
-          <img
-            src={selectedImage}
-            alt="Full View"
-            className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20"
-          />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs" onClick={() => setSelectedImage(null)}>
+          <img src={selectedImage} alt="Full View" className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20" />
         </div>
       )}
     </div>
