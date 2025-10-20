@@ -62,7 +62,7 @@ const Sidebar = () => {
       <div
         className={`
           fixed top-0 left-0 h-screen bg-white shadow-lg z-50 p-4 flex flex-col gap-4
-          w-[70%] max-w-xs
+          w-[80%] max-w-xs
           overflow-y-auto
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
