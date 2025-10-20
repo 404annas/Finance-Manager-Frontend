@@ -8,7 +8,7 @@ const UserDashboard = () => {
       <Sidebar role="user" />
       <div className="flex-1 flex flex-col">
         <HeroNav role="user" />
-        <div className="p-4 flex-1 overflow-y-auto">
+        <div className="p-2 sm:p-4 flex-1 overflow-y-auto">
           <Outlet />
         </div>
       </div>

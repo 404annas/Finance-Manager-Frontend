@@ -179,13 +179,13 @@ const Hero = ({ role }) => {
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-[#6667DD] p-bold text-4xl tracking-tight">FinSync Dashboard</h1>
+                    <h1 className="text-[#6667DD] p-bold text-2xl sm:text-4xl tracking-tight">FinSync Dashboard</h1>
                     <p className="text-gray-600 p-regular mt-1 text-sm sm:text-base">
                         Overview of your balances, expenses, and investments
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Link to={"/users"} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 py-3 rounded-full hover:bg-[#5556cc] cursor-pointer hover:scale-95 transition-all duration-300 p-regular">
+                    <Link to={"/users"} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 py-3 rounded-full hover:bg-[#5556cc] cursor-pointer hover:scale-95 transition-all duration-300 p-regular text-sm sm:text-base">
                         <TrendingUp size={20} />
                         Invite Friends
                     </Link>
