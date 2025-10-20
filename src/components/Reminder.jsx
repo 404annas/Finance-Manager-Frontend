@@ -22,7 +22,7 @@ const Reminder = () => {
             const errorMessage = err.response?.data?.message || "Error occurred while sending the reminder.";
             toast.error(errorMessage);
         }
-    })
+    });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,18 +30,18 @@ const Reminder = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        mutate(formData)
+        mutate(formData);
     };
 
     return (
-        <div className="bg-[#F6F9FC] p-6 rounded-2xl shadow-sm max-w-4xl mx-auto">
+        <div className="bg-[#F6F9FC] p-4 sm:p-6 md:p-8 rounded-2xl shadow-sm max-w-md sm:max-w-lg md:max-w-xl lg:max-w-3xl mx-auto">
             {/* Heading */}
-            <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center">
+            <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl p-semibold text-[#6667DD] mb-6 text-center">
                 Send Payment Reminder
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Subject Input */}
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+                {/* Subject + Email */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input
                         type="text"
@@ -50,10 +50,8 @@ const Reminder = () => {
                         required
                         value={formData.subject}
                         onChange={handleChange}
-                        className="w-full p-regular px-4 py-3 rounded-lg border-2 border-[#6667DD] outline-none"
+                        className="w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 border-[#6667DD] outline-none"
                     />
-
-                    {/* Email Input */}
                     <input
                         type="email"
                         name="email"
@@ -61,7 +59,7 @@ const Reminder = () => {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full p-regular px-4 py-3 rounded-lg border-2 border-[#6667DD] outline-none"
+                        className="w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 border-[#6667DD] outline-none"
                     />
                 </div>
 
@@ -71,7 +69,7 @@ const Reminder = () => {
                         name="currency"
                         value={formData.currency}
                         onChange={handleChange}
-                        className="w-full p-regular px-3 py-2 rounded-lg border-2 border-[#6667DD] outline-none cursor-pointer"
+                        className="w-full text-sm sm:text-base p-regular px-3 py-2 rounded-lg border-2 border-[#6667DD] outline-none cursor-pointer"
                     >
                         <option value="USD">USD ($)</option>
                         <option value="EUR">EUR (€)</option>
@@ -85,7 +83,7 @@ const Reminder = () => {
                         required
                         value={formData.amount}
                         onChange={handleChange}
-                        className="w-full p-regular px-4 py-2 rounded-lg border-2 border-[#6667DD] outline-none"
+                        className="w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 border-[#6667DD] outline-none"
                     />
                 </div>
 
@@ -96,17 +94,17 @@ const Reminder = () => {
                     value={formData.message}
                     onChange={handleChange}
                     rows={4}
-                    className="w-full p-regular px-4 py-3 rounded-lg border-2 border-[#6667DD] outline-none resize-none"
+                    className="w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 border-[#6667DD] outline-none resize-none"
                 />
 
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    disabled={isPending} // disable button during loading
+                    disabled={isPending}
                     className={`w-full ${isPending ? "bg-gray-400 hover:cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"
-                        } text-white py-3 rounded-lg shadow transition-all duration-300 cursor-pointer p-regular`}
+                        } text-white py-3 sm:py-3.5 rounded-lg shadow transition-all duration-300 cursor-pointer p-regular text-sm sm:text-base`}
                 >
-                    {isPending ? "Reminding..." : "Send Reminder"} {/* show loading text */}
+                    {isPending ? "Reminding..." : "Send Reminder"}
                 </button>
             </form>
         </div>
