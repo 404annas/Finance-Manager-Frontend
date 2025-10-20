@@ -14,10 +14,10 @@ const HeroNav = ({ role }) => {
     }
 
     return (
-        <section className="w-full flex flex-col sm:flex-row items-end sm:items-center sm:justify-between px-4 sm:px-6 md:px-10 py-4 overflow-y-auto">
-            <div className="flex-1 flex items-center gap-2 sm:gap-4 mb-4 sm:mb-0 bg-gray-100 px-4 py-2.5 rounded-xl min-w-0">
+        <section className="w-full flex flex-col sm:flex-row items-end sm:items-center sm:justify-between px-2 sm:px-6 md:px-10 py-4 overflow-y-auto">
+            <div className="flex-1 flex items-center gap-2 sm:gap-4 mb-4 sm:mb-0 bg-gray-100 px-3 sm:px-4 py-2.5 rounded-xl min-w-0">
                 <h1 className='text-gray-800 p-bold truncate'>
-                    <span className='text-[#6667DD]'>Welcome,</span> {user?.name || "John Doe"}
+                    <span className='text-[#6667DD]'>Hey,</span> {user?.name || "John Doe"}
                 </h1>
             </div>
 
