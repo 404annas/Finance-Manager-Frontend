@@ -11,53 +11,58 @@ const CurrencyExchange = () => {
     useEffect(() => {
         const fetchExchangeRate = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_CURRENCY_CONVERTER_BASE_URL}/${fromCurrency}`);
+                const response = await fetch(
+                    `${import.meta.env.VITE_CURRENCY_CONVERTER_BASE_URL}/${fromCurrency}`
+                );
                 const data = await response.json();
-                console.log(data);
                 if (data && data.rates) {
                     setRate(data.rates[toCurrency]);
                 }
             } catch (error) {
                 console.log("Error fetching exchange rate:", error);
             }
-        }
+        };
         fetchExchangeRate();
     }, [fromCurrency, toCurrency]);
 
     return (
-        <div className="flex justify-center">
-            <div className="bg-[#F6F9FC] shadow-sm rounded-2xl p-8 w-full max-w-4xl">
-                <h2 className="text-2xl p-bold text-[#6667DF] text-center mb-6">
+        <div className="flex justify-center py-6 sm:py-10">
+            <div className="bg-[#F6F9FC] shadow-md rounded-2xl w-full max-w-[90rem] p-5 sm:p-8 md:p-10">
+                <h2 className="text-lg sm:text-2xl md:text-3xl p-bold text-[#6667DF] text-center mb-6">
                     💱 Currency Exchange
                 </h2>
 
                 {/* Amount Input */}
                 <div className="mb-6">
-                    <label className="block text-gray-600 p-medium mb-2">Amount</label>
+                    <label className="block text-gray-600 p-medium mb-2 text-sm sm:text-base">
+                        Amount
+                    </label>
                     <input
                         type="number"
                         value={amount}
                         min={0}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="w-full p-3 rounded-xl outline-none border-2 border-[#6667DF] text-gray-700 p-regular"
+                        className="w-full p-2.5 sm:p-3 md:p-3.5 rounded-xl outline-none border-2 border-[#6667DF] text-gray-700 p-regular text-sm sm:text-base"
                     />
                 </div>
 
                 {/* From & To Selectors */}
-                <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row items-stretch justify-between gap-5 sm:gap-6 mb-6">
                     {/* From Currency */}
                     <div className="flex-1">
-                        <label className="block text-gray-600 p-medium mb-2">From</label>
-                        <div className="flex items-center border-2 border-[#6667DF] rounded-xl p-3">
+                        <label className="block text-gray-600 p-medium mb-2 text-sm sm:text-base">
+                            From
+                        </label>
+                        <div className="flex items-center border-2 border-[#6667DF] rounded-xl p-2.5 sm:p-3">
                             <img
                                 src={currencies.find((c) => c.code === fromCurrency)?.flag}
                                 alt="flag"
-                                className="w-6 h-6 mr-2 rounded-full"
+                                className="w-5 h-5 sm:w-6 sm:h-6 mr-2 rounded-full object-cover"
                             />
                             <select
                                 value={fromCurrency}
                                 onChange={(e) => setFromCurrency(e.target.value)}
-                                className="flex-1 outline-none p-regular cursor-pointer"
+                                className="flex-1 outline-none p-regular cursor-pointer text-sm sm:text-base bg-transparent"
                             >
                                 {currencies.map((c) => (
                                     <option key={c.code} value={c.code}>
@@ -68,21 +73,29 @@ const CurrencyExchange = () => {
                         </div>
                     </div>
 
-                    <ArrowRightLeft className="text-gray-600 mt-7" size={28} />
+                    {/* Arrow Icon */}
+                    <div className="flex justify-center items-center transform sm:rotate-0 rotate-90">
+                        <ArrowRightLeft
+                            className="text-gray-600"
+                            size={26}
+                        />
+                    </div>
 
                     {/* To Currency */}
                     <div className="flex-1">
-                        <label className="block text-gray-600 p-medium mb-2">To</label>
-                        <div className="flex items-center border-2 border-[#6667DF] rounded-xl p-3">
+                        <label className="block text-gray-600 p-medium mb-2 text-sm sm:text-base">
+                            To
+                        </label>
+                        <div className="flex items-center border-2 border-[#6667DF] rounded-xl p-2.5 sm:p-3">
                             <img
                                 src={currencies.find((c) => c.code === toCurrency)?.flag}
                                 alt="flag"
-                                className="w-6 h-6 mr-2 rounded-full"
+                                className="w-5 h-5 sm:w-6 sm:h-6 mr-2 rounded-full object-cover"
                             />
                             <select
                                 value={toCurrency}
                                 onChange={(e) => setToCurrency(e.target.value)}
-                                className="flex-1 outline-none p-regular cursor-pointer"
+                                className="flex-1 outline-none p-regular cursor-pointer text-sm sm:text-base bg-transparent"
                             >
                                 {currencies.map((c) => (
                                     <option key={c.code} value={c.code}>
@@ -95,11 +108,16 @@ const CurrencyExchange = () => {
                 </div>
 
                 {/* Result */}
-                <div className="bg-gray-100 rounded-xl p-4 text-center">
-                    <p className="text-lg text-gray-700 p-medium">
+                <div className="bg-gray-100 rounded-xl p-3 sm:p-4 md:p-5 text-center">
+                    <p className="text-base sm:text-lg md:text-xl text-gray-700 p-medium leading-relaxed break-words">
                         {amount} {fromCurrency} ={" "}
                         <span className="p-bold text-[#6667DF]">
-                            {rate ? (amount * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
+                            {rate
+                                ? (amount * rate).toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                })
+                                : "---"}
                         </span>{" "}
                         {toCurrency}
                     </p>
