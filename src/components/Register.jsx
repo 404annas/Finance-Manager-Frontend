@@ -15,8 +15,8 @@ const Register = () => {
         password: '',
         inviteToken: '',
     });
-    const [loading, setLoading] = useState(false);
 
+    const [loading, setLoading] = useState(false);
     const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
@@ -40,7 +40,6 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         try {
             const form = new FormData();
             form.append("file", formData.file);
@@ -54,7 +53,7 @@ const Register = () => {
             const res = await fetch(`${API_URL}/api/register`, {
                 method: "POST",
                 body: form,
-                credentials: 'include'
+                credentials: 'include',
             });
 
             const data = await res.json();
@@ -64,8 +63,12 @@ const Register = () => {
             } else {
                 toast.success(data.message || "Registered successfully!");
                 setUser(data.user);
+
+                // *** ADD THIS PART ***
+                // Save the user and token to localStorage
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("token", data.token);
+
                 setFormData({ file: null, name: "", email: "", password: "", inviteToken: "" });
                 navigate("/");
             }

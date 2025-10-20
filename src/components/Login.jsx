@@ -6,15 +6,21 @@ import { useAppContext } from '../../context/AppContext';
 const Login = () => {
     const { user, setUser } = useAppContext();
     const navigate = useNavigate();
+    const API_URL = import.meta.env.VITE_API_URL;
 
-    const API_URL = import.meta.env.VITE_API_URL
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
 
-    const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData({
+            ...formData,
+            [name]: value
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -27,6 +33,7 @@ const Login = () => {
                 body: JSON.stringify(formData),
                 credentials: "include",
             });
+
             const data = await res.json();
 
             if (!res.ok) {
