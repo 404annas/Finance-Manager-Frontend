@@ -61,7 +61,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div
         className={`
-          fixed top-0 left-0 h-screen bg-white shadow-lg z-50 p-4 flex flex-col gap-2
+          fixed top-0 left-0 h-screen bg-white shadow-lg z-50 p-4 flex flex-col gap-1 sm:gap-2
           w-[80%] max-w-xs
           overflow-y-auto
           transform transition-transform duration-300 ease-in-out
