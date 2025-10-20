@@ -26,9 +26,9 @@ const CurrencyExchange = () => {
     }, [fromCurrency, toCurrency]);
 
     return (
-        <div className="flex justify-center py-6 sm:py-10">
-            <div className="bg-[#F6F9FC] shadow-md rounded-2xl w-full max-w-[90rem] p-5 sm:p-8 md:p-10">
-                <h2 className="text-lg sm:text-2xl md:text-3xl p-bold text-[#6667DF] text-center mb-6">
+        <div className="flex justify-center">
+            <div className="bg-[#F6F9FC] shadow-md rounded-2xl max-w-[90rem] py-5 px-4 sm:p-8 md:p-10">
+                <h2 className="text-xl sm:text-2xl md:text-3xl p-bold text-[#6667DF] text-center mb-6">
                     💱 Currency Exchange
                 </h2>
 
@@ -108,8 +108,8 @@ const CurrencyExchange = () => {
                 </div>
 
                 {/* Result */}
-                <div className="bg-gray-100 rounded-xl p-3 sm:p-4 md:p-5 text-center">
-                    <p className="text-base sm:text-lg md:text-xl text-gray-700 p-medium leading-relaxed break-words">
+                <div className="bg-gray-100 rounded-xl p-3 sm:p-4 text-center">
+                    <p className="text-base sm:text-lg text-gray-700 p-medium leading-relaxed break-words">
                         {amount} {fromCurrency} ={" "}
                         <span className="p-bold text-[#6667DF]">
                             {rate
