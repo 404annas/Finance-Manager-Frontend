@@ -47,24 +47,23 @@ const Login = () => {
     };
 
     return (
-        <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+        <div className="relative flex items-center justify-center min-h-screen overflow-hidden px-4 sm:px-6 lg:px-8">
             {/* Floating Gradient Circles */}
-            <div className="absolute top-10 left-10 w-20 h-20 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FFCE56] opacity-30 animate-bounce-slow"></div>
-            <div className="absolute top-1/4 right-20 w-28 h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-25 animate-bounce-medium"></div>
-            <div className="absolute bottom-32 left-1/3 w-24 h-24 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#6667DD] opacity-20 animate-bounce-fast"></div>
-            <div className="absolute bottom-10 right-1/4 w-32 h-32 rounded-full bg-gradient-to-r from-[#FF6384] to-[#6667DD] opacity-15 animate-bounce-slower"></div>
-            <div className="absolute top-1/3 left-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-20 animate-bounce-fast"></div>
-            <div className="absolute bottom-1/4 right-1/3 w-20 h-20 rounded-full bg-gradient-to-r from-[#FF6384] to-[#36A2EB] opacity-15 animate-bounce-medium"></div>
-            <div className="absolute top-3/4 left-1/5 w-24 h-24 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FF6384] opacity-25 animate-bounce-slower"></div>
-            <div className="absolute bottom-10 left-1/6 w-28 h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-20 animate-bounce-slow"></div>
-            <div className="absolute top-1/6 right-1/5 w-20 h-20 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
-            <div className="absolute top-2/5 right-3/4 w-30 h-30 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
-            <div className="absolute top-1/6 right-1/5 w-20 h-20 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-10 left-10 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FFCE56] opacity-30 animate-bounce-slow"></div>
+            <div className="absolute top-1/4 right-10 sm:right-20 w-20 sm:w-28 h-20 sm:h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-25 animate-bounce-medium"></div>
+            <div className="absolute bottom-32 left-1/4 sm:left-1/3 w-16 sm:w-24 h-16 sm:h-24 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#6667DD] opacity-20 animate-bounce-fast"></div>
+            <div className="absolute bottom-10 right-10 sm:right-1/4 w-24 sm:w-32 h-24 sm:h-32 rounded-full bg-gradient-to-r from-[#FF6384] to-[#6667DD] opacity-15 animate-bounce-slower"></div>
+            <div className="absolute top-1/3 left-16 sm:left-1/4 w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-20 animate-bounce-fast"></div>
+            <div className="absolute bottom-1/4 right-1/4 sm:right-1/3 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#FF6384] to-[#36A2EB] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-3/4 left-10 sm:left-1/5 w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FF6384] opacity-25 animate-bounce-slower"></div>
+            <div className="absolute bottom-10 left-4 sm:left-1/6 w-24 sm:w-28 h-24 sm:h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-20 animate-bounce-slow"></div>
+            <div className="absolute top-1/6 right-4 sm:right-1/5 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-2/5 right-1/2 sm:right-3/4 w-24 sm:w-30 h-24 sm:h-30 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
 
             {/* Login Box */}
-            <div className="w-full max-w-lg bg-[#F6F9FC] p-8 rounded-xl shadow-md relative z-10">
+            <div className="w-full max-w-md sm:max-w-lg bg-[#F6F9FC] p-6 sm:p-8 rounded-xl shadow-md relative z-10">
 
-                <h1 className="text-[#6667DD] text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
+                <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div className="flex flex-col">
@@ -76,7 +75,7 @@ const Login = () => {
                             onChange={handleChange}
                             placeholder="Enter your email"
                             required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular"
+                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
                         />
                     </div>
 
@@ -89,22 +88,21 @@ const Login = () => {
                             onChange={handleChange}
                             placeholder="Enter your password"
                             required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular"
+                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
                         />
                     </div>
 
                     <button
                         type="submit"
-                        disabled={loading} // disable when loading
-                        className={`w-full bg-[#6667DD] text-white py-3 rounded-lg transition duration-300 p-medium mt-2 
-        ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
+                        disabled={loading}
+                        className={`w-full bg-[#6667DD] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
+                        ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
                     >
                         {loading ? "Logging..." : "Login"}
                     </button>
-
                 </form>
 
-                <p className="text-center text-gray-600 mt-4 p-regular">
+                <p className="text-center text-gray-600 mt-4 p-regular text-sm sm:text-base">
                     Account not exists?{' '}
                     <Link to="/register" className="text-[#6667DD] p-medium hover:underline">
                         Register Now
