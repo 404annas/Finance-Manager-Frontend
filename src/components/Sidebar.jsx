@@ -42,7 +42,7 @@ const Sidebar = () => {
       <div className="lg:hidden fixed top-5 left-5 z-50">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center justify-center w-12 h-10 bg-gradient-to-r from-[#6667DD] to-[black] text-white shadow-xl rounded-full hover:scale-110 transition-transform duration-300 relative"
+          className="flex items-center justify-center w-12 h-10 bg-gradient-to-r from-[#6667DD] to-[black] text-white shadow-xl rounded-full hover:scale-110 transition-transform duration-300 relative cursor-pointer"
         >
           <ListMinus size={20} />
           {/* Bubble pointer effect */}
@@ -61,7 +61,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div
         className={`
-          fixed top-0 left-0 h-screen bg-white shadow-lg z-50 p-4 flex flex-col gap-4
+          fixed top-0 left-0 h-screen bg-white shadow-lg z-50 p-4 flex flex-col gap-2
           w-[80%] max-w-xs
           overflow-y-auto
           transform transition-transform duration-300 ease-in-out
@@ -78,7 +78,7 @@ const Sidebar = () => {
           <div className="lg:hidden">
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-300"
+              className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-300 cursor-pointer"
             >
               <X size={18} />
             </button>
