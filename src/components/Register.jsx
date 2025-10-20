@@ -87,7 +87,7 @@ const Register = () => {
             <div className="absolute bottom-0 right-1/2 sm:right-3/4 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#FF6384] to-[#36A2EB] opacity-25 animate-bounce-slow"></div>
 
             {/* Register Box */}
-            <div className="w-full max-w-md sm:max-w-xl md:max-w-4xl bg-[#F6F9FC] p-6 sm:p-8 md:p-10 my-4 sm:my-0 rounded-xl shadow-md relative z-10">
+            <div className="w-full max-w-md sm:max-w-xl md:max-w-4xl bg-[#F6F9FC] p-4 sm:p-8 md:p-10 my-4 sm:my-0 rounded-xl shadow-md relative z-10">
                 <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 sm:mb-8 text-center">
                     Register into FinSync
                 </h1>
