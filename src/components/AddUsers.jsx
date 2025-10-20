@@ -41,7 +41,7 @@ const AddUsers = () => {
     return (
         <div className="flex justify-center items-center pt-6">
             <div className="bg-[#F6F9FC] shadow-sm rounded-2xl p-8 w-full max-w-lg">
-                <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center ">
+                <h2 className="text-xl sm:text-2xl p-semibold text-[#6667DD] mb-6 text-center ">
                     Invite Friends to Your Finance
                 </h2>
 
@@ -54,15 +54,15 @@ const AddUsers = () => {
                             value={email}
                             required
                             onChange={(e) => handleChange(index, e.target.value)}
-                            className="p-regular w-full px-4 py-2 rounded-lg outline-none border-2 border-[#6667DD] text-gray-700"
+                            className="p-regular w-full px-4 py-2 rounded-lg outline-none border-2 border-[#6667DD] text-gray-700 text-sm sm:text-base"
                         />
                     ))}
                 </div>
 
-                <div className="mt-6 flex items-center justify-between gap-3">
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <button
                         onClick={addEmailField}
-                        className="flex items-center justify-center gap-2 flex-1 py-2 rounded-lg bg-[#6667DD] text-white p-medium hover:bg-[#5656c4] transition-all duration-300 cursor-pointer hover:scale-95"
+                        className="flex items-center justify-center gap-2 flex-1 py-2 rounded-lg bg-[#6667DD] text-white p-medium hover:bg-[#5656c4] transition-all duration-300 cursor-pointer hover:scale-95 w-full text-sm sm:text-base"
                     >
                         <Plus size={18} /> Add Another
                     </button>
@@ -70,7 +70,7 @@ const AddUsers = () => {
                     <button
                         onClick={handleSendInvite}
                         disabled={isPending}
-                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 ${isPending
+                        className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-95 w-full text-sm sm:text-base ${isPending
                             ? "bg-green-300 hover:cursor-not-allowed"
                             : "bg-green-500 hover:bg-green-600"
                             }`}
