@@ -187,7 +187,7 @@ const Hero = ({ role }) => {
                 <div className="flex gap-3">
                     <Link to={"/users"} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 py-3 rounded-full hover:bg-[#5556cc] cursor-pointer hover:scale-95 transition-all duration-300 p-regular text-sm sm:text-base">
                         <TrendingUp size={20} />
-                        Invite Friends
+                        Invite Friends 
                     </Link>
                 </div>
             </div>
