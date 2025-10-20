@@ -41,7 +41,7 @@ const AddUsers = () => {
     return (
         <div className="flex justify-center items-center pt-6">
             <div className="bg-[#F6F9FC] shadow-sm rounded-2xl p-8 w-full max-w-lg">
-                <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center">
+                <h2 className="text-2xl p-semibold text-[#6667DD] mb-6 text-center ">
                     Invite Friends to Your Finance
                 </h2>
 
