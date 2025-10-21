@@ -1,12 +1,14 @@
-import { Trash2, X } from "lucide-react";
+import { Trash2, UserPlus2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchUsers, deleteUsers } from "../hooks/getUsers";
 import { useState } from "react";
+import AddUsers from "./AddUsers";
 
 const Users = () => {
     const queryClient = useQueryClient();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false); // 👈 new state
     const [userToDelete, setUserToDelete] = useState(null);
 
     const { data: usersData, isLoading, isError, error } = useQuery({
@@ -48,10 +50,20 @@ const Users = () => {
     const invitedBy = usersData?.invitedBy || null;
 
     return (
-        <div className="p-6">
+        <div className="p-6 relative">
             {/* SECTION 1: Users You Have Invited */}
             <div>
-                <h2 className="text-2xl p-bold mb-4 text-[#6667DD]">Invited Users</h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl p-bold mb-4 text-[#6667DD]">Invited Users</h2>
+                    <div
+                        onClick={() => setIsInviteModalOpen(true)} // 👈 open modal
+                        className="flex items-center gap-2 p-regular bg-[#6667DD] px-5 py-3 cursor-pointer text-white hover:bg-[#4b4dc9] transition-all duration-300 hover:scale-97 rounded-full"
+                    >
+                        <UserPlus2 size={18} />
+                        <button>Invite Users</button>
+                    </div>
+                </div>
+
                 {invitedUsers.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {invitedUsers.map((user) => (
@@ -61,7 +73,7 @@ const Users = () => {
                             >
                                 <div className="flex items-center">
                                     <img
-                                        src={user.profileImage || "..."}
+                                        src={user.profileImage || "https://via.placeholder.com/80"}
                                         alt={user.name}
                                         className="w-16 h-16 rounded-full mr-4 object-cover"
                                     />
@@ -124,7 +136,7 @@ const Users = () => {
                                 <img
                                     src={
                                         invitedBy.profileImage ||
-                                        "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bWFufGVufDB8fDB8fHww"
+                                        "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500"
                                     }
                                     alt={invitedBy.name}
                                     className="w-16 h-16 rounded-full mr-4 object-cover"
@@ -142,6 +154,20 @@ const Users = () => {
                     </div>
                 )}
             </div>
+
+            {/* 🟢 Invite Modal */}
+            {isInviteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden">
+                    <div className="relative bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl px-8 pt-4 pb-10 animate-scaleUp">
+                        <X
+                            size={22}
+                            className="absolute top-3 right-4 text-gray-600 hover:text-gray-800 cursor-pointer transition-all duration-300"
+                            onClick={() => setIsInviteModalOpen(false)} // 👈 close modal
+                        />
+                        <AddUsers /> {/* your whole AddUsers component inside modal */}
+                    </div>
+                </div>
+            )}
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && (

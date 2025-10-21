@@ -21,14 +21,14 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: <LayoutDashboard size={23} />, label: "Dashboard", path: `/` },
-    { icon: <CreditCard size={23} />, label: "Payments", path: `/payments` },
+    { icon: <CreditCard size={23} />, label: "Schedules", path: `/payments` },
     { icon: <Layers2 size={23} />, label: "Transactions", path: `/transactions` },
     { icon: <Handshake size={23} />, label: "Recipients", path: `/recipients` },
     { icon: <RefreshCcw size={23} />, label: "Exchange", path: `/exchange` },
     { icon: <History size={23} />, label: "Reminder", path: `/reminder` },
     { icon: <PhoneForwarded size={22} />, label: "Contact", path: `/contact` },
-    { icon: <UserCheck2 size={23} />, label: "All Users", path: `/all-users` },
-    { icon: <UsersRound size={23} />, label: "Add Users", path: `/users` },
+    { icon: <UserCheck2 size={23} />, label: "Users", path: `/all-users` },
+    // { icon: <UsersRound size={23} />, label: "Add Users", path: `/users` },
   ];
 
   // Disable body scroll when sidebar is open

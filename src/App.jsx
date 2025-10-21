@@ -35,7 +35,7 @@ function App() {
           <Route path="reminder" element={<Reminder />} />
           <Route path="profile" element={<Profile />} />
           <Route path="contact" element={<Contact />} />
-          <Route path="users" element={<AddUsers />} />
+          {/* <Route path="users" element={<AddUsers />} /> */}
           <Route path="all-users" element={<Users />} />
           <Route path="recipients" element={<Recipients />} />
           <Route path="recipient/:id" element={<RecipientsData />} />

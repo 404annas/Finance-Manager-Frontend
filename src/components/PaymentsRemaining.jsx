@@ -59,7 +59,7 @@ const PaymentsRemaining = () => {
     };
 
     return (
-        <div className="mt-8 p-8 bg-gradient-to-r from-[#f6f9fc] to-[#F3E8FF] rounded-3xl shadow-lg w-full">
+        <div className=" p-8 bg-gradient-to-r from-[#eff7ff] to-[#F3E8FF] w-full">
             <div className="flex flex-col lg:flex-row gap-10 items-start justify-between w-full">
 
                 <div className="flex-1">

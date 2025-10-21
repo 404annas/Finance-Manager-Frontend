@@ -59,9 +59,9 @@ const Payments = () => {
     };
 
     return (
-        <div className="w-full bg-[#f6f9fc] flex flex-col p-6">
+        <div className="w-full bg-[#f6f9fc] flex flex-col">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            {/* <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl p-semibold text-[#6667DD]">Payments Done</h2>
                 <button
                     onClick={() => setIsOpen(true)}
@@ -69,10 +69,10 @@ const Payments = () => {
                 >
                     <Plus size={18} /> Add Transaction
                 </button>
-            </div>
+            </div> */}
 
             {/* Add Payment Modal */}
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {isOpen && (
                     <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
                         <motion.div
@@ -111,10 +111,10 @@ const Payments = () => {
                         </div>
                     </Dialog>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
             {/* Payments Table */}
-            <div className="overflow-x-auto bg-transparent rounded-lg shadow p-4">
+            {/* <div className="overflow-x-auto bg-transparent rounded-lg shadow p-4">
                 {isLoadingPayments ? (
                     <p className="text-[#6667DD] text-center text-lg p-regular animate-pulse">Loading Payments...</p>
                 ) : (
@@ -179,7 +179,7 @@ const Payments = () => {
                         )}
                     </>
                 )}
-            </div>
+            </div> */}
 
             <PaymentsRemaining />
 
