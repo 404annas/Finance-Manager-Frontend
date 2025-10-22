@@ -127,57 +127,71 @@ const PaymentsRemaining = () => {
                 </div>
             </div>
 
-            {/* STATUS LIST */}
+            {/* ===== SCHEDULED PAYMENTS LIST / SKELETON ===== */}
             <h1 className="text-[#6667DD] text-lg sm:text-xl md:text-2xl p-semibold mt-10">
                 {loadingSchedules ? "Loading scheduled Payments..." : "All Payment Schedules"}
             </h1>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {schedules.length === 0 && !loadingSchedules && (
-                    <p className="text-gray-500 text-center col-span-full p-regular mt-4 text-sm sm:text-base">
-                        No payments scheduled.
-                    </p>
-                )}
-
-                {schedules.map((s) => {
-                    const isCurrentlyDeleting = isDeleting && deletingId === s._id;
-                    return (
+            {loadingSchedules ? (
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-pulse">
+                    {[1, 2, 3].map((i) => (
                         <div
-                            key={s._id}
-                            className="p-4 sm:p-5 bg-[#f0f4ff] rounded-xl shadow-sm relative"
+                            key={i}
+                            className="p-4 sm:p-5 bg-gray-200 rounded-xl shadow-sm h-32 flex flex-col justify-between"
                         >
-                            <h3 className="text-[#6667DD] text-base sm:text-lg p-semibold mb-2 underline break-words">
-                                {s.title}
-                            </h3>
-                            <p className="text-gray-700 p-medium text-sm sm:text-base mt-2">
-                                {new Date(s.scheduledDate).toLocaleString()} -{" "}
-                                {s.status.toUpperCase()}
-                            </p>
-                            {s.message && (
-                                <p className="text-gray-500 text-xs sm:text-sm mt-1 p-regular break-words">
-                                    {s.message}
-                                </p>
-                            )}
-
-                            <button
-                                onClick={() => {
-                                    setScheduleToDelete(s._id);
-                                    setIsDeleteModalOpen(true);
-                                }}
-                                disabled={isCurrentlyDeleting}
-                                className={`absolute top-3 right-3 p-1.5 sm:p-2 cursor-pointer rounded-full transition-all duration-300 ${isCurrentlyDeleting ? "bg-red-300" : "hover:bg-red-200"
-                                    }`}
-                            >
-                                {isCurrentlyDeleting ? (
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <Trash2 className="text-red-500" size={18} />
-                                )}
-                            </button>
+                            <div className="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
+                            <div className="h-4 w-1/2 bg-gray-300 rounded mb-1"></div>
+                            <div className="h-3 w-1/3 bg-gray-300 rounded"></div>
                         </div>
-                    );
-                })}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    {schedules.length === 0 && (
+                        <p className="text-gray-500 text-center col-span-full p-regular mt-4 text-sm sm:text-base">
+                            No payments scheduled.
+                        </p>
+                    )}
+
+                    {schedules.map((s) => {
+                        const isCurrentlyDeleting = isDeleting && deletingId === s._id;
+                        return (
+                            <div
+                                key={s._id}
+                                className="p-4 sm:p-5 bg-[#f0f4ff] rounded-xl shadow-sm relative"
+                            >
+                                <h3 className="text-[#6667DD] text-base sm:text-lg p-semibold mb-2 underline break-words">
+                                    {s.title}
+                                </h3>
+                                <p className="text-gray-700 p-medium text-sm sm:text-base mt-2">
+                                    {new Date(s.scheduledDate).toLocaleString()} - {s.status.toUpperCase()}
+                                </p>
+                                {s.message && (
+                                    <p className="text-gray-500 text-xs sm:text-sm mt-1 p-regular break-words">
+                                        {s.message}
+                                    </p>
+                                )}
+
+                                <button
+                                    onClick={() => {
+                                        setScheduleToDelete(s._id);
+                                        setIsDeleteModalOpen(true);
+                                    }}
+                                    disabled={isCurrentlyDeleting}
+                                    className={`absolute top-3 right-3 p-1.5 sm:p-2 cursor-pointer rounded-full transition-all duration-300 ${isCurrentlyDeleting ? "bg-red-300" : "hover:bg-red-200"
+                                        }`}
+                                >
+                                    {isCurrentlyDeleting ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <Trash2 className="text-red-500" size={18} />
+                                    )}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {schedules.length > 0 && (
                 <button
@@ -202,12 +216,9 @@ const PaymentsRemaining = () => {
                         <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
                             <Trash2 size={20} className="text-red-500" />
                         </div>
-                        <h2 className="text-lg p-semibold text-gray-800 mb-2">
-                            Are you sure?
-                        </h2>
+                        <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
                         <p className="text-gray-600 mb-6 p-regular text-sm">
-                            Do you really want to delete this scheduled payment? This action
-                            cannot be undone.
+                            Do you really want to delete this scheduled payment? This action cannot be undone.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-3">
                             <button
@@ -241,12 +252,9 @@ const PaymentsRemaining = () => {
                         <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
                             <Trash2 size={20} className="text-red-500" />
                         </div>
-                        <h2 className="text-lg p-semibold text-gray-800 mb-2">
-                            Are you sure?
-                        </h2>
+                        <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
                         <p className="text-gray-600 mb-6 p-regular text-sm">
-                            Do you really want to delete all scheduled payments? This action
-                            cannot be undone.
+                            Do you really want to delete all scheduled payments? This action cannot be undone.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-3">
                             <button

@@ -27,7 +27,7 @@ const CurrencyExchange = () => {
 
     return (
         <div className="flex justify-center">
-            <div className="bg-[#F6F9FC] shadow-sm w-76 sm:max-w-[90rem] py-5 px-4 sm:p-8 md:p-10">
+            <div className="bg-[#F6F9FC] shadow-sm w-77 sm:w-auto sm:max-w-4xl mx-auto py-5 px-4 sm:p-8 md:p-10">
                 <h2 className="text-xl sm:text-2xl md:text-3xl p-bold text-[#6667DF] text-center mb-6">
                     💱 Currency Exchange
                 </h2>

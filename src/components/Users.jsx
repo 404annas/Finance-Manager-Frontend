@@ -31,8 +31,50 @@ const Users = () => {
 
     if (isLoading) {
         return (
-            <div className="p-6 text-center p-regular text-[#6667DD] animate-pulse">
-                Loading users...
+            <div className="p-4 sm:p-6 md:p-8 w-full">
+                <div className="animate-pulse space-y-6">
+                    {/* Header */}
+                    <div className="h-8 bg-[#6667DD]/30 rounded w-1/3 mx-auto sm:mx-0 sm:w-1/4"></div>
+
+                    {/* Invite button */}
+                    <div className="h-10 bg-[#6667DD]/30 rounded w-1/2 mx-auto sm:w-40 sm:hidden block"></div>
+
+                    {/* User cards skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-10">
+                        {[1, 2].map((i) => (
+                            <div
+                                key={i}
+                                className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 px-2 py-6 bg-[#F6F9FC] shadow rounded-lg w-full"
+                            >
+                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
+                                    <div className="w-16 h-16 rounded-full bg-gray-300"></div>
+                                    <div className="space-y-2 sm:space-y-1">
+                                        <div className="h-4 w-32 bg-gray-300 rounded"></div>
+                                        <div className="h-3 w-48 bg-gray-300 rounded"></div>
+                                        <div className="h-3 w-24 bg-gray-300 rounded"></div>
+                                    </div>
+                                </div>
+                                <div className="h-8 w-24 bg-red-300 rounded mt-4 sm:mt-0"></div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Invited By skeleton */}
+                    <div className="mt-10">
+                        <div className="h-8 bg-[#6667DD]/30 rounded w-1/4 mb-4"></div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 px-2 py-6 bg-[#F6F9FC] shadow rounded-lg w-full">
+                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
+                                    <div className="w-16 h-16 rounded-full bg-gray-300"></div>
+                                    <div className="space-y-2 sm:space-y-1">
+                                        <div className="h-4 w-32 bg-gray-300 rounded"></div>
+                                        <div className="h-3 w-48 bg-gray-300 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }

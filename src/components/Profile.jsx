@@ -1,18 +1,39 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
     const { user } = useAppContext();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
 
-    if (!user) {
-        navigate("/login");
-        return null;
+    useEffect(() => {
+        if (!user) {
+            navigate("/login");
+        } else {
+            // simulate loading
+            const timer = setTimeout(() => setLoading(false), 800); // 0.8s delay for skeleton
+            return () => clearTimeout(timer);
+        }
+    }, [user, navigate]);
+
+    if (!user) return null;
+
+    if (loading) {
+        // Skeleton Loading
+        return (
+            <div className="flex flex-col justify-center items-center px-6 py-10 sm:p-10 mt-4 sm:mt-0 shadow-sm bg-[#F6F9FC] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl mx-auto animate-pulse">
+                <div className="w-30 h-30 sm:w-40 sm:h-40 rounded-full bg-gray-300 border-2 sm:border-4 border-gray-200 shadow-md"></div>
+                <div className="w-40 sm:w-60 h-6 sm:h-8 bg-gray-300 rounded mt-6"></div>
+                <div className="w-32 sm:w-48 h-4 sm:h-6 bg-gray-300 rounded mt-2"></div>
+                <div className="w-24 sm:w-32 h-6 bg-gray-300 rounded mt-4"></div>
+            </div>
+        );
     }
 
+    // Actual Profile
     return (
-        <div className="flex flex-col justify-center items-center px-6 py-10 sm:p-10 mt-4 sm:mt-0 shadow-sm bg-[#F6F9FC] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl mx-auto">
+        <div className="flex flex-col justify-center items-center px-6 py-10 sm:p-10 mt-10 sm:mt-0 shadow-sm bg-[#F6F9FC] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl mx-auto">
             <img
                 src={
                     user.profileImage ||
