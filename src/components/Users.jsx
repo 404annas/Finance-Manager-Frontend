@@ -157,7 +157,7 @@ const Users = () => {
 
             {/* 🟢 Invite Modal */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 sm:px-6">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="relative bg-gradient-to-br from-[#6667DD] via-black to-black shadow-xl w-full max-w-[90%] sm:max-w-lg md:max-w-xl rounded-2xl px-4 pt-5 pb-9 animate-scaleUp">
                         <X
                             size={22}

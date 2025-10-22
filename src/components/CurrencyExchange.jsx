@@ -27,7 +27,7 @@ const CurrencyExchange = () => {
 
     return (
         <div className="flex justify-center">
-            <div className="bg-[#F6F9FC] shadow-sm w-78 sm:max-w-[90rem] py-5 px-4 sm:p-8 md:p-10">
+            <div className="bg-[#F6F9FC] shadow-sm w-76 sm:max-w-[90rem] py-5 px-4 sm:p-8 md:p-10">
                 <h2 className="text-xl sm:text-2xl md:text-3xl p-bold text-[#6667DF] text-center mb-6">
                     💱 Currency Exchange
                 </h2>
@@ -62,7 +62,8 @@ const CurrencyExchange = () => {
                             <select
                                 value={fromCurrency}
                                 onChange={(e) => setFromCurrency(e.target.value)}
-                                className="flex-1 outline-none p-regular cursor-pointer text-sm sm:text-base bg-transparent"
+                                className="flex-1 outline-none p-regular cursor-pointer text-sm sm:text-base bg-transparent appearance-none"
+                                style={{ backgroundPosition: "right 0.75rem center", backgroundRepeat: "no-repeat" }}
                             >
                                 {currencies.map((c) => (
                                     <option key={c.code} value={c.code}>
@@ -95,7 +96,8 @@ const CurrencyExchange = () => {
                             <select
                                 value={toCurrency}
                                 onChange={(e) => setToCurrency(e.target.value)}
-                                className="flex-1 outline-none p-regular cursor-pointer text-sm sm:text-base bg-transparent"
+                                className="flex-1 outline-none p-regular cursor-pointer text-sm sm:text-base bg-transparent appearance-none"
+                                style={{ backgroundPosition: "right 0.75rem center", backgroundRepeat: "no-repeat" }}
                             >
                                 {currencies.map((c) => (
                                     <option key={c.code} value={c.code}>
