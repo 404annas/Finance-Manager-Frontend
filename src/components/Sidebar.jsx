@@ -28,7 +28,7 @@ const Sidebar = () => {
     { icon: <History size={23} />, label: "Reminder", path: `/reminder` },
     { icon: <PhoneForwarded size={22} />, label: "Contact", path: `/contact` },
     { icon: <UserCheck2 size={23} />, label: "Users", path: `/all-users` },
-    // { icon: <UsersRound size={23} />, label: "Add Users", path: `/users` },
+    { icon: <UsersRound size={23} />, label: "My Profile", path: `/profile` },
   ];
 
   // Disable body scroll when sidebar is open

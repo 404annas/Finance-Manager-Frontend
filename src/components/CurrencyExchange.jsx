@@ -27,7 +27,7 @@ const CurrencyExchange = () => {
 
     return (
         <div className="flex justify-center">
-            <div className="bg-[#F6F9FC] shadow-sm w-77 sm:w-auto sm:max-w-4xl mx-auto py-5 px-4 sm:p-8 md:p-10">
+            <div className="bg-[#F6F9FC] shadow-sm w-78 sm:w-auto sm:max-w-4xl mx-auto py-5 px-4 sm:p-8 md:p-10">
                 <h2 className="text-xl sm:text-2xl md:text-3xl p-bold text-[#6667DF] text-center mb-6">
                     💱 Currency Exchange
                 </h2>
@@ -42,7 +42,7 @@ const CurrencyExchange = () => {
                         value={amount}
                         min={0}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="w-full p-2.5 sm:p-3 md:p-3.5 rounded-xl outline-none border-2 border-[#6667DF] text-gray-700 p-regular text-sm sm:text-base"
+                        className="w-full p-2.5 sm:p-3 md:p-3.5 rounded-xl outline-none border-2 border-[#6667DF] text-gray-700 p8regular text-sm sm:text-base"
                     />
                 </div>
 
