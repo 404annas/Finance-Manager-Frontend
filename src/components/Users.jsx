@@ -8,7 +8,7 @@ import AddUsers from "./AddUsers";
 const Users = () => {
     const queryClient = useQueryClient();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false); // 👈 new state
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
 
     const { data: usersData, isLoading, isError, error } = useQuery({
@@ -50,36 +50,36 @@ const Users = () => {
     const invitedBy = usersData?.invitedBy || null;
 
     return (
-        <div className="p-6 relative">
+        <div className="p-4 sm:p-6 md:p-8 relative w-full">
             {/* SECTION 1: Users You Have Invited */}
             <div>
-                <div className="flex items-center justify-between">
-                    <h2 className="text-2xl p-bold mb-4 text-[#6667DD]">Invited Users</h2>
-                    <div
-                        onClick={() => setIsInviteModalOpen(true)} // 👈 open modal
-                        className="flex items-center gap-2 p-regular bg-[#6667DD] px-5 py-3 cursor-pointer text-white hover:bg-[#4b4dc9] transition-all duration-300 hover:scale-97 rounded-full"
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-6">
+                    <h2 className="text-2xl p-bold text-[#6667DD]">Invited Users</h2>
+                    <button
+                        onClick={() => setIsInviteModalOpen(true)}
+                        className="flex items-center justify-center gap-2 p-regular bg-[#6667DD] px-4 sm:px-5 py-2.5 sm:py-3 cursor-pointer text-white hover:bg-[#4b4dc9] transition-all duration-300 rounded-full w-full sm:w-auto text-sm sm:text-base"
                     >
                         <UserPlus2 size={18} />
-                        <button>Invite Users</button>
-                    </div>
+                        Invite Users
+                    </button>
                 </div>
 
                 {invitedUsers.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         {invitedUsers.map((user) => (
                             <div
                                 key={user._id}
-                                className="flex items-center justify-between px-4 py-6 bg-[#F6F9FC] shadow rounded-lg"
+                                className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 px-2 py-6 bg-[#F6F9FC] shadow rounded-lg w-full"
                             >
-                                <div className="flex items-center">
+                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
                                     <img
-                                        src={user.profileImage || "https://via.placeholder.com/80"}
+                                        src={user.profileImage || "https://images.unsplash.com/photo-1615109398623-88346a601842?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bWFufGVufDB8fDB8fHww&auto=format&fit=crop&q=60&w=500"}
                                         alt={user.name}
-                                        className="w-16 h-16 rounded-full mr-4 object-cover"
+                                        className="w-16 h-16 rounded-full object-cover"
                                     />
                                     <div>
                                         <h3 className="text-lg p-semibold">{user.name}</h3>
-                                        <p className="text-gray-500 p-regular">{user.email}</p>
+                                        <p className="text-gray-500 p-regular break-all">{user.email}</p>
                                         <p
                                             className={`text-sm p-medium ${user.status === "accepted"
                                                 ? "text-green-600"
@@ -96,14 +96,14 @@ const Users = () => {
                                         setIsDeleteModalOpen(true);
                                     }}
                                     disabled={isDeletingUser}
-                                    className={`p-medium flex items-center gap-2 p-2 rounded-md transition-all duration-300 ${isDeletingUser
-                                        ? "hover:cursor-not-allowed"
-                                        : "text-red-600 hover:text-red-700 underline cursor-pointer"
+                                    className={`p-medium flex items-center justify-center sm:justify-start gap-2 px-3 py-2 rounded-md transition-all duration-300 text-sm cursor-pointer ${isDeletingUser
+                                        ? "hover:cursor-not-allowed text-gray-400"
+                                        : "text-red-600 hover:text-red-700 underline"
                                         }`}
                                 >
                                     {isDeletingUser ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin text-red-600"></div>
+                                            <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin border-red-600"></div>
                                             Deleting...
                                         </>
                                     ) : (
@@ -127,23 +127,23 @@ const Users = () => {
             <div className="mt-10">
                 <h2 className="text-2xl p-bold mb-4 text-[#6667DD]">Invited By</h2>
                 {invitedBy ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         <div
                             key={invitedBy._id}
-                            className="flex items-center justify-between px-4 py-6 bg-[#F6F9FC] shadow rounded-lg"
+                            className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 px-2 py-6 bg-[#F6F9FC] shadow rounded-lg w-full"
                         >
-                            <div className="flex items-center">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
                                 <img
                                     src={
                                         invitedBy.profileImage ||
                                         "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500"
                                     }
                                     alt={invitedBy.name}
-                                    className="w-16 h-16 rounded-full mr-4 object-cover"
+                                    className="w-16 h-16 rounded-full object-cover"
                                 />
                                 <div>
                                     <h3 className="text-lg p-semibold">{invitedBy.name}</h3>
-                                    <p className="text-gray-500 p-regular">{invitedBy.email}</p>
+                                    <p className="text-gray-500 p-regular break-all">{invitedBy.email}</p>
                                 </div>
                             </div>
                         </div>
@@ -157,22 +157,22 @@ const Users = () => {
 
             {/* 🟢 Invite Modal */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden">
-                    <div className="relative bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl px-8 pt-4 pb-10 animate-scaleUp">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 sm:px-6">
+                    <div className="relative bg-gradient-to-br from-[#6667DD] via-black to-black shadow-xl w-full max-w-[90%] sm:max-w-lg md:max-w-xl rounded-2xl px-4 pt-5 pb-9 animate-scaleUp">
                         <X
                             size={22}
-                            className="absolute top-3 right-4 text-gray-600 hover:text-gray-800 cursor-pointer transition-all duration-300"
-                            onClick={() => setIsInviteModalOpen(false)} // 👈 close modal
+                            className="absolute top-3 right-4 text-gray-300 hover:text-gray-400 cursor-pointer transition-all duration-300"
+                            onClick={() => setIsInviteModalOpen(false)}
                         />
-                        <AddUsers /> {/* your whole AddUsers component inside modal */}
+                        <AddUsers />
                     </div>
                 </div>
             )}
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 sm:px-6">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-[90%] sm:max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
                         <X
                             size={20}
                             className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
@@ -185,10 +185,10 @@ const Users = () => {
                         <p className="text-gray-600 mb-6 p-regular text-sm">
                             Do you really want to delete this user? This action cannot be undone.
                         </p>
-                        <div className="flex justify-center gap-3">
+                        <div className="flex flex-col sm:flex-row justify-center gap-3">
                             <button
                                 onClick={() => setIsDeleteModalOpen(false)}
-                                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular"
+                                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 text-sm text-gray-700 p-regular cursor-pointer"
                             >
                                 Cancel
                             </button>
@@ -197,7 +197,7 @@ const Users = () => {
                                     deleteUserMutate(userToDelete);
                                     setIsDeleteModalOpen(false);
                                 }}
-                                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular"
+                                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 text-sm p-regular cursor-pointer"
                             >
                                 Delete
                             </button>

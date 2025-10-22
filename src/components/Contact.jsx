@@ -35,7 +35,7 @@ const Contact = () => {
 
     return (
         <div className="flex justify-center items-start sm:items-center sm:px-4 md:px-6 lg:px-8">
-            <div className="bg-[#F6F9FC] rounded-3xl shadow-sm p-4 sm:py-6 sm:px-8 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-3xl">
+            <div className="bg-[#F6F9FC] shadow-sm p-4 sm:py-6 sm:px-8 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl p-semibold text-[#6667DD] mb-2 text-center">
                     Contact Us
                 </h2>
