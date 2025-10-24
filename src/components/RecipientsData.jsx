@@ -94,6 +94,11 @@ const RecipientsData = () => {
 
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
+            <div className="w-full text-center mb-4 md:hidden block">
+                <p className="text-sm sm:text-base text-[#6667DD] p-medium animate-bounce">
+                    Zoom out to see the full table clearly! 👀
+                </p>
+            </div>
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -103,7 +108,7 @@ const RecipientsData = () => {
                     </button>
                     <h2 className="text-2xl p-bold text-[#6667DD]">Shared Payment Details</h2>
                 </div>
-                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 sm:px-5 py-2 sm:py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer">
+                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-5 py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer">
                     <Plus size={18} /> Add Payment
                 </button>
             </div>
@@ -127,7 +132,7 @@ const RecipientsData = () => {
             {/* Add Payment Modal */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl sm:max-w-2xl px-4 py-6 sm:p-6 relative overflow-y-auto max-h-[90vh]">
+                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl sm:max-w-2xl px-4 py-6 sm:p-6 relative overflow-y-auto h-fit">
                         <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"><X size={22} /></button>
                         <h3 className="text-xl p-semibold text-[#6667DD] mb-4">Add New Payment</h3>
 
