@@ -57,7 +57,6 @@ const Recipients = () => {
         onError: (err) => toast.error(err.response?.data?.message || "Failed to delete."),
     });
 
-    // Share form handler
     const handleShare = () => {
         if (!title || !selectedCategory || selectedUserIds.length === 0) {
             return toast.error("Please fill all fields and select at least one user!");
@@ -65,7 +64,6 @@ const Recipients = () => {
         createShareMutate({ title, category: selectedCategory, sharedWith: selectedUserIds });
     };
 
-    // Delete handler with modal
     const confirmDeleteShare = (shareId) => {
         setSelectedDeleteId(shareId);
         setDeleteModalOpen(true);
@@ -75,14 +73,12 @@ const Recipients = () => {
         deleteShareMutate(selectedDeleteId);
     };
 
-    // Memoized data
     const { sharedByMe, sharedWithMe } = useMemo(() => {
         const byMe = sharedCards.filter(card => card.sharedBy._id === currentUser.id);
         const withMe = sharedCards.filter(card => card.sharedBy._id !== currentUser.id);
         return { sharedByMe: byMe, sharedWithMe: withMe };
     }, [sharedCards, currentUser.id]);
 
-    // Helpers
     const toggleUser = (userId) => setSelectedUserIds(prev =>
         prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
     );
@@ -97,9 +93,8 @@ const Recipients = () => {
         return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading...</div>;
     }
 
-    // Card Grid
     const CardGrid = ({ cards, showDelete }) => (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {cards.map((card) => (
                 <div
                     key={card._id}
@@ -107,37 +102,34 @@ const Recipients = () => {
                     className="bg-transparent p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-all duration-300"
                 >
                     <div className="flex justify-between items-center">
-                        <h3 className="p-semibold text-[#6667DD] mb-2 text-lg">{card.title}</h3>
+                        <h3 className="p-semibold text-[#6667DD] mb-2 text-lg break-words">{card.title}</h3>
                         {showDelete && (
                             <p
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    confirmDeleteShare(card._id);
-                                }}
+                                onClick={(e) => { e.stopPropagation(); confirmDeleteShare(card._id); }}
                                 className="text-red-500 hover:text-red-700 cursor-pointer transition-all duration-300 p-1"
                             >
                                 <Trash2 size={20} />
                             </p>
                         )}
                     </div>
-                    <p className="p-medium text-gray-700 text-sm">Category: {card.category}</p>
-                    <p className="p-medium text-gray-700 text-sm mt-1">
+                    <p className="p-medium text-gray-700 text-sm break-words">Category: {card.category}</p>
+                    <p className="p-medium text-gray-700 text-sm mt-1 break-words">
                         Users: {card.sharedWith.map(u => u.name).join(", ")}
                     </p>
-                    {!showDelete && <p className="p-medium text-gray-500 text-xs mt-1">By: {card.sharedBy.name}</p>}
+                    {!showDelete && <p className="p-medium text-gray-500 text-xs mt-1 break-words">By: {card.sharedBy.name}</p>}
                 </div>
             ))}
         </div>
     );
 
     return (
-        <div className="w-full px-6 py-6 bg-[#F6F9FC]">
+        <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC]">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
                 <h2 className="text-2xl p-bold text-[#6667DD]">Shared Payments</h2>
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex items-center gap-2 bg-[#6667DD] text-white px-5 py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer"
+                    className="flex items-center gap-2 bg-[#6667DD] text-white px-5 py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer w-full sm:w-auto justify-center"
                 >
                     <Share2 size={18} /> Share With
                 </button>
@@ -145,24 +137,16 @@ const Recipients = () => {
 
             {/* Shared By Me */}
             <h3 className="text-xl p-semibold text-gray-800 mb-3">Shared By Me</h3>
-            {sharedByMe.length > 0 ? (
-                <CardGrid cards={sharedByMe} showDelete={true} />
-            ) : (
-                <div className="text-center py-6 text-gray-500 p-medium">You haven't shared any payments yet.</div>
-            )}
+            {sharedByMe.length > 0 ? <CardGrid cards={sharedByMe} showDelete={true} /> : <div className="text-center py-6 text-gray-500 p-medium">You haven't shared any payments yet.</div>}
 
             {/* Shared With Me */}
             <h3 className="text-xl p-semibold text-gray-800 mt-8 mb-3">Shared With Me</h3>
-            {sharedWithMe.length > 0 ? (
-                <CardGrid cards={sharedWithMe} showDelete={false} />
-            ) : (
-                <div className="text-center py-6 text-gray-500 p-medium">No payments have been shared with you.</div>
-            )}
+            {sharedWithMe.length > 0 ? <CardGrid cards={sharedWithMe} showDelete={false} /> : <div className="text-center py-6 text-gray-500 p-medium">No payments have been shared with you.</div>}
 
             {/* Share Modal */}
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl px-4 py-6 relative">
                         <button
                             onClick={resetAndCloseModal}
                             className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
@@ -170,7 +154,7 @@ const Recipients = () => {
                             <X size={22} />
                         </button>
                         <h3 className="text-xl p-semibold text-[#6667DD] mb-4">Share Payment Details</h3>
-                        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                        <div className="flex flex-col gap-4 sm:flex-row mb-4">
                             <div className="flex-1">
                                 <label className="block text-sm p-medium text-gray-700 mb-2 uppercase">Title</label>
                                 <input
@@ -195,9 +179,9 @@ const Recipients = () => {
                         </div>
 
                         <label className="block text-sm uppercase p-medium text-gray-700 mb-2">Share With</label>
-                        <div className="flex flex-col gap-2 max-h-40 overflow-y-auto mb-4 border-2 border-[#6667DD] rounded-lg p-3">
+                        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto mb-4 border-2 border-[#6667DD] rounded-lg p-3">
                             {potentialRecipients.length > 0 ? potentialRecipients.map((user) => (
-                                <label key={user._id} className="flex items-center gap-2 cursor-pointer p-regular">
+                                <label key={user._id} className="flex items-center gap-2 cursor-pointer p-regular break-words">
                                     <input
                                         type="checkbox"
                                         className="w-4 h-4 accent-[#6667DD]"
@@ -212,7 +196,7 @@ const Recipients = () => {
                         <button
                             onClick={handleShare}
                             disabled={isSharing}
-                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isSharing ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}
+                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg shadow-md p-medium transition-all sm:text-base text-sm duration-300 ${isSharing ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}
                         >
                             <UsersRound size={18} />
                             {isSharing ? "Sharing..." : "Share Now"}
@@ -223,7 +207,7 @@ const Recipients = () => {
 
             {/* Delete Confirmation Modal */}
             {deleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
                         <X
                             size={20}
@@ -237,17 +221,17 @@ const Recipients = () => {
                         <p className="text-gray-600 mb-6 p-regular text-sm">
                             Do you really want to delete this shared payment? This action cannot be undone.
                         </p>
-                        <div className="flex justify-center gap-3">
+                        <div className="flex flex-col sm:flex-row justify-center gap-3">
                             <button
                                 onClick={() => setDeleteModalOpen(false)}
-                                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular"
+                                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular w-full sm:w-auto"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleDeleteShare}
                                 disabled={isDeleting}
-                                className={`px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular`}
+                                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular w-full sm:w-auto"
                             >
                                 {isDeleting ? "Deleting..." : "Delete"}
                             </button>

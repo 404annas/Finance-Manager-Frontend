@@ -12,12 +12,10 @@ const RecipientsData = () => {
     const queryClient = useQueryClient();
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
-    // --- Component State ---
     const [isOpen, setIsOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [paymentToDelete, setPaymentToDelete] = useState(null);
 
-    // --- Form State ---
     const [title, setTitle] = useState("");
     const [category, setCategory] = useState("");
     const [currency, setCurrency] = useState("USD");
@@ -27,7 +25,6 @@ const RecipientsData = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
 
-    // --- Fetch Payments ---
     const { data: payments = [], isPending: isLoadingPayments } = useQuery({
         queryKey: ["sharePayments", shareId],
         queryFn: () => fetchPaymentsForShare(shareId),
@@ -37,7 +34,6 @@ const RecipientsData = () => {
         },
     });
 
-    // --- Add Payment ---
     const { mutate: addPaymentMutate, isPending: isAddingPayment } = useMutation({
         mutationFn: addPaymentToShare,
         onSuccess: () => {
@@ -49,7 +45,6 @@ const RecipientsData = () => {
         onError: (err) => toast.error(err.response?.data?.message || "Failed to add payment."),
     });
 
-    // --- Delete Payment ---
     const { mutate: deletePaymentMutate, isPending: isDeleting } = useMutation({
         mutationFn: deletePayment,
         onSuccess: () => {
@@ -75,7 +70,6 @@ const RecipientsData = () => {
         addPaymentMutate({ shareId, paymentFormData });
     };
 
-    // --- DataTable Columns ---
     const columns = [
         { name: <span className="p-semibold">Title</span>, selector: row => row.title, cell: row => <span className="p-regular">{row.title}</span>, sortable: true },
         { name: <span className="p-semibold">Category</span>, selector: row => row.category, cell: row => <span className="p-regular">{row.category}</span>, sortable: true },
@@ -87,10 +81,7 @@ const RecipientsData = () => {
             name: <span className="p-semibold">Actions</span>,
             cell: row => row.createdBy._id === currentUser.id && (
                 <button
-                    onClick={() => {
-                        setPaymentToDelete(row._id);
-                        setIsDeleteModalOpen(true);
-                    }}
+                    onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
                     className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer"
                 >
                     <Trash2 size={18} />
@@ -102,38 +93,46 @@ const RecipientsData = () => {
     if (isLoadingPayments) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading Payments...</div>;
 
     return (
-        <div className="w-full px-6 py-6 bg-[#F6F9FC]">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
+
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div className="flex items-center gap-2">
                     <button onClick={() => navigate("/recipients")} className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-300 cursor-pointer">
                         <ArrowLeft size={18} />
                     </button>
                     <h2 className="text-2xl p-bold text-[#6667DD]">Shared Payment Details</h2>
                 </div>
-                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-5 py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer">
+                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 sm:px-5 py-2 sm:py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer">
                     <Plus size={18} /> Add Payment
                 </button>
             </div>
 
-            {/* DataTable */}
-            <DataTable
-                columns={columns}
-                data={payments}
-                pagination
-                highlightOnHover
-                striped
-                customStyles={{ headCells: { style: { fontSize: "14px", fontWeight: "600" } }, cells: { style: { fontSize: "14px", fontWeight: "400" } } }}
-                noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
-            />
+            {/* DataTable with horizontal scroll */}
+            <div className="overflow-x-auto">
+                <DataTable
+                    columns={columns}
+                    data={payments}
+                    pagination
+                    highlightOnHover
+                    striped
+                    customStyles={{
+                        headCells: { style: { fontSize: "14px", fontWeight: "600" } },
+                        cells: { style: { fontSize: "14px", fontWeight: "400" } }
+                    }}
+                    noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
+                />
+            </div>
 
             {/* Add Payment Modal */}
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl sm:max-w-2xl px-4 py-6 sm:p-6 relative overflow-y-auto max-h-[90vh]">
                         <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"><X size={22} /></button>
                         <h3 className="text-xl p-semibold text-[#6667DD] mb-4">Add New Payment</h3>
-                        <div className="flex gap-4 mb-4">
+
+                        {/* Form Inputs responsive */}
+                        <div className="flex flex-col sm:flex-row gap-4 mb-4">
                             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Payment Title" className="flex-1 outline-none rounded-lg px-3 py-2 p-regular border-2 border-[#6667DD]" />
                             <select value={category} onChange={(e) => setCategory(e.target.value)} className="flex-1 rounded-lg px-3 py-2 border-2 border-[#6667DD] p-regular cursor-pointer outline-none">
                                 <option value="">Select Category</option>
@@ -143,7 +142,8 @@ const RecipientsData = () => {
                                 <option value="Friends">Friends</option>
                             </select>
                         </div>
-                        <div className="flex gap-4 mb-4">
+
+                        <div className="flex flex-col sm:flex-row gap-4 mb-4">
                             <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="flex-1 rounded-lg px-3 py-2 border-2 border-[#6667DD] cursor-pointer outline-none p-regular">
                                 <option value="USD">$ USD</option>
                                 <option value="PKR">₨ PKR</option>
@@ -151,11 +151,13 @@ const RecipientsData = () => {
                             </select>
                             <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" className="flex-1 p-regular outline-none rounded-lg px-3 py-2 border-2 border-[#6667DD]" />
                         </div>
-                        <div className="flex gap-4 mb-4">
+
+                        <div className="flex flex-col sm:flex-row gap-4 mb-4">
                             <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Paid" />
                             <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Request" />
                             <StatusButton currentStatus={status} onSelectStatus={setStatus} statusName="Pending" />
                         </div>
+
                         <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#6667DD] rounded-lg cursor-pointer hover:bg-gray-100 transition mb-4">
                             <Upload size={24} className="mb-2 text-gray-600" />
                             <span className="text-gray-600 p-regular">{imagePreview ? "Image Selected ✅" : "Upload Image (optional)"}</span>
@@ -167,6 +169,7 @@ const RecipientsData = () => {
                                 }
                             }} />
                         </label>
+
                         <button onClick={handleAddPayment} disabled={isAddingPayment} className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAddingPayment ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}>
                             {isAddingPayment ? "Adding..." : "Add Payment"}
                         </button>
@@ -176,46 +179,30 @@ const RecipientsData = () => {
 
             {/* Image Preview Modal */}
             {selectedImage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs" onClick={() => setSelectedImage(null)}>
-                    <img src={selectedImage} alt="Full View" className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4" onClick={() => setSelectedImage(null)}>
+                    <img src={selectedImage} alt="Full View" className="max-w-full sm:max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20" />
                 </div>
             )}
 
             {/* Delete Modal */}
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
-                        <X
-                            size={20}
-                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"
-                            onClick={() => setIsDeleteModalOpen(false)}
-                        />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-4 sm:p-6 text-center relative animate-scaleUp border border-gray-300">
+                        <X size={20} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300" onClick={() => setIsDeleteModalOpen(false)} />
                         <div className="p-3 bg-red-200 rounded-full mx-auto w-fit mb-3">
                             <Trash2 size={20} className="text-red-500" />
                         </div>
                         <h2 className="text-lg p-semibold text-gray-800 mb-2">Are you sure?</h2>
-                        <p className="text-gray-600 mb-6 p-regular text-sm">
-                            Do you really want to delete this payment? This action cannot be undone.
-                        </p>
-                        <div className="flex justify-center gap-3">
-                            <button
-                                onClick={() => setIsDeleteModalOpen(false)}
-                                className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => deletePaymentMutate(paymentToDelete)}
-                                disabled={isDeleting}
-                                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular"
-                            >
+                        <p className="text-gray-600 mb-6 p-regular text-sm">Do you really want to delete this payment? This action cannot be undone.</p>
+                        <div className="flex flex-col sm:flex-row justify-center gap-3">
+                            <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 cursor-pointer outline-none text-sm text-gray-700 p-regular">Cancel</button>
+                            <button onClick={() => deletePaymentMutate(paymentToDelete)} disabled={isDeleting} className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-all duration-300 cursor-pointer outline-none text-sm p-regular">
                                 {isDeleting ? "Deleting..." : "Delete"}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-
         </div>
     );
 };
@@ -231,15 +218,7 @@ const StatusBadge = ({ status }) => (
 const StatusButton = ({ currentStatus, onSelectStatus, statusName }) => {
     const isSelected = currentStatus === statusName;
     return (
-        <button
-            onClick={() => onSelectStatus(statusName)}
-            className={`flex-1 cursor-pointer py-2 rounded-lg border-2 p-medium transition-all duration-300`}
-            style={{
-                backgroundColor: isSelected ? selectedColors[statusName] : statusColors[statusName],
-                color: isSelected ? "#fff" : "#000",
-                borderColor: statusColors[statusName]
-            }}
-        >
+        <button onClick={() => onSelectStatus(statusName)} className={`flex-1 cursor-pointer py-2 rounded-lg border-2 p-medium transition-all duration-300`} style={{ backgroundColor: isSelected ? selectedColors[statusName] : statusColors[statusName], color: isSelected ? "#fff" : "#000", borderColor: statusColors[statusName] }}>
             {statusName}
         </button>
     );
