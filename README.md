@@ -1,134 +1,145 @@
-# 💻 FINANCE-APP-BACKEND
+# 💰 FINANCE-APP
 
-**FINANCE-APP-BACKEND** is the secure, reliable, and feature-rich backend service powering the FINANCE-APP frontend dashboard and upcoming mobile app.  
-It handles authentication, payment scheduling, transactions, email reminders, file uploads, and user management with a modular and maintainable architecture.
+**FINANCE-APP** is a modern **Finance Manager Web Platform** designed for secure, seamless, and efficient financial management.  
+A **mobile application** built with **React Native** will be released soon for users on the go.  
 
----
+The project leverages **React 19 + Tailwind CSS 4** and modern libraries to provide a sleek, responsive, and interactive **dashboard system**.  
+The backend is powered by **Node.js, Express, and MongoDB**, ensuring speed, scalability, and reliability.  
 
-## ✨ About the Project
-
-This backend is built using **Node.js and Express** and follows the **MVC (Model-View-Controller)** pattern for clean separation of concerns.  
-It acts as the central API for the FINANCE-APP, managing all server-side business logic, database interactions, secure communication, and integration with external services.
-
-Key functionalities include:  
-- **User Authentication & Authorization** using JWT and middleware (`authMiddleware.js`)  
-- **Payment & Transaction Management** including scheduling, categorization, and reminders (`transactionController.js`, `schedulePayment.js`)  
-- **Automated Email Notifications** using Nodemailer (`reminderMailer.js`, `inviteUser.js`)  
-- **File Upload Handling** via Multer & Cloudinary for images (`cloudinary.js`, `multer.js`)  
-- **Scheduled Tasks** with Node-Cron for recurring reminders (`cron.js`)  
-- **Secure & Scalable Architecture** with Helmet, CORS, and dotenv for environment configuration  
-
-This backend ensures all operations are **secure, fast, and consistent** with the frontend dashboard and future mobile applications.
+Users can **create accounts, log in securely, manage payments, transactions, reminders, and collaborations** from a beautifully designed, real-time dashboard.  
 
 ---
 
-## 🚀 Key Features
+## ✨ Key Features
 
-* **🔐 Secure Authentication & Authorization**  
-  - JWT-based authentication to protect routes.  
-  - Role-Based Access Control for admin and regular users.  
-  - Passwords securely hashed with **bcryptjs**.  
+### 👤 User Dashboards
+- Personalized and responsive dashboards for **dynamic financial insights**.  
+- Interactive charts using **Recharts, React-ChartJS-2, Nivo (Pie & Radial Bar)**.  
+- Real-time updates powered by **TanStack Query** and **Socket.io**.  
+- TanStack handles **smart caching**, **auto refetching**, and **data synchronization**.
+- Socket.io delivers **instant updates** for payments, transactions, and user activities.
 
-* **👤 User Management**  
-  - CRUD operations for users (`userController.js`, `CRUD Users.js`).  
-  - Invite users to collaborate on payments or dashboards.  
-  - Admin dashboard support for full user oversight.
+### 💳 Payment Management
+- Add and track payments with statuses: **Completed, Pending, Processing, or Custom**.  
+- Schedule payments with **date & time reminders**.  
+- Automated email reminders via **Nodemailer**.  
+- Real-time synchronization using **Socket.io** for instant dashboard updates.
 
-* **💳 Payments & Transactions**  
-  - Add, track, schedule, and categorize payments.  
-  - Real-time tracking via APIs for the frontend dashboard.  
-  - Users can create shared transactions with multiple contributors.
+### 💱 Transactions
+- Categorized transactions management.  
+- Modern, interactive tables using **React Data Table Component**.  
+- Always synced with backend updates via **TanStack Query** and WebSocket events.  
 
-* **📧 Email Services**  
-  - Send reminders, notifications, and invitations via **Nodemailer**.  
-  - Scheduled email sending using **node-cron**.  
-  - Template-based emails for clarity and professional appearance.
+### 📧 Reminders & Notifications
+- Send reminders to specific users via email.  
+- Keep business partners or team members aligned on deadlines.  
+- Real-time UI updates when reminders are sent or payments are updated.
 
-* **🖼️ Cloud-Based File Handling**  
-  - File uploads for attachments/images handled via **Multer** and **Cloudinary**.  
-  - Secure storage, optimized image delivery, and organized folders.  
-  - Supports dynamic image and media content for transactions and user profiles.
+### 🤝 Collaborative Payments
+- Invite users or business partners to contribute to payments.  
+- Manage participants via **Users** and **Recipients** menus.  
+- Create shared categories for group payments.  
+- Automatic **email + real-time Socket notifications** for all participants.
 
-* **🕒 Scheduled Tasks & Reminders**  
-  - Cron jobs automate sending payment reminders and notifications.  
-  - Ensures users and collaborators are alerted in a timely manner.
+### 🔐 Authentication & Security
+- Finance apps require **robust security** — FINANCE-APP ensures data protection and safe authentication.  
+- Secure login/registration using:  
+  - **JWT (JSON Web Tokens)** for authentication.  
+  - **bcrypt** for password hashing.  
+  - **Role-Based Access Control (RBAC)** for Admin and User privileges.  
+  - **Secure cookies & HTTPS** for encrypted communication.  
+- Guarantees credentials, transactions, and records remain **private and tamper-proof**.
 
-* **🔀 RESTful API Design**  
-  - Well-structured endpoints for all frontend interactions.  
-  - Consistent and modular route grouping (users, payments, transactions, reminders, shares).  
-  - Middleware ensures secure, authenticated access.
+### 🧠 TanStack Query Integration
+- All asynchronous requests are managed using **TanStack Query** (React Query).  
+- Ensures **real-time synchronization** between client and server with **minimal API calls**.  
+- Handles background refetching, caching, and automatic data invalidation for smoother UX.  
+- Custom hooks inside the `/hooks` folder make logic **reusable**, **clean**, and **scalable** —  
+  for example:
+  - `useFetchPayments.js`  
+  - `useAddTransaction.js`  
+  - `useInviteUser.js`  
+  - `useDeleteUser.js`  
+  - `useRealTimeUpdates.js` (via Socket.io)  
+
+### ⚡ Real-Time Updates (Socket.io)
+- **Socket.io** ensures all users see **instant changes** (no refresh needed).  
+- Used for:
+  - Payment creation/deletion.
+  - Transaction updates.
+  - Shared user collaboration.
+  - Live notifications.
+- Makes the dashboard feel **interactive and modern** just like a live finance tracking app.
+
+### 📞 Contact & Support
+- Built-in **Contact Us form** for queries, bug reports, or feedback.  
+- Direct support channel for timely issue resolution.
 
 ---
 
-## 🛠️ Technologies & Libraries Used
+## 🛠️ Tech Stack
 
-### Core Stack
-- **Node.js:** Fast and scalable server-side runtime.  
-- **Express.js:** Minimalist and flexible backend framework.  
-- **MongoDB:** NoSQL database for storing user, payment, and transaction data.  
-- **Mongoose:** ODM for schema validation, relationships, and database operations.
+### Core
+- **Frontend**: React 19, Tailwind CSS 4 (`@tailwindcss/vite`)  
+- **Backend**: Node.js, Express, MongoDB  
+- **Mobile (upcoming)**: React Native  
 
-### Security & Middleware
-- **bcryptjs:** Hashing passwords for secure storage.  
-- **jsonwebtoken (JWT):** Secure token-based authentication.  
-- **helmet:** Adds HTTP headers to enhance security.  
-- **cors:** Cross-Origin Resource Sharing configuration.  
-- **cookie-parser:** Parse cookies for session management.
-
-### File Upload & Cloud Storage
-- **multer & multer-storage-cloudinary:** Handles file uploads and stores in Cloudinary.  
-- **cloudinary:** Cloud-based media storage with optimized delivery.
-
-### Scheduling & Email
-- **node-cron:** Schedule recurring jobs for reminders.  
-- **nodemailer:** Send automated emails for reminders and invitations.
-
-### Utilities
-- **dotenv:** Manage environment variables securely.  
-- **nodemon:** Dev dependency for live server reloading.
+### Libraries & Tools
+- **UI & Styling**: Tailwind CSS, Lucide-React, React Icons  
+- **Charts & Visualization**: Recharts, React-ChartJS-2, @nivo/pie, @nivo/radial-bar  
+- **Animations**: Framer Motion  
+- **Forms & Inputs**: React Datepicker  
+- **Tables**: React Data Table Component  
+- **State & Data Management**: TanStack Query, React Context API  
+- **Real-Time Communication**: Socket.io  
+- **Routing**: React Router DOM  
+- **Utilities**: Axios, Sonner (toast notifications)  
+- **Communication**: Nodemailer  
 
 ---
 
 ## 📂 Project Structure
 
 ```
-FINANCE-APP-BACKEND/
+FINANCE-APP/
 |
-├── config/              # Configuration files (DB, Cloudinary, Mailer)
-│   ├── cloudinary.js
-│   ├── cron.js
-│   ├── db.js
-│   ├── mailer.js
-│   └── multer.js
-├── controllers/         # Business logic for handling requests
-├── middlewares/         # Middleware functions (e.g., authentication)
-├── models/              # Mongoose schemas for MongoDB
-├── routes/              # API route definitions
-├── uploads/             # Directory for temporary file uploads
+├── public/              # Static assets available to the browser
+├── src/
+│   ├── assets/          # Images, icons, and other media
+│   ├── components/      # Reusable UI components (e.g., Sidebar, Hero)
+│   ├── hooks/           # Making Business Logic & Ui Logic Seperate via TanStack
+│   ├── context/         # Global state management (AppContext.jsx)
+│   ├── routes/          # Application routing configuration
+│   ├── screens/         # Top-level screen components (Dashboards)
+│   ├── App.jsx          # Main application component and router setup
+│   └── main.jsx         # Application's primary entry point
 |
-├── .env                 # Environment variables
-├── .gitignore           # Git ignore file
-├── app.js               # Main application entry point and Express server setup
-└── package.json         # Project dependencies and scripts
+├── .env                 # Environment variables configuration
+├── .gitignore           # Specifies intentionally untracked files
+├── index.html           # The main HTML template for Vite
+├── package.json         # Project metadata and dependencies
+└── vite.config.js       # Vite build and server configuration
 ```
 
 ---
 
-## 🖥️ Backend Flow (Integration with Frontend)
+## 🖥️ Usage Flow
 
-1. **User Authentication** → Client logs in/registers → Backend verifies credentials → Returns JWT token.  
-2. **Dashboard Data Fetch** → Frontend requests user dashboard → Backend sends real-time payments, transactions, and chart data from MongoDB.  
-3. **Payments & Transactions** → Users create or update payments → Backend saves to database → Sends confirmation & updates shared users.  
-4. **Email Notifications** → Scheduled or triggered emails (reminders, invites) sent via Nodemailer & cron jobs.  
-5. **File Uploads** → Users upload images → Multer temporarily stores → Cloudinary uploads → Returns URL to frontend.  
-6. **Shared/Collaborative Payments** → Backend manages invited users, recipients, and shared transactions → Sends real-time updates to collaborators.  
-7. **Admin Controls** → Admin API routes allow managing users, monitoring transactions, and overseeing the platform.
+1. 🔑 **User Authentication** → Register/Login securely with encrypted credentials.  
+2. 📊 **Dashboard Access** → View charts, tables, and real-time financial data.  
+3. 💳 **Manage Payments** → Add, track, and schedule payments with reminders.  
+4. 🔔 **Notifications** → Receive automated email and live Socket alerts.  
+5. 💱 **Transactions** → Add categorized transactions with instant updates.  
+6. 🤝 **Collaboration** → Invite users, manage group payments, and share dashboards.  
+7. 📧 **Reminders** → Send emails for specific payment/transaction cases.  
+8. ⚡ **Live Sync** → Dashboard auto-refreshes via **TanStack Query** & **Socket.io**.  
+9. 📞 **Support** → Contact management for queries, bugs, or issues.  
 
 ---
 
 ## 📬 Contact
 
-For any queries, suggestions, or issues regarding the backend, reach out:  
+For any queries, suggestions, or issues, feel free to reach out:  
 
 📧 **Email**: annasking601@gmail.com  
 🌐 **Project Link**: [FINANCE-APP](https://finance-manage-kappa.vercel.app/)
