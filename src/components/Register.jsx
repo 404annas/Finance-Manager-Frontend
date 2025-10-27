@@ -1,54 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppContext } from '../../context/AppContext';
+import { EyeOff, Eye } from 'lucide-react';
+import { Formik, Form, Field } from 'formik';
 
 const Register = () => {
     const { setUser } = useAppContext();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
-    const [formData, setFormData] = useState({
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const API_URL = import.meta.env.VITE_API_URL;
+
+    const initialValues = {
         file: null,
         name: '',
         email: '',
         password: '',
         inviteToken: '',
-    });
-
-    const [loading, setLoading] = useState(false);
-    const API_URL = import.meta.env.VITE_API_URL;
+    };
 
     useEffect(() => {
         const tokenFromUrl = searchParams.get('token');
         if (tokenFromUrl) {
-            setFormData(prevData => ({
-                ...prevData,
-                inviteToken: tokenFromUrl,
-            }));
+            initialValues.inviteToken = tokenFromUrl;
         }
     }, [searchParams]);
 
-    const handleChange = (e) => {
-        const { name, value, files } = e.target;
-        setFormData({
-            ...formData,
-            [name]: files ? files[0] : value,
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (values) => {
         setLoading(true);
         try {
             const form = new FormData();
-            form.append("file", formData.file);
-            form.append("name", formData.name);
-            form.append("email", formData.email);
-            form.append("password", formData.password);
-            if (formData.inviteToken) {
-                form.append("token", formData.inviteToken);
-            }
+            if (values.file) form.append("file", values.file);
+            form.append("name", values.name);
+            form.append("email", values.email);
+            form.append("password", values.password);
+            if (values.inviteToken) form.append("token", values.inviteToken);
 
             const res = await fetch(`${API_URL}/api/register`, {
                 method: "POST",
@@ -63,13 +53,8 @@ const Register = () => {
             } else {
                 toast.success(data.message || "Registered successfully!");
                 setUser(data.user);
-
-                // *** ADD THIS PART ***
-                // Save the user and token to localStorage
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("token", data.token);
-
-                setFormData({ file: null, name: "", email: "", password: "", inviteToken: "" });
                 navigate("/");
             }
         } catch (error) {
@@ -95,78 +80,104 @@ const Register = () => {
                     Register into FinSync
                 </h1>
 
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    <div className="flex flex-col">
-                        <label className="text-gray-700 p-medium mb-1">
-                            Profile Picture <span className="text-[#6667DD]">(Optional)</span>
-                        </label>
-                        <input
-                            type="file"
-                            name="file"
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
-                        />
-                    </div>
+                <Formik
+                    initialValues={initialValues}
+                    validate={values => {
+                        const errors = {};
+                        if (!values.name) errors.name = "Name is required";
+                        if (!values.email) errors.email = "Email is required";
+                        else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email))
+                            errors.email = "Invalid email address";
+                        if (!values.password) errors.password = "Password is required";
+                        return errors;
+                    }}
+                    onSubmit={handleSubmit}
+                >
+                    {({ values, setFieldValue, handleChange, errors, touched }) => (
+                        <Form className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="flex flex-col">
+                                <label className="text-gray-700 p-medium mb-1">
+                                    Profile Picture <span className="text-[#6667DD]">(Optional)</span>
+                                </label>
+                                <input
+                                    type="file"
+                                    name="file"
+                                    onChange={e => setFieldValue("file", e.currentTarget.files[0])}
+                                    disabled={loading}
+                                    className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
+                                />
+                            </div>
 
-                    <div className="flex flex-col">
-                        <label className="text-gray-700 p-medium mb-1">Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            placeholder="Enter your full name"
-                            required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
-                        />
-                    </div>
+                            <div className="flex flex-col">
+                                <label className="text-gray-700 p-medium mb-1">Name</label>
+                                <Field
+                                    type="text"
+                                    name="name"
+                                    value={values.name}
+                                    onChange={handleChange}
+                                    placeholder="Enter your full name"
+                                    disabled={loading}
+                                    className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.name && touched.name ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                />
+                                {errors.name && touched.name && <div className="text-red-500 text-sm mt-1 transition-opacity duration-300">{errors.name}</div>}
+                            </div>
 
-                    <div className="flex flex-col">
-                        <label className="text-gray-700 p-medium mb-1">Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="Enter your email"
-                            required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
-                        />
-                    </div>
+                            <div className="flex flex-col">
+                                <label className="text-gray-700 p-medium mb-1">Email</label>
+                                <Field
+                                    type="email"
+                                    name="email"
+                                    value={values.email}
+                                    onChange={handleChange}
+                                    placeholder="Enter your email"
+                                    disabled={loading}
+                                    className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                />
+                                {errors.email && touched.email && <div className="text-red-500 text-sm mt-1 transition-opacity duration-300">{errors.email}</div>}
+                            </div>
 
-                    <div className="flex flex-col">
-                        <label className="text-gray-700 p-medium mb-1">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Enter your password"
-                            required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
-                        />
-                    </div>
+                            <div className="flex flex-col relative">
+                                <label className="text-gray-700 p-medium mb-1">Password</label>
+                                <Field
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={values.password}
+                                    onChange={handleChange}
+                                    placeholder="Enter your password"
+                                    disabled={loading}
+                                    className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base pr-10 ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                />
+                                {errors.password && touched.password && <div className="text-red-500 text-sm mt-1 transition-opacity duration-300">{errors.password}</div>}
+                                <div
+                                    className="absolute right-3 top-9.5 cursor-pointer text-gray-600 hover:text-[#6667DD] transition-all duration-300"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                </div>
+                            </div>
 
-                    <div className="w-full md:col-span-2">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`w-full bg-[#6667DD] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 mt-2 p-regular text-sm sm:text-base
-              ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
-                        >
-                            {loading ? "Creating..." : "Create Account"}
-                        </button>
-                    </div>
+                            <div className="w-full md:col-span-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className={`w-full bg-[#6667DD] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 mt-2 p-regular text-sm sm:text-base
+                                        ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
+                                >
+                                    {loading ? "Creating..." : "Create Account"}
+                                </button>
+                            </div>
 
-                    <div className="md:col-span-2 text-center mt-3">
-                        <p className="text-gray-600 p-regular text-sm sm:text-base">
-                            Already have an account?{' '}
-                            <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
-                                Login Now
-                            </Link>
-                        </p>
-                    </div>
-                </form>
+                            <div className="md:col-span-2 text-center mt-3">
+                                <p className="text-gray-600 p-regular text-sm sm:text-base">
+                                    Already have an account?{' '}
+                                    <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
+                                        Login Now
+                                    </Link>
+                                </p>
+                            </div>
+                        </Form>
+                    )}
+                </Formik>
             </div>
 
             {/* Animation Styles */}

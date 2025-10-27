@@ -1,36 +1,26 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppContext } from '../../context/AppContext';
+import { EyeOff, Eye } from 'lucide-react';
+import { Formik, Form, Field } from 'formik';
 
 const Login = () => {
     const { user, setUser } = useAppContext();
     const navigate = useNavigate();
     const API_URL = import.meta.env.VITE_API_URL;
 
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
-
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [loggedIn, setLoggedIn] = useState(false);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (values) => {
         setLoading(true);
         try {
             const res = await fetch(`${API_URL}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(values),
                 credentials: "include",
             });
 
@@ -44,7 +34,7 @@ const Login = () => {
                 setUser(data.user);
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("token", data.token);
-                setFormData({ email: "", password: "" });
+                setLoggedIn(true);
             }
         } catch (error) {
             toast.error(error.message || "Invalid Credentials!");
@@ -72,42 +62,77 @@ const Login = () => {
 
                 <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <div className="flex flex-col">
-                        <label className="text-gray-700 p-medium mb-1">Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="Enter your email"
-                            required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
-                        />
-                    </div>
+                <Formik
+                    initialValues={{ email: '', password: '' }}
+                    validate={values => {
+                        const errors = {};
+                        if (!values.email) {
+                            errors.email = "Email is required";
+                        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                            errors.email = "Invalid email address";
+                        }
+                        if (!values.password) {
+                            errors.password = "Password is required";
+                        }
+                        return errors;
+                    }}
+                    onSubmit={handleSubmit}
+                >
+                    {({ values, handleChange, errors, touched }) => (
+                        <Form className="flex flex-col gap-4">
+                            <div className="flex flex-col">
+                                <label className="text-gray-700 p-medium mb-1">Email</label>
+                                <Field
+                                    type="email"
+                                    name="email"
+                                    value={values.email}
+                                    onChange={handleChange}
+                                    placeholder="Enter your email"
+                                    disabled={loading || loggedIn}
+                                    className={`w-full px-3 py-2 rounded-lg outline-none p-regular text-sm sm:text-base
+                                        border
+                                        ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                />
+                                {errors.email && touched.email && (
+                                    <div className="text-red-500 text-sm mt-1 transition-opacity duration-300 opacity-100">{errors.email}</div>
+                                )}
+                            </div>
 
-                    <div className="flex flex-col">
-                        <label className="text-gray-700 p-medium mb-1">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Enter your password"
-                            required
-                            className="w-full px-3 py-2 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base"
-                        />
-                    </div>
+                            <div className="flex flex-col relative">
+                                <label className="text-gray-700 p-medium mb-1">Password</label>
+                                <Field
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={values.password}
+                                    onChange={handleChange}
+                                    placeholder="Enter your password"
+                                    disabled={loading || loggedIn}
+                                    className={`w-full px-3 py-2 rounded-lg outline-none p-regular text-sm sm:text-base pr-10
+                                        border
+                                        ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                />
+                                {errors.password && touched.password && (
+                                    <div className="text-red-500 text-sm mt-1 transition-opacity duration-300 opacity-100">{errors.password}</div>
+                                )}
+                                <div
+                                    className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD] transition"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                </div>
+                            </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full bg-[#6667DD] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
-                        ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
-                    >
-                        {loading ? "Logging..." : "Login"}
-                    </button>
-                </form>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={`w-full bg-[#6667DD] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
+                                ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
+                            >
+                                {loading ? "Logging..." : "Login"}
+                            </button>
+                        </Form>
+                    )}
+                </Formik>
 
                 <p className="text-center text-gray-600 mt-4 p-regular text-sm sm:text-base">
                     Account not exists?{' '}
