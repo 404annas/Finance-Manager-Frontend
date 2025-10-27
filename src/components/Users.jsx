@@ -138,7 +138,7 @@ const Users = () => {
                                         setIsDeleteModalOpen(true);
                                     }}
                                     disabled={isDeletingUser}
-                                    className={`p-medium flex items-center justify-center sm:justify-start gap-2 px-3 py-2 rounded-md transition-all duration-300 text-sm cursor-pointer ${isDeletingUser
+                                    className={`p-medium flex items-center justify-center sm:justify-start gap-2 px-3 py-2 rounded-md transition-all duration-300 text-sm sm:text-base cursor-pointer ${isDeletingUser
                                         ? "hover:cursor-not-allowed text-gray-400"
                                         : "text-red-600 hover:text-red-700 underline"
                                         }`}

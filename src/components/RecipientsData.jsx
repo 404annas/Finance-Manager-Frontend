@@ -58,7 +58,7 @@ const RecipientsData = () => {
 
     const handleAddPayment = () => {
         if (!title || !category || !currency || !amount || !status) {
-            return toast.error("Please fill all required fields!");
+            return toast.error("Please fill all fields!");
         }
         const paymentFormData = new FormData();
         paymentFormData.append("title", title);
@@ -90,7 +90,7 @@ const RecipientsData = () => {
         },
     ];
 
-    if (isLoadingPayments) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading Payments...</div>;
+    // if (isLoadingPayments) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading Payments...</div>;
 
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
@@ -115,18 +115,26 @@ const RecipientsData = () => {
 
             {/* DataTable with horizontal scroll */}
             <div className="overflow-x-auto">
-                <DataTable
-                    columns={columns}
-                    data={payments}
-                    pagination
-                    highlightOnHover
-                    striped
-                    customStyles={{
-                        headCells: { style: { fontSize: "14px", fontWeight: "600" } },
-                        cells: { style: { fontSize: "14px", fontWeight: "400" } }
-                    }}
-                    noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
-                />
+                {isLoadingPayments ? (
+                    <div className="space-y-2 py-2">
+                        {[...Array(2)].map((_, idx) => (
+                            <div key={idx} className="h-10 grid grid-cols-7 gap-4 bg-gray-200 rounded animate-pulse w-full px-4"></div>
+                        ))}
+                    </div>
+                ) : (
+                    <DataTable
+                        columns={columns}
+                        data={payments}
+                        pagination
+                        highlightOnHover
+                        striped
+                        customStyles={{
+                            headCells: { style: { fontSize: "14px", fontWeight: "600" } },
+                            cells: { style: { fontSize: "14px", fontWeight: "400" } }
+                        }}
+                        noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
+                    />
+                )}
             </div>
 
             {/* Add Payment Modal */}
