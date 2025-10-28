@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-env
+.env
 code-to-txt.py
 combined_project_code.txt
 
