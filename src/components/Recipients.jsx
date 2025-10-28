@@ -81,7 +81,35 @@ const Recipients = () => {
     };
 
     if (isLoadingShares || isLoadingRecipients) {
-        return <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">Loading...</div>;
+        return (
+            <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="flex justify-between items-center gap-4">
+                    <div className="h-6 w-48 bg-gray-300 rounded"></div>
+                    <div className="h-10 w-32 bg-gray-300 rounded-full md:block hidden"></div>
+                </div>
+
+                {/* Shared By Me Title Skeleton */}
+                <div className="h-5 w-32 bg-gray-300 rounded mt-4"></div>
+
+                {/* Shared By Me Cards Skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                    {Array.from({ length: 2 }).map((_, idx) => (
+                        <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
+                    ))}
+                </div>
+
+                {/* Shared With Me Title Skeleton */}
+                <div className="h-5 w-32 bg-gray-300 rounded mt-6"></div>
+
+                {/* Shared With Me Cards Skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                    {Array.from({ length: 2 }).map((_, idx) => (
+                        <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     const CardGrid = ({ cards, showDelete }) => (
