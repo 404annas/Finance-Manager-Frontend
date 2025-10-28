@@ -95,7 +95,7 @@ const Transactions = () => {
   const handleAddTransaction = (e) => {
     e.preventDefault();
     if (!formData.title || !formData.amount || !formData.category) {
-      return toast.error("Title, amount and category are required.");
+      return toast.error("Please fill in all fields.");
     }
     const body = new FormData();
     Object.keys(formData).forEach((key) => {
@@ -189,14 +189,12 @@ const Transactions = () => {
                   type="text"
                   name="title"
                   placeholder="Transaction Title"
-                  required
                   value={formData.title}
                   onChange={handleChange}
                   className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular"
                 />
                 <select
                   name="category"
-                  required
                   value={formData.category}
                   onChange={handleChange}
                   className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular cursor-pointer"
@@ -227,7 +225,6 @@ const Transactions = () => {
                   type="number"
                   name="amount"
                   placeholder="Amount"
-                  required
                   value={formData.amount}
                   onChange={handleChange}
                   className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD]"

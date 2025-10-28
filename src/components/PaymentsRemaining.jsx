@@ -64,7 +64,7 @@ const PaymentsRemaining = () => {
 
     const handleSchedule = () => {
         if (!selectedDate || !title || !message)
-            return toast.error("Please fill all fields");
+            return toast.error("Please fill in all fields");
         addScheduleMutate({ title, message, scheduledDate: selectedDate });
     };
 

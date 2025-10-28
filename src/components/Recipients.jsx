@@ -4,6 +4,8 @@ import { Share2, X, Trash2, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchShares, createShare, deleteShare, fetchRecipients } from "../hooks/shares";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 
 const Recipients = () => {
     const navigate = useNavigate();
@@ -15,9 +17,6 @@ const Recipients = () => {
     const [selectedDeleteId, setSelectedDeleteId] = useState(null);
 
     const [selectedUserIds, setSelectedUserIds] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState("");
-    const [title, setTitle] = useState("");
-
     const categories = ["Personal", "Business", "Family", "Friends", "Loan", "Other"];
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -57,12 +56,20 @@ const Recipients = () => {
         onError: (err) => toast.error(err.response?.data?.message || "Failed to delete."),
     });
 
-    const handleShare = () => {
-        if (!title || !selectedCategory || selectedUserIds.length === 0) {
-            return toast.error("Please fill all fields and select at least one user!");
-        }
-        createShareMutate({ title, category: selectedCategory, sharedWith: selectedUserIds });
+    const toggleUser = (userId) => setSelectedUserIds(prev =>
+        prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+
+    const resetAndCloseModal = () => {
+        setIsOpen(false);
+        setSelectedUserIds([]);
     };
+
+    const { sharedByMe, sharedWithMe } = useMemo(() => {
+        const byMe = sharedCards.filter(card => card.sharedBy._id === currentUser.id);
+        const withMe = sharedCards.filter(card => card.sharedBy._id !== currentUser.id);
+        return { sharedByMe: byMe, sharedWithMe: withMe };
+    }, [sharedCards, currentUser.id]);
 
     const confirmDeleteShare = (shareId) => {
         setSelectedDeleteId(shareId);
@@ -73,52 +80,8 @@ const Recipients = () => {
         deleteShareMutate(selectedDeleteId);
     };
 
-    const { sharedByMe, sharedWithMe } = useMemo(() => {
-        const byMe = sharedCards.filter(card => card.sharedBy._id === currentUser.id);
-        const withMe = sharedCards.filter(card => card.sharedBy._id !== currentUser.id);
-        return { sharedByMe: byMe, sharedWithMe: withMe };
-    }, [sharedCards, currentUser.id]);
-
-    const toggleUser = (userId) => setSelectedUserIds(prev =>
-        prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    );
-    const resetAndCloseModal = () => {
-        setIsOpen(false);
-        setTitle("");
-        setSelectedCategory("");
-        setSelectedUserIds([]);
-    };
-
     if (isLoadingShares || isLoadingRecipients) {
-        return (
-            <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">
-                {/* Header Skeleton */}
-                <div className="flex justify-between items-center gap-4">
-                    <div className="h-6 w-48 bg-gray-300 rounded"></div>
-                    <div className="h-10 w-32 bg-gray-300 rounded-full md:block hidden"></div>
-                </div>
-
-                {/* Shared By Me Title Skeleton */}
-                <div className="h-5 w-32 bg-gray-300 rounded mt-4"></div>
-
-                {/* Shared By Me Cards Skeleton */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                    {Array.from({ length: 2 }).map((_, idx) => (
-                        <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
-                    ))}
-                </div>
-
-                {/* Shared With Me Title Skeleton */}
-                <div className="h-5 w-32 bg-gray-300 rounded mt-6"></div>
-
-                {/* Shared With Me Cards Skeleton */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                    {Array.from({ length: 2 }).map((_, idx) => (
-                        <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
-                    ))}
-                </div>
-            </div>
-        );
+        return <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">Loading...</div>;
     }
 
     const CardGrid = ({ cards, showDelete }) => (
@@ -150,9 +113,16 @@ const Recipients = () => {
         </div>
     );
 
+    // Formik + Yup for Share Modal
+    const initialValues = { title: "", category: "", sharedWith: [] };
+    const validationSchema = Yup.object({
+        title: Yup.string().required("Title is required"),
+        category: Yup.string().required("Category is required"),
+        sharedWith: Yup.array().min(1, "Select at least one user"),
+    });
+
     return (
         <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC]">
-            {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
                 <h2 className="text-2xl p-bold text-[#6667DD]">Shared Payments</h2>
                 <button
@@ -163,15 +133,13 @@ const Recipients = () => {
                 </button>
             </div>
 
-            {/* Shared By Me */}
             <h3 className="text-xl p-semibold text-gray-800 mb-3">Shared By Me</h3>
             {sharedByMe.length > 0 ? <CardGrid cards={sharedByMe} showDelete={true} /> : <div className="text-center py-6 text-gray-500 p-medium">You haven't shared any payments yet.</div>}
 
-            {/* Shared With Me */}
             <h3 className="text-xl p-semibold text-gray-800 mt-8 mb-3">Shared With Me</h3>
             {sharedWithMe.length > 0 ? <CardGrid cards={sharedWithMe} showDelete={false} /> : <div className="text-center py-6 text-gray-500 p-medium">No payments have been shared with you.</div>}
 
-            {/* Share Modal */}
+            {/* Share Modal with Formik */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                     <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl px-4 py-6 relative">
@@ -182,53 +150,67 @@ const Recipients = () => {
                             <X size={22} />
                         </button>
                         <h3 className="text-xl p-semibold text-[#6667DD] mb-4">Share Payment Details</h3>
-                        <div className="flex flex-col gap-4 sm:flex-row mb-4">
-                            <div className="flex-1">
-                                <label className="block text-sm p-medium text-gray-700 mb-2 uppercase">Title</label>
-                                <input
-                                    type="text"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="e.g., Monthly Rent"
-                                    className="w-full rounded-lg px-3 py-2 outline-none border-2 border-[#6667DD] p-regular"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-sm p-medium text-gray-700 mb-2 uppercase">Category</label>
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="w-full rounded-lg px-3 py-2 outline-none cursor-pointer p-regular border-2 border-[#6667DD]"
-                                >
-                                    <option value="">Select Category</option>
-                                    {categories.map((cat, idx) => (<option key={idx} value={cat}>{cat}</option>))}
-                                </select>
-                            </div>
-                        </div>
 
-                        <label className="block text-sm uppercase p-medium text-gray-700 mb-2">Share With</label>
-                        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto mb-4 border-2 border-[#6667DD] rounded-lg p-3">
-                            {potentialRecipients.length > 0 ? potentialRecipients.map((user) => (
-                                <label key={user._id} className="flex items-center gap-2 cursor-pointer p-regular break-words">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 accent-[#6667DD]"
-                                        checked={selectedUserIds.includes(user._id)}
-                                        onChange={() => toggleUser(user._id)}
-                                    />
-                                    {user.name} ({user.email})
-                                </label>
-                            )) : (<p className="text-gray-500 p-medium">No invited users to share with.</p>)}
-                        </div>
-
-                        <button
-                            onClick={handleShare}
-                            disabled={isSharing}
-                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg shadow-md p-medium transition-all sm:text-base text-sm duration-300 ${isSharing ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}
+                        <Formik
+                            initialValues={initialValues}
+                            validationSchema={validationSchema}
+                            onSubmit={(values) => createShareMutate(values)}
                         >
-                            <UsersRound size={18} />
-                            {isSharing ? "Sharing..." : "Share Now"}
-                        </button>
+                            {({ values, setFieldValue, errors, touched }) => (
+                                <Form className="space-y-4">
+                                    <div className="flex flex-col gap-4 sm:flex-row mb-4">
+                                        <div className="flex-1">
+                                            <Field
+                                                type="text"
+                                                name="title"
+                                                placeholder="Title e.g., Monthly Rent"
+                                                className={`w-full rounded-lg px-3 py-2 outline-none border-2 p-regular ${errors.title && touched.title ? "border-red-500" : "border-[#6667DD]"}`}
+                                            />
+                                            <ErrorMessage name="title" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <Field as="select" name="category" className={`w-full rounded-lg px-3 py-2 outline-none cursor-pointer p-regular border-2 ${errors.category && touched.category ? "border-red-500" : "border-[#6667DD]"}`}>
+                                                <option value="">Select Category</option>
+                                                {categories.map((cat, idx) => (<option key={idx} value={cat}>{cat}</option>))}
+                                            </Field>
+                                            <ErrorMessage name="category" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                                        </div>
+                                    </div>
+
+                                    <label className="block text-sm uppercase p-medium text-gray-700 mb-2">Share With</label>
+                                    <div className={`flex flex-col gap-2 max-h-48 overflow-y-auto mb-4 border-2 rounded-lg p-3 ${errors.sharedWith && touched.sharedWith ? "border-red-500" : "border-[#6667DD]"}`}>
+                                        {potentialRecipients.length > 0 ? potentialRecipients.map((user) => (
+                                            <label key={user._id} className="flex items-center gap-2 cursor-pointer p-regular break-words">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 accent-[#6667DD]"
+                                                    checked={values.sharedWith.includes(user._id)}
+                                                    onChange={() => {
+                                                        if (values.sharedWith.includes(user._id)) {
+                                                            setFieldValue("sharedWith", values.sharedWith.filter(id => id !== user._id));
+                                                        } else {
+                                                            setFieldValue("sharedWith", [...values.sharedWith, user._id]);
+                                                        }
+                                                        toggleUser(user._id);
+                                                    }}
+                                                />
+                                                {user.name} ({user.email})
+                                            </label>
+                                        )) : (<p className="text-gray-500 p-medium">No invited users to share with.</p>)}
+                                        <ErrorMessage name="sharedWith" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSharing}
+                                        className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg shadow-md p-medium transition-all sm:text-base text-sm duration-300 ${isSharing ? "bg-[#999] cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"} text-white`}
+                                    >
+                                        <UsersRound size={18} />
+                                        {isSharing ? "Sharing..." : "Share Now"}
+                                    </button>
+                                </Form>
+                            )}
+                        </Formik>
                     </div>
                 </div>
             )}

@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import DataTable from "react-data-table-component";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchPaymentsForShare, addPaymentToShare, deletePayment } from "../hooks/paymentsShareData";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 
 const RecipientsData = () => {
     const navigate = useNavigate();
@@ -58,7 +60,7 @@ const RecipientsData = () => {
 
     const handleAddPayment = () => {
         if (!title || !category || !currency || !amount || !status) {
-            return toast.error("Please fill all fields!");
+            return toast.error("Please fill in all fields!");
         }
         const paymentFormData = new FormData();
         paymentFormData.append("title", title);
@@ -89,8 +91,6 @@ const RecipientsData = () => {
             )
         },
     ];
-
-    // if (isLoadingPayments) return <div className="p-6 text-center p-medium animate-pulse text-[#6667DD]">Loading Payments...</div>;
 
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
