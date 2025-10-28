@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+env
+code-to-txt.py
+combined_project_code.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
