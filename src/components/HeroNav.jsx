@@ -2,6 +2,7 @@ import React from 'react';
 import { BellDot, LogOut, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
+import NotificationBell from './NotificationBell';
 
 const HeroNav = ({ role }) => {
     const navigate = useNavigate();
@@ -22,9 +23,11 @@ const HeroNav = ({ role }) => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                <button className="bg-purple-100 p-2.5 sm:p-3 rounded-xl hover:bg-purple-200 transition duration-300 cursor-pointer flex-shrink-0">
+                {/* <button className="bg-purple-100 p-2.5 sm:p-3 rounded-xl hover:bg-purple-200 transition duration-300 cursor-pointer flex-shrink-0">
                     <BellDot size={20} className="text-[#6667DD]" />
-                </button>
+                </button> */}
+
+                <NotificationBell />
 
                 {user && (
                     <button onClick={handleLogout} className="bg-gray-100 p-2.5 sm:p-3 rounded-xl hover:bg-gray-200 transition duration-300 cursor-pointer flex-shrink-0">
