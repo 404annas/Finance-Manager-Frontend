@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import io from "socket.io-client";
 
 // Create the context
@@ -21,6 +21,16 @@ export const SocketProvider = ({ children }) => {
             const newSocket = io(import.meta.env.VITE_API_URL, {
                 auth: { token },
             });
+
+            // --- ADD THESE LISTENERS ---
+            newSocket.on("connect", () => {
+                console.log("✅ Socket connected successfully! Socket ID:", newSocket.id);
+            });
+
+            newSocket.on("connect_error", (err) => {
+                console.error("❌ Socket connection error:", err.message);
+            });
+            // --- END OF ADDED LISTENERS ---
 
             setSocket(newSocket);
 

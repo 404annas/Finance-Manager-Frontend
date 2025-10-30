@@ -125,7 +125,7 @@ const Recipients = () => {
                         {showDelete && (
                             <p
                                 onClick={(e) => { e.stopPropagation(); confirmDeleteShare(card._id); }}
-                                className="text-red-500 hover:text-red-700 cursor-pointer transition-all duration-300 p-1"
+                                className="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 rounded-full cursor-pointer transition-all duration-300 p-2"
                             >
                                 <Trash2 size={20} />
                             </p>

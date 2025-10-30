@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Bell } from "lucide-react";
-import { useNotifications } from "../../context/NotificationContext";
+import { Bell, X } from "lucide-react";
+import { useNotifications } from "../hooks/notifications";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns"; // The library we installed
 
 const NotificationBell = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { notifications, unreadCount, markAllAsRead } = useNotifications();
+    const { notifications, unreadCount, markAllAsRead, deleteNotification } = useNotifications();
     const navigate = useNavigate();
 
     const handleToggle = () => {
@@ -24,6 +24,11 @@ const NotificationBell = () => {
             navigate(notification.link); // Navigate to the relevant page
         }
     };
+
+    const handleDelete = (notificationId) => {
+        deleteNotification(notificationId);
+    };
+
 
     return (
         <div className="relative">
@@ -49,13 +54,24 @@ const NotificationBell = () => {
                             notifications.map(n => (
                                 <div
                                     key={n._id}
-                                    onClick={() => handleNotificationClick(n)}
-                                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-200 ${!n.read ? 'bg-blue-50' : ''}`}
+                                    className={`p-3 border-b border-gray-100 hover:bg-[#e8d7fa] transition-colors duration-200 flex items-center justify-between ${!n.read ? 'bg-blue-50' : ''
+                                        }`}
                                 >
-                                    <p className="text-sm text-gray-800 p-regular">{n.message}</p>
-                                    <p className="text-xs text-gray-500 mt-1 p-regular">
-                                        {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                                    </p>
+                                    <div
+                                        onClick={() => handleNotificationClick(n)}
+                                        className="flex-grow cursor-pointer"
+                                    >
+                                        <p className="text-sm text-gray-800 p-regular">{n.message}</p>
+                                        <p className="text-xs text-gray-500 mt-1 p-regular">
+                                            {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDelete(n._id)}
+                                        className="ml-2 p-1 rounded-full bg-red-100 hover:bg-red-20 transition-all duration-3000 cursor-pointer"
+                                    >
+                                        <X size={16} className="text-red-500" />
+                                    </button>
                                 </div>
                             ))
                         ) : (
