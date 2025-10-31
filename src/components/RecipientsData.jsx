@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, Upload, X, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Upload, X, Trash2, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import DataTable from "react-data-table-component";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -82,12 +82,20 @@ const RecipientsData = () => {
         {
             name: <span className="p-semibold">Actions</span>,
             cell: row => row.createdBy._id === currentUser.id && (
-                <button
-                    onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
-                    className="p-2 rounded-full hover:bg-red-100 text-red-600 transition cursor-pointer"
-                >
-                    <Trash2 size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
+                        className="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-all duration-300 cursor-pointer"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                    <button
+                        // onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
+                        className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all duration-300 cursor-pointer"
+                    >
+                        <SquarePen size={18} />
+                    </button>
+                </div>
             )
         },
     ];
@@ -122,18 +130,22 @@ const RecipientsData = () => {
                         ))}
                     </div>
                 ) : (
-                    <DataTable
-                        columns={columns}
-                        data={payments}
-                        pagination
-                        highlightOnHover
-                        striped
-                        customStyles={{
-                            headCells: { style: { fontSize: "14px", fontWeight: "600" } },
-                            cells: { style: { fontSize: "14px", fontWeight: "400" } }
-                        }}
-                        noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
-                    />
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        <DataTable
+                            columns={columns}
+                            data={payments}
+                            pagination
+                            highlightOnHover
+                            striped
+                            fixedHeader
+                            fixedHeaderScrollHeight="100%" // scrollable height
+                            customStyles={{
+                                headCells: { style: { fontSize: "14px", fontWeight: "600" } },
+                                cells: { style: { fontSize: "14px", fontWeight: "400" } }
+                            }}
+                            noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
+                        />
+                    </div>
                 )}
             </div>
 

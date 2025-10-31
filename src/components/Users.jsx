@@ -200,10 +200,10 @@ const Users = () => {
             {/* 🟢 Invite Modal */}
             {isInviteModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="relative bg-gradient-to-br from-[#6667DD] via-black to-black shadow-xl w-full max-w-[90%] sm:max-w-lg md:max-w-xl rounded-2xl px-4 pt-5 pb-9 animate-scaleUp">
+                    <div className="relative bg-[#8793a0] shadow-xl w-full max-w-[90%] sm:max-w-lg md:max-w-xl rounded-2xl px-4 pt-5 pb-9 animate-scaleUp">
                         <X
                             size={22}
-                            className="absolute top-3 right-4 text-gray-300 hover:text-gray-400 cursor-pointer transition-all duration-300"
+                            className="absolute top-3 right-4 text-gray-200 hover:text-gray-300 cursor-pointer transition-all duration-300"
                             onClick={() => setIsInviteModalOpen(false)}
                         />
                         <AddUsers />

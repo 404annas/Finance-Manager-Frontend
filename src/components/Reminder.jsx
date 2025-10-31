@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { sendReminder } from "../hooks/reminder";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { PencilLine, Mail, CircleDollarSign, Wallet, MessagesSquare } from 'lucide-react';
 
 const Reminder = () => {
     const { mutate, isPending } = useMutation({
@@ -39,33 +40,43 @@ const Reminder = () => {
                         {/* Subject + Email */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="flex flex-col">
-                                <Field
-                                    type="text"
-                                    name="subject"
-                                    placeholder="Reminder Title"
-                                    disabled={isPending}
-                                    className={`w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 outline-none transition-colors duration-200 ${isPending
-                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                <div className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                  transition-colors duration-200
+                  ${isPending ? 'bg-[#ECECFB] border-[#b6b6e0]'
                                         : errors.subject && touched.subject
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
-                                        }`}
-                                />
+                                            ? 'border-red-500'
+                                            : 'border-[#6667DD]'}`}>
+                                    <PencilLine size={20} className="text-gray-500 mr-2" />
+                                    <Field
+                                        type="text"
+                                        name="subject"
+                                        placeholder="Reminder Title"
+                                        disabled={isPending}
+                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                    />
+                                </div>
                                 <ErrorMessage name="subject" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                             </div>
                             <div className="flex flex-col">
-                                <Field
-                                    type="email"
-                                    name="email"
-                                    placeholder="Recipient Email"
-                                    disabled={isPending}
-                                    className={`w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 outline-none transition-colors duration-200 ${isPending
-                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                        : errors.email && touched.email
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
+                                <div
+                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+      transition-colors duration-200
+      ${isPending
+                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                            : errors.email && touched.email
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
                                         }`}
-                                />
+                                >
+                                    <Mail size={20} className="text-gray-500 mr-2" />
+                                    <Field
+                                        type="email"
+                                        name="email"
+                                        placeholder="Recipient Email"
+                                        disabled={isPending}
+                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                    />
+                                </div>
                                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                             </div>
                         </div>
@@ -73,25 +84,32 @@ const Reminder = () => {
                         {/* Amount + Currency */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="flex flex-col">
-                                <select
-                                    name="currency"
-                                    value={values.currency}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    disabled={isPending}
-                                    className={`w-full text-sm sm:text-base px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 outline-none transition-colors duration-200 ${isPending
-                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                        : errors.currency && touched.currency
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
+                                <div
+                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+      transition-colors duration-200
+      ${isPending
+                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                            : errors.currency && touched.currency
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
                                         }`}
                                 >
-                                    <option value="">Select Currency</option>
-                                    <option value="USD">USD ($)</option>
-                                    <option value="EUR">EUR (€)</option>
-                                    <option value="PKR">PKR (₨)</option>
-                                    <option value="INR">INR (₹)</option>
-                                </select>
+                                    <CircleDollarSign size={20} className="text-gray-500 mr-2" />
+                                    <select
+                                        name="currency"
+                                        value={values.currency}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        disabled={isPending}
+                                        className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                    >
+                                        <option value="">Select Currency</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="PKR">PKR (₨)</option>
+                                        <option value="INR">INR (₹)</option>
+                                    </select>
+                                </div>
                                 <ErrorMessage
                                     name="currency"
                                     component="div"
@@ -99,37 +117,51 @@ const Reminder = () => {
                                 />
                             </div>
                             <div className="flex flex-col">
-                                <Field
-                                    type="number"
-                                    name="amount"
-                                    placeholder="Amount"
-                                    disabled={isPending}
-                                    className={`w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 outline-none transition-colors duration-200 ${isPending
-                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                        : errors.amount && touched.amount
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
+                                <div
+                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+      transition-colors duration-200
+      ${isPending
+                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                            : errors.amount && touched.amount
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
                                         }`}
-                                />
+                                >
+                                    <Wallet size={20} className="text-gray-500 mr-2" />
+                                    <Field
+                                        type="number"
+                                        name="amount"
+                                        placeholder="Amount"
+                                        disabled={isPending}
+                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                    />
+                                </div>
                                 <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                             </div>
                         </div>
 
                         {/* Message Box */}
                         <div className="flex flex-col">
-                            <Field
-                                as="textarea"
-                                name="message"
-                                placeholder="Write a message..."
-                                rows={4}
-                                disabled={isPending}
-                                className={`w-full text-sm sm:text-base p-regular px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 outline-none resize-none transition-colors duration-200 ${isPending
-                                    ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                    : errors.message && touched.message
-                                        ? "border-red-500"
-                                        : "border-[#6667DD]"
+                            <div
+                                className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+      transition-colors duration-200
+      ${isPending
+                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                        : errors.message && touched.message
+                                            ? "border-red-500"
+                                            : "border-[#6667DD]"
                                     }`}
-                            />
+                            >
+                                <MessagesSquare size={20} className="text-gray-500 mr-2 mt-0.5" />
+                                <Field
+                                    as="textarea"
+                                    name="message"
+                                    placeholder="Write a message..."
+                                    rows={4}
+                                    disabled={isPending}
+                                    className="w-full text-sm sm:text-base outline-none bg-transparent resize-none"
+                                />
+                            </div>
                             <ErrorMessage name="message" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                         </div>
 

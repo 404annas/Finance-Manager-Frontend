@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
+import { UserRoundPen } from 'lucide-react';
+import UpdateProfileModal from "./UpdateProfileModal";
+import { useUpdateProfile } from "../hooks/updateProfile";
 
 // Global flag to remember skeleton loaded
 let skeletonShown = false;
@@ -9,6 +12,11 @@ const Profile = () => {
     const { user } = useAppContext();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(!skeletonShown);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const { updateProfile, isUpdating } = useUpdateProfile({
+        onSuccess: () => setIsModalOpen(false),
+    });
 
     useEffect(() => {
         if (!user) {
@@ -38,21 +46,36 @@ const Profile = () => {
     }
 
     return (
-        <div className="flex flex-col justify-center items-center px-6 py-10 sm:p-10 mt-10 sm:mt-0 shadow-sm bg-[#F6F9FC] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl mx-auto">
-            <img
-                src={user.profileImage || "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500&auto=format&fit=crop&q=60"}
-                alt="Profile"
-                className="w-30 h-30 sm:w-40 sm:h-40 rounded-full border-2 sm:border-4 border-[#6667DD] object-cover shadow-md"
+        <>
+            <div className="flex flex-col justify-center items-center px-6 py-10 sm:p-10 mt-10 sm:mt-0 shadow-sm bg-[#F6F9FC] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-4xl mx-auto relative">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="absolute top-4 right-5 cursor-pointer bg-purple-100 hover:bg-purple-200 p-3 rounded-full"
+                >
+                    <UserRoundPen size={20} />
+                </button>
+                <img
+                    src={user.profileImage || "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500&auto=format&fit=crop&q=60"}
+                    alt="Profile"
+                    className="w-30 h-30 sm:w-40 sm:h-40 rounded-full border-2 sm:border-4 border-[#6667DD] object-cover shadow-md"
+                />
+
+                <h2 className="text-xl sm:text-3xl p-bold text-gray-800 mt-6">{user.name}</h2>
+
+                <p className="text-base sm:text-lg text-gray-600 mt-2 p-regular">{user.email}</p>
+
+                <span className="p-regular mt-4 px-5 py-2 rounded-full bg-[#6667DD]/10 text-[#6667DD] uppercase tracking-wide text-xs sm:text-sm">
+                    I'm a User
+                </span>
+            </div>
+            <UpdateProfileModal
+                isOpen={isModalOpen}
+                onRequestClose={() => setIsModalOpen(false)}
+                user={user}
+                onUpdate={updateProfile}
+                isUpdating={isUpdating}
             />
-
-            <h2 className="text-xl sm:text-3xl p-bold text-gray-800 mt-6">{user.name}</h2>
-
-            <p className="text-base sm:text-lg text-gray-600 mt-2 p-regular">{user.email}</p>
-
-            <span className="p-regular mt-4 px-5 py-2 rounded-full bg-[#6667DD]/10 text-[#6667DD] uppercase tracking-wide text-xs sm:text-sm">
-                I'm a User
-            </span>
-        </div>
+        </>
     );
 };
 

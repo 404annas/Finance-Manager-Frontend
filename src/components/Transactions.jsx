@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Upload, Trash2 } from "lucide-react";
+import { Plus, X, Upload, Trash2, SquarePen } from "lucide-react";
 import DataTable from "react-data-table-component";
 import { toast } from "sonner";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -118,18 +118,32 @@ const Transactions = () => {
     {
       name: "Action", cell: (row) => {
         return (
-          <button
-            onClick={() => {
-              setTransactionToDelete(row._id);
-              setIsDeleteModalOpen(true);
-            }}
-            className="transition-colors duration-300"
-          >
-            <Trash2
-              size={18}
-              className="text-red-500 hover:text-red-700 cursor-pointer"
-            />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setTransactionToDelete(row._id);
+                setIsDeleteModalOpen(true);
+              }}
+              className="transition-colors duration-300 bg-red-200 p-2 rounded-full"
+            >
+              <Trash2
+                size={18}
+                className="text-red-500 hover:text-red-700 transition-all duration-300 cursor-pointer"
+              />
+            </button>
+            <button
+              onClick={() => {
+                // setTransactionToDelete(row._id);
+                // setIsDeleteModalOpen(true);
+              }}
+              className="transition-colors duration-300 bg-blue-200 p-2 rounded-full"
+            >
+              <SquarePen
+                size={18}
+                className="text-blue-500 hover:text-blue-700 transition-all duration-300 cursor-pointer"
+              />
+            </button>
+          </div>
         );
       },
     },
@@ -168,13 +182,29 @@ const Transactions = () => {
       )}
 
       {/* Data Table */}
-      {isLoadingTransactions ? (
-        <p className="text-[#6667DD] text-center mt-20 text-lg p-regular animate-pulse">Loading Transactions...</p>
-      ) : transactions.length > 0 ? (
-        <DataTable columns={columns} data={filteredTransactions} pagination highlightOnHover striped customStyles={customStyles} />
-      ) : (
-        <p className="text-gray-500 text-center mt-20 text-lg p-regular">No Current Transactions</p>
-      )}
+      <div className="flex-1 overflow-y-auto">
+        {isLoadingTransactions ? (
+          <p className="text-[#6667DD] text-center mt-20 text-lg p-regular animate-pulse">
+            Loading Transactions...
+          </p>
+        ) : transactions.length > 0 ? (
+          <div className="overflow-y-auto max-h-[calc(100vh-340px)]">
+            <DataTable
+              columns={columns}
+              data={filteredTransactions}
+              pagination
+              highlightOnHover
+              striped
+              fixedHeader
+              fixedHeaderScrollHeight="100%"
+              customStyles={customStyles}
+            />
+          </div>
+        ) : (
+          <p className="text-gray-500 text-center mt-20 text-lg p-regular">No Current Transactions</p>
+        )}
+      </div>
+
 
       {/* Add Transaction Modal */}
       {isModalOpen && (
