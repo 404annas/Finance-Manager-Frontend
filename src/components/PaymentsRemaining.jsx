@@ -1,31 +1,44 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Calendar, Clock, Trash2, X } from "lucide-react";
+import { Calendar, Clock, UserRoundCheck, UserPlus2Icon, Trash2, X, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import {
-    fetchSchedules,
-    addSchedule,
-    deleteSchedule,
-    deleteAllSchedules,
-} from "../hooks/schedule";
+import Select from "react-select";
+import DataTable from "react-data-table-component";
+import { fetchSchedules, addSchedule, deleteSchedule, deleteAllSchedules } from "../hooks/schedule";
+import { fetchUsers } from "../hooks/getUsers";
+import moment from "moment";
 
 const PaymentsRemaining = () => {
+    // --- Form State ---
     const [selectedDate, setSelectedDate] = useState(null);
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
 
+    // --- UI State ---
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [scheduleToDelete, setScheduleToDelete] = useState(null);
     const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
-    const queryClient = useQueryClient();
+    // --- Feature State ---
+    const [scheduleType, setScheduleType] = useState("me"); // 'me' or 'recipients'
+    const [selectedRecipients, setSelectedRecipients] = useState([]);
 
+    const queryClient = useQueryClient();
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+
+    // --- Data Fetching & Mutations ---
     const { data: schedules = [], isPending: loadingSchedules } = useQuery({
         queryKey: ["schedules"],
         queryFn: fetchSchedules,
         onError: () => toast.error("Failed to fetch scheduled payments"),
+    });
+
+    const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+        queryKey: ["users"],
+        queryFn: fetchUsers,
+        enabled: scheduleType === 'recipients',
     });
 
     const { mutate: addScheduleMutate, isPending: isScheduling } = useMutation({
@@ -36,175 +49,192 @@ const PaymentsRemaining = () => {
             setTitle("");
             setMessage("");
             setSelectedDate(null);
+            setSelectedRecipients([]);
         },
-        onError: (err) =>
-            toast.error(err.response?.data?.message || "Failed to schedule payment"),
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to schedule payment"),
     });
 
-    const { mutate: deleteScheduleMutate, isPending: isDeleting, variables: deletingId } =
-        useMutation({
-            mutationFn: deleteSchedule,
-            onSuccess: () => {
-                toast.success("Schedule deleted");
-                queryClient.invalidateQueries({ queryKey: ["schedules"] });
-            },
-            onError: (err) =>
-                toast.error(err.response?.data?.message || "Failed to delete schedule"),
-        });
+    const { mutate: deleteScheduleMutate, isPending: isDeleting, variables: deletingId } = useMutation({
+        mutationFn: deleteSchedule,
+        onSuccess: () => { toast.success("Schedule deleted"); queryClient.invalidateQueries({ queryKey: ["schedules"] }); },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete schedule"),
+    });
 
     const { mutate: deleteAllMutate, isPending: isDeletingAll } = useMutation({
         mutationFn: deleteAllSchedules,
-        onSuccess: () => {
-            toast.success("All schedules deleted");
-            queryClient.invalidateQueries({ queryKey: ["schedules"] });
-        },
-        onError: (err) =>
-            toast.error(err.response?.data?.message || "Failed to delete all schedules"),
+        onSuccess: () => { toast.success("All schedules deleted"); queryClient.invalidateQueries({ queryKey: ["schedules"] }); },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete all schedules"),
     });
 
+    // --- Logic & Event Handlers ---
+    const recipientOptions = useMemo(() => {
+        if (!usersData?.invitedUsers) return [];
+        return usersData.invitedUsers.map(user => ({
+            value: user._id,
+            label: `${user.name} (${user.email})`,
+        }));
+    }, [usersData]);
+
     const handleSchedule = () => {
-        if (!selectedDate || !title || !message)
-            return toast.error("Please fill in all fields");
-        addScheduleMutate({ title, message, scheduledDate: selectedDate });
+        if (!selectedDate || !title) {
+            return toast.error("Please provide a title and select a date.");
+        }
+        let scheduledForIds = [];
+        if (scheduleType === "me") {
+            if (!currentUser?.id) return toast.error("Could not identify current user.");
+            scheduledForIds = [currentUser.id];
+        } else {
+            if (selectedRecipients.length === 0) {
+                return toast.error("Please select at least one recipient.");
+            }
+            scheduledForIds = selectedRecipients.map(option => option.value);
+        }
+
+        // THE FIX: Format the date into a simple string that the backend can parse.
+        // This sends the "wall clock" time, without any timezone conversion.
+        const formattedDate = moment(selectedDate).format("YYYY-MM-DD HH:mm:ss");
+
+        addScheduleMutate({
+            title,
+            message,
+            scheduledDate: formattedDate, // Send the formatted string
+            scheduledForIds,
+        });
     };
+
+    const scheduleColumns = [
+        { name: "Title", selector: (row) => row.title, sortable: true, width: "200px" },
+        { name: "Scheduled For", selector: (row) => row.scheduledFor?.name || 'N/A', sortable: true, width: "200px" },
+        { name: "Scheduled By", selector: (row) => row.createdBy?.name || 'N/A', sortable: true, width: "200px" },
+        // Display the date in the user's local format
+        { name: "Date & Time", selector: (row) => new Date(row.scheduledDate).toLocaleString(), sortable: true, width: "180px" },
+        { name: "Status", cell: (row) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === "done" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"}`}>{row.status.toUpperCase()}</span> },
+        { name: "Message", selector: (row) => row.message || "-", wrap: true, width: "200px" },
+        {
+            name: "Actions",
+            cell: (row) => {
+                if (currentUser.id !== row.createdBy?._id) return <p className="w-[120px]">Not Allowed</p>;
+                const isCurrentlyDeleting = isDeleting && deletingId === row._id;
+                return (
+                    <div className="flex items-center gap-2 w-[120px]">
+                        <button onClick={() => { setScheduleToDelete(row._id); setIsDeleteModalOpen(true); }} disabled={isCurrentlyDeleting} className={`p-2 text-red-500 hover:text-red-600 cursor-pointer transition-all duration-300 bg-red-100 rounded-full`}>
+                            <Trash2 size={18} />
+                        </button>
+                        <button className={`p-2 text-blue-500 hover:text-blue-600 bg-blue-100 cursor-pointer transition-all duration-300 rounded-full`}>
+                            <SquarePen size={18} />
+                        </button>
+                    </div>
+                );
+            },
+        },
+    ];
 
     return (
         <div className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#eff7ff] to-[#F3E8FF] w-full">
+            {/* Form Section */}
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start justify-between w-full">
-                {/* LEFT FORM SECTION */}
                 <div className="flex-1 w-full">
                     <div className="flex items-center gap-3 mb-4">
                         <Calendar className="text-[#6667DD]" size={22} />
-                        <h2 className="text-lg sm:text-xl md:text-2xl p-semibold text-[#6667DD]">
-                            Schedule Payment
-                        </h2>
+                        <h2 className="text-lg sm:text-xl md:text-2xl p-semibold text-[#6667DD]">Schedule Payment</h2>
                     </div>
-
-                    <p className="text-gray-600 text-sm sm:text-base p-regular mb-4 leading-relaxed">
-                        Choose a date to schedule your next payment.
-                    </p>
-
-                    <input
-                        type="text"
-                        placeholder="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full mb-3 p-2 sm:p-3 border-2 border-[#6667DD] outline-none rounded-xl p-regular text-sm sm:text-base"
-                    />
-                    <textarea
-                        placeholder="Message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className="w-full mb-4 p-2 sm:p-3 border-2 border-[#6667DD] outline-none p-regular rounded-xl resize-none text-sm sm:text-base"
-                        rows={3}
-                    />
-
-                    <button
-                        onClick={handleSchedule}
-                        disabled={isScheduling}
-                        className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isScheduling
-                            ? "bg-[#9ba0e0] hover:cursor-not-allowed"
-                            : "bg-[#6667DD] hover:bg-[#5253b8]"
-                            } text-white`}
-                    >
-                        <Clock size={20} />{" "}
-                        {isScheduling ? "Scheduling..." : "Schedule Payment"}
-                    </button>
+                    <p className="text-gray-600 text-sm sm:text-base p-regular mb-4 leading-relaxed">Schedule a payment reminder for yourself or for users you've invited.</p>
+                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full mb-3 p-2 sm:p-3 border-2 border-[#6667DD] outline-none rounded-xl p-regular text-sm sm:text-base" />
+                    <textarea placeholder="Message" value={message} onChange={(e) => setMessage(e.target.value)} className="w-full mb-4 p-2 sm:p-3 border-2 border-[#6667DD] outline-none p-regular rounded-xl resize-none text-sm sm:text-base" rows={3} />
+                    {scheduleType === "recipients" && (
+                        <div className="mb-4">
+                            <label className="block text-gray-700 text-sm p-medium mb-1">Select Recipients</label>
+                            <Select
+                                isMulti
+                                options={recipientOptions}
+                                value={selectedRecipients}
+                                onChange={setSelectedRecipients}
+                                isLoading={isLoadingUsers}
+                                placeholder="Select one or more users..."
+                                styles={{
+                                    control: (base, state) => ({
+                                        ...base,
+                                        borderColor: '#6667DD',
+                                        borderWidth: 2,
+                                        borderRadius: '0.75rem',
+                                        padding: '2px',
+                                        backgroundColor: 'transparent',
+                                        cursor: 'pointer',
+                                        boxShadow: 'none', // remove focus shadow
+                                        '&:hover': {
+                                            borderColor: '#6667DD', // same as normal
+                                        },
+                                    }),
+                                    multiValue: (base) => ({
+                                        ...base,
+                                        backgroundColor: '#E9D4FF',
+                                    }),
+                                    menu: (base) => ({
+                                        ...base,
+                                        zIndex: 50,
+                                    }),
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
-
-                {/* RIGHT DATE PICKER SECTION */}
                 <div className="flex-1 w-full max-w-md">
-                    <DatePicker
-                        selected={selectedDate}
-                        onChange={date => setSelectedDate(date)}
-                        showTimeSelect
-                        timeFormat="HH:mm"
-                        timeIntervals={5}
-                        dateFormat="MMMM d, yyyy h:mm aa"
-                        inline
-                        className="rounded-2xl border border-gray-200 shadow-lg p-4 bg-white"
-                    />
+                    <DatePicker selected={selectedDate} onChange={(date) => setSelectedDate(date)} showTimeSelect timeFormat="HH:mm" timeIntervals={5} dateFormat="MMMM d, yyyy h:mm aa" inline className="rounded-2xl border border-gray-200 shadow-lg p-4 bg-white" />
                 </div>
             </div>
-
-            {/* ===== SCHEDULED PAYMENTS LIST / SKELETON ===== */}
-            <h1 className="text-[#6667DD] text-lg sm:text-xl md:text-2xl p-semibold mt-10">
-                {loadingSchedules ? "Loading scheduled Payments..." : "All Payment Schedules"}
-            </h1>
-
-            {loadingSchedules ? (
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-pulse">
-                    {[1, 2, 3].map((i) => (
-                        <div
-                            key={i}
-                            className="p-4 sm:p-5 bg-gray-200 rounded-xl shadow-sm h-32 flex flex-col justify-between"
-                        >
-                            <div className="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
-                            <div className="h-4 w-1/2 bg-gray-300 rounded mb-1"></div>
-                            <div className="h-3 w-1/3 bg-gray-300 rounded"></div>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {schedules.length === 0 && (
-                        <p className="text-gray-500 text-center col-span-full p-regular mt-4 text-sm sm:text-base">
-                            No payments scheduled.
-                        </p>
-                    )}
-
-                    {schedules.map((s) => {
-                        const isCurrentlyDeleting = isDeleting && deletingId === s._id;
-                        return (
-                            <div
-                                key={s._id}
-                                className="p-4 sm:p-5 bg-[#f0f4ff] rounded-xl shadow-sm relative"
-                            >
-                                <h3 className="text-[#6667DD] text-base sm:text-lg p-semibold mb-2 underline break-words">
-                                    {s.title}
-                                </h3>
-                                <p className="text-gray-700 p-medium text-sm sm:text-base mt-2">
-                                    {new Date(s.scheduledDate).toLocaleString()} - {s.status.toUpperCase()}
-                                </p>
-                                {s.message && (
-                                    <p className="text-gray-500 text-xs sm:text-sm mt-1 p-regular break-words">
-                                        {s.message}
-                                    </p>
-                                )}
-
-                                <button
-                                    onClick={() => {
-                                        setScheduleToDelete(s._id);
-                                        setIsDeleteModalOpen(true);
-                                    }}
-                                    disabled={isCurrentlyDeleting}
-                                    className={`absolute top-3 right-3 p-1.5 sm:p-2 cursor-pointer rounded-full transition-all duration-300 ${isCurrentlyDeleting ? "bg-red-300" : "hover:bg-red-200"
-                                        }`}
-                                >
-                                    {isCurrentlyDeleting ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <Trash2 className="text-red-500" size={18} />
-                                    )}
-                                </button>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {schedules.length > 0 && (
-                <button
-                    onClick={() => setIsDeleteAllModalOpen(true)}
-                    disabled={isDeletingAll}
-                    className={`bg-red-500 transition-all duration-300 text-white py-2 px-4 sm:px-5 rounded-lg font-medium shadow-md p-regular mt-6 sm:mt-8 cursor-pointer ${isDeletingAll ? "bg-red-300 cursor-not-allowed" : "hover:bg-red-600"
-                        }`}
-                >
-                    {isDeletingAll ? "Deleting..." : "Delete All"}
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4 py-2 flex-wrap">
+                <button onClick={handleSchedule} disabled={isScheduling} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isScheduling ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"} text-white`}>
+                    <Clock size={20} /> {isScheduling ? "Scheduling..." : "Schedule Payment"}
                 </button>
-            )}
+                <button onClick={() => setScheduleType("me")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-green-700 ${scheduleType === 'me' ? 'bg-green-300 ring-2 ring-green-500' : 'bg-green-200 hover:bg-green-300'}`}>
+                    <UserRoundCheck size={20} /> <p>For Me</p>
+                </button>
+                <button onClick={() => setScheduleType("recipients")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-orange-700 ${scheduleType === 'recipients' ? 'bg-orange-300 ring-2 ring-orange-500' : 'bg-orange-200 hover:bg-orange-300'}`}>
+                    <UserPlus2Icon size={20} /> <p>For Recipients</p>
+                </button>
+            </div>
 
-            {/* DELETE MODALS */}
+            {/* DataTable */}
+            <div className="mt-6">
+                {loadingSchedules ? (
+                    <div className="mt-6 animate-pulse">
+                        <div className="h-10 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-10 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-10 bg-gray-200 rounded mb-2"></div>
+                    </div>
+                ) : schedules.length === 0 ? (
+                    <p className="text-gray-500 text-center p-regular mt-4 text-sm sm:text-base">
+                        No payments scheduled.
+                    </p>
+                ) : (
+                    <>
+                        <h1 className="text-lg sm:text-xl md:text-2xl p-semibold text-[#6667DD] pb-4">Scheduled Payments</h1>
+                        <DataTable
+                            // title="Scheduled Payments"
+                            columns={scheduleColumns}
+                            data={schedules}
+                            pagination
+                            highlightOnHover
+                            responsive
+                            striped
+                            customStyles={{
+                                headCells: {
+                                    style: {
+                                        backgroundColor: "#E9D4FF",
+                                        color: "#6667DD",
+                                        fontWeight: "semibold",
+                                        fontSize: "14px",
+                                        textTransform: "uppercase",
+                                    },
+                                },
+                            }}
+                        />
+                    </>
+                )}
+            </div>
+
+            {/* Delete Modals */}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative border border-gray-300">

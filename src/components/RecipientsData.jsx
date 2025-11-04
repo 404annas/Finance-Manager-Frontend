@@ -5,8 +5,6 @@ import { toast } from "sonner";
 import DataTable from "react-data-table-component";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchPaymentsForShare, addPaymentToShare, deletePayment } from "../hooks/paymentsShareData";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
 
 const RecipientsData = () => {
     const navigate = useNavigate();
@@ -73,12 +71,12 @@ const RecipientsData = () => {
     };
 
     const columns = [
-        { name: <span className="p-semibold">Title</span>, selector: row => row.title, cell: row => <span className="p-regular">{row.title}</span>, sortable: true },
-        { name: <span className="p-semibold">Category</span>, selector: row => row.category, cell: row => <span className="p-regular">{row.category}</span>, sortable: true },
-        { name: <span className="p-semibold">Amount</span>, selector: row => row.amount, cell: row => <span className="p-regular">{`${row.currency} ${row.amount}`}</span>, sortable: true },
-        { name: <span className="p-semibold">Status</span>, cell: row => <StatusBadge status={row.status} />, sortable: true },
-        { name: <span className="p-semibold">Added By</span>, selector: row => row.createdBy.name, cell: row => <span className="p-regular">{row.createdBy.name}</span>, sortable: true },
-        { name: <span className="p-semibold">Image</span>, cell: row => row.image ? <img src={row.image} alt={row.title} onClick={() => setSelectedImage(row.image)} className="w-12 h-12 rounded-md object-cover cursor-pointer" /> : <span className="text-gray-400 p-regular text-sm">No Image</span> },
+        { name: <span className="p-semibold">Title</span>, selector: row => row.title, cell: row => <span className="p-regular">{row.title}</span>, sortable: true, width: "200px" },
+        { name: <span className="p-semibold">Category</span>, selector: row => row.category, cell: row => <span className="p-regular">{row.category}</span>, sortable: true, with: "150px" },
+        { name: <span className="p-semibold">Amount</span>, selector: row => row.amount, cell: row => <span className="p-regular">{`${row.currency} ${row.amount}`}</span>, sortable: true, width: "100px" },
+        { name: <span className="p-semibold">Status</span>, cell: row => <StatusBadge status={row.status} />, sortable: true, width: "120px" },
+        { name: <span className="p-semibold">Added By</span>, selector: row => row.createdBy.name, cell: row => <span className="p-regular">{row.createdBy.name}</span>, sortable: true, width: "220px" },
+        { name: <span className="p-semibold">Image</span>, cell: row => row.image ? <img src={row.image} alt={row.title} onClick={() => setSelectedImage(row.image)} className="w-12 h-12 rounded-md object-cover cursor-pointer" /> : <span className="text-gray-400 p-regular text-sm">No Image</span>, width: "100px" },
         {
             name: <span className="p-semibold">Actions</span>,
             cell: row => row.createdBy._id === currentUser.id && (
@@ -104,7 +102,7 @@ const RecipientsData = () => {
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
             <div className="w-full text-center mb-4 md:hidden block">
                 <p className="text-sm sm:text-base text-[#6667DD] p-medium animate-bounce">
-                    Zoom out to see the full table clearly! 👀
+                    Zoom out to see the full table clearly! or Scroll Horizontally 👀
                 </p>
             </div>
 
@@ -114,9 +112,9 @@ const RecipientsData = () => {
                     <button onClick={() => navigate("/recipients")} className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-all duration-300 cursor-pointer">
                         <ArrowLeft size={18} />
                     </button>
-                    <h2 className="text-2xl p-bold text-[#6667DD]">Shared Payment Details</h2>
+                    <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Shared Payment Details</h2>
                 </div>
-                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-5 py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer">
+                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 sm:px-5 py-2 sm:py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer text-sm sm:text-base">
                     <Plus size={18} /> Add Payment
                 </button>
             </div>
@@ -152,7 +150,7 @@ const RecipientsData = () => {
             {/* Add Payment Modal */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl sm:max-w-2xl px-4 py-6 sm:p-6 relative overflow-y-auto h-fit">
+                    <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-xl sm:max-w-2xl px-4 py-6 sm:p-6 relative overflow-y-auto h-[90vh] sm:h-fit">
                         <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer transition-all duration-300"><X size={22} /></button>
                         <h3 className="text-xl p-semibold text-[#6667DD] mb-4">Add New Payment</h3>
 

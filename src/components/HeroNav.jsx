@@ -1,5 +1,4 @@
-import React from 'react';
-import { BellDot, LogOut, UserRound } from 'lucide-react';
+import { LogOut, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import NotificationBell from './NotificationBell';
@@ -23,9 +22,9 @@ const HeroNav = ({ role }) => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                {/* <button className="bg-purple-100 p-2.5 sm:p-3 rounded-xl hover:bg-purple-200 transition duration-300 cursor-pointer flex-shrink-0">
-                    <BellDot size={20} className="text-[#6667DD]" />
-                </button> */}
+                <Link to={"/contact"}>
+                    <button className='p-regular bg-[#F6F9FC] hover:bg-blue-50 transition-all duration-300 py-2.5 px-4 rounded-xl cursor-pointer text-[#6667DD]'>Contact Us</button>
+                </Link>
 
                 <NotificationBell />
 
@@ -46,7 +45,7 @@ const HeroNav = ({ role }) => {
 
                         <Link to={role === "admin" ? "/admin-dashboard/profile" : "/profile"}
                             className="absolute left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex
-                        px-3 py-1.5 bg-white border border-gray-200 shadow-md rounded-lg
+                        px-3 py-1.5 bg-[#F6F9FC] border border-blue-50 shadow-md rounded-lg
                         text-sm text-[#5556cc] p-medium whitespace-nowrap cursor-pointer z-50"
                         >
                             My Profile

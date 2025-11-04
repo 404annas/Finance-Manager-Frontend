@@ -20,14 +20,14 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: <LayoutDashboard size={23} />, label: "Dashboard", path: `/` },
-    { icon: <CreditCard size={23} />, label: "Schedules", path: `/payments` },
     { icon: <Layers2 size={23} />, label: "Transactions", path: `/transactions` },
     { icon: <Handshake size={23} />, label: "Recipients", path: `/recipients` },
-    { icon: <RefreshCcw size={23} />, label: "Exchange", path: `/exchange` },
+    { icon: <CreditCard size={23} />, label: "Schedules", path: `/payments` },
     { icon: <History size={23} />, label: "Reminder", path: `/reminder` },
-    { icon: <PhoneForwarded size={22} />, label: "Contact", path: `/contact` },
-    { icon: <UserCheck2 size={23} />, label: "Users", path: `/all-users` },
-    { icon: <UsersRound size={23} />, label: "My Profile", path: `/profile` },
+    { icon: <RefreshCcw size={23} />, label: "Exchange", path: `/exchange` },
+    // { icon: <PhoneForwarded size={22} />, label: "Contact", path: `/contact` },
+    // { icon: <UserCheck2 size={23} />, label: "Users", path: `/all-users` },
+    // { icon: <UsersRound size={23} />, label: "My Profile", path: `/profile` },
   ];
 
   // Disable body scroll when sidebar is open
@@ -93,9 +93,9 @@ const Sidebar = () => {
               key={index}
               onClick={() => setIsOpen(false)}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-300
+                flex items-center gap-3 px-4 py-3 rounded-lg outline-none border-none cursor-pointer transition-all duration-300
                 ${isActive
-                  ? "bg-purple-100 text-[#6667DD] font-medium"
+                  ? "bg-purple-100 text-[#6667DD] p-medium border-none"
                   : "text-gray-600 hover:bg-purple-100 hover:text-[#6667DD]"
                 }
               `}
@@ -105,6 +105,24 @@ const Sidebar = () => {
             </Link>
           );
         })}
+
+        {/* My Profile for small screens only */}
+        <div className="lg:hidden">
+          <Link
+            to="/profile"
+            onClick={() => setIsOpen(false)}
+            className={`
+      flex items-center gap-3 px-4 py-3 rounded-lg outline-none border-none cursor-pointer transition-all duration-300
+      ${location.pathname === "/profile"
+                ? "bg-purple-100 text-[#6667DD] p-medium"
+                : "text-gray-600 hover:bg-purple-100 hover:text-[#6667DD]"
+              }
+    `}
+          >
+            <UsersRound size={23} />
+            <span className="p-medium">My Profile</span>
+          </Link>
+        </div>
       </div>
     </>
   );
