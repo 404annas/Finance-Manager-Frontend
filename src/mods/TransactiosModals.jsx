@@ -12,7 +12,7 @@ export const AddTransactionModal = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-0 bg-black/50 backdrop-blur-sm">
-            <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-4 sm:p-6 relative animate-scaleUp border-2 border-[#6667DD] max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-4 sm:p-6 relative animate-scaleUp border-2 border-[#6667DD] max-h-[80vh] sm:max-h-[90vh] overflow-y-auto">
                 <button
                     onClick={() => setIsOpen(false)}
                     className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 cursor-pointer transition-all duration-300"
