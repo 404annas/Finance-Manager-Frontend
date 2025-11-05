@@ -26,7 +26,7 @@ const Sidebar = () => {
     { icon: <History size={23} />, label: "Reminder", path: `/reminder` },
     { icon: <RefreshCcw size={23} />, label: "Exchange", path: `/exchange` },
     // { icon: <PhoneForwarded size={22} />, label: "Contact", path: `/contact` },
-    // { icon: <UserCheck2 size={23} />, label: "Users", path: `/all-users` },
+    { icon: <UserCheck2 size={23} />, label: "Users", path: `/all-users` },
     // { icon: <UsersRound size={23} />, label: "My Profile", path: `/profile` },
   ];
 

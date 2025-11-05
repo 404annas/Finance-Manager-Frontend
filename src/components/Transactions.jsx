@@ -265,7 +265,7 @@ const Transactions = () => {
             src={row.imageUrl}
             alt="txn"
             onClick={() => setSelectedImage(row.imageUrl)}
-            className="w-14 h-14 rounded-lg object-cover cursor-pointer"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover cursor-pointer"
           />
         ) : (
           <span className="p-regular text-gray-500">No Image</span>
@@ -274,18 +274,18 @@ const Transactions = () => {
     {
       name: "Action",
       cell: (row) => (
-        <div className="flex items-center gap-2 w-[120px]">
+        <div className="flex items-center justify-center gap-2 w-[100px] sm:w-[120px]">
           <button
             onClick={() => {
               setTransactionToDelete(row._id);
               setIsDeleteModalOpen(true);
             }}
-            className="bg-red-100 hover:bg-red-200 p-2 cursor-pointer rounded-full transition-all duration-300"
+            className="bg-red-100 hover:bg-red-200 p-2 rounded-full transition-all duration-300"
           >
-            <Trash2 size={18} className="text-red-500" />
+            <Trash2 size={16} className="sm:size-[18px] text-red-500" />
           </button>
-          <button className="bg-blue-100 hover:bg-blue-200 p-2 rounded-full transition-all duration-300 cursor-pointer">
-            <SquarePen size={18} className="text-blue-500" />
+          <button className="bg-blue-100 hover:bg-blue-200 p-2 rounded-full transition-all duration-300">
+            <SquarePen size={16} className="sm:size-[18px] text-blue-500" />
           </button>
         </div>
       ),
@@ -315,28 +315,28 @@ const Transactions = () => {
     .reduce((sum, txn) => sum + Number(txn.amount), 0);
 
   return (
-    <div className="bg-[#F7F9FC] p-6 relative max-w-7xl mx-auto min-h-[80vh]">
+    <div className="bg-[#F7F9FC] p-3 sm:p-6 relative max-w-7xl mx-auto min-h-[80vh] w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
-        <h2 className="text-2xl p-semibold text-[#6667DD]">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4 mb-4">
+        <h2 className="text-xl sm:text-2xl p-semibold text-[#6667DD]">
           My Transactions
         </h2>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-2.5 rounded-full shadow-md hover:scale-96 transition-all duration-300 cursor-pointer"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md hover:scale-[0.98] transition-all duration-300"
         >
-          <Plus size={18} /> Add Transaction
+          <Plus size={16} className="sm:size-[18px]" /> Add Transaction
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-transparent p-4 rounded-xl shadow-sm mb-5 flex flex-wrap justify-between items-center gap-3">
-        <div className="flex flex-wrap gap-2">
+      <div className="bg-transparent p-3 sm:p-4 rounded-xl shadow-sm mb-5 flex flex-col lg:flex-row flex-wrap justify-between items-start lg:items-center gap-3">
+        <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full lg:w-auto">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-sm cursor-pointer p-medium transition-all duration-300 ${selectedCategory === cat
+              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-300 ${selectedCategory === cat
                 ? categoryButtonColors[cat] || "bg-[#6667DD] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -346,7 +346,7 @@ const Transactions = () => {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full lg:w-auto">
           {[
             "Entire",
             "Today",
@@ -360,7 +360,7 @@ const Transactions = () => {
             <button
               key={filter}
               onClick={() => setDateFilter(filter)}
-              className={`px-3 py-1.5 rounded-full cursor-pointer text-sm p-medium transition-all duration-200 ${dateFilter === filter
+              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${dateFilter === filter
                 ? "bg-[#6667DD] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -373,30 +373,30 @@ const Transactions = () => {
 
       {/* Custom Date Filter */}
       {dateFilter === "Custom" && (
-        <div className="flex gap-2 items-center mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 items-center mb-4">
           <input
             type="date"
             value={customDateRange.from}
             onChange={(e) =>
               setCustomDateRange({ ...customDateRange, from: e.target.value })
             }
-            className="rounded-lg border border-[#6667DD] px-3 py-1 text-sm outline-none"
+            className="rounded-lg border border-[#6667DD] px-3 py-1 text-sm outline-none w-full sm:w-auto"
           />
-          <span className="p-regular">to</span>
+          <span className="p-regular text-sm">to</span>
           <input
             type="date"
             value={customDateRange.to}
             onChange={(e) =>
               setCustomDateRange({ ...customDateRange, to: e.target.value })
             }
-            className="rounded-lg border border-[#6667DD] px-3 py-1 text-sm outline-none"
+            className="rounded-lg border border-[#6667DD] px-3 py-1 text-sm outline-none w-full sm:w-auto"
           />
         </div>
       )}
 
       {/* Stats & Download */}
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
-        <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+        <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-center sm:justify-start">
           <div className="bg-[#D4F5E9] text-gray-700 px-4 py-1.5 rounded-lg text-sm p-medium">
             💰 Income: {currencySymbols["USD"]}
             {totalIncome}
@@ -410,28 +410,39 @@ const Transactions = () => {
         <button
           onClick={handleDownload}
           disabled={isDownloading}
-          className={`flex items-center justify-center cursor-pointer gap-2 px-5 py-2 rounded-lg text-sm p-medium transition-all duration-300 ${isDownloading
+          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading
             ? "bg-gray-300 hover:cursor-not-allowed"
             : "bg-[#E0E2FD] hover:bg-[#C8CBFC] text-[#4447AA]"
             }`}
         >
-          <DownloadCloud size={18} />
+          <DownloadCloud size={16} className="sm:size-[18px]" />
           {isDownloading ? "Downloading..." : "Download PDF"}
         </button>
       </div>
 
       {/* Data Table */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-x-auto">
         {isLoadingTransactions ? (
-          <p className="text-[#6667DD] text-center mt-20 text-lg p-regular animate-pulse">Loading Transactions...</p>
-        ) : transactions.length > 0 ?
-          (
-            <div className=" max-w-[100%] mx-auto max-h-[calc(100vh-410px)]">
-              <div className="overflow-x-auto">
-                <DataTable columns={columns} data={filteredTransactions} pagination highlightOnHover striped fixedHeader customStyles={customStyles} /> </div> </div>)
-          :
-          (
-            <p className="text-gray-700 text-center mt-14 text-lg p-regular bg-[#F3E8FF] py-4">No Current Transactions</p>)}
+          <p className="text-[#6667DD] text-center mt-10 sm:mt-20 text-base sm:text-lg p-regular animate-pulse">
+            Loading Transactions...
+          </p>
+        ) : transactions.length > 0 ? (
+          <div className="max-w-full mx-auto">
+            <DataTable
+              columns={columns}
+              data={filteredTransactions}
+              pagination
+              highlightOnHover
+              striped
+              fixedHeader
+              customStyles={customStyles}
+            />
+          </div>
+        ) : (
+          <p className="text-gray-700 text-center mt-10 sm:mt-14 text-base sm:text-lg p-regular bg-[#F3E8FF] py-4">
+            No Current Transactions
+          </p>
+        )}
       </div>
 
       {/* Modals */}

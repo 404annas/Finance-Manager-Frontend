@@ -11,8 +11,8 @@ export const AddTransactionModal = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-6 relative animate-scaleUp border-2 border-[#6667DD] max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-0 bg-black/50 backdrop-blur-sm">
+            <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-4 sm:p-6 relative animate-scaleUp border-2 border-[#6667DD] max-h-[90vh] overflow-y-auto">
                 <button
                     onClick={() => setIsOpen(false)}
                     className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 cursor-pointer transition-all duration-300"
@@ -149,7 +149,7 @@ export const ConfirmDeleteModal = ({
 }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-0 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative animate-scaleUp border border-gray-300">
                 <X
                     size={20}
@@ -190,7 +190,7 @@ export const ImagePreviewModal = ({ image, onClose }) => {
             <img
                 src={image}
                 alt="Full View"
-                className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20"
+                className="max-w-[90%] max-h-[90%] object-cover rounded-lg shadow-lg bg-white/20"
             />
         </div>
     );
