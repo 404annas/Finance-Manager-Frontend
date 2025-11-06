@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppContext } from '../../context/AppContext';
@@ -48,7 +48,6 @@ const Register = () => {
             if (values.inviteToken) {
                 formData.append("token", values.inviteToken);
             }
-
 
             const res = await fetch(`${API_URL}/api/register`, {
                 method: "POST",

@@ -243,14 +243,14 @@ const Hero = () => {
             </div>
 
             {/* Section 5: Recent Transactions */}
-            <div className="bg-transparent backdrop-blur-sm p-4 sm:p-6 rounded-3xl shadow-sm border border-purple-100/50">
-                <h3 className="p-semibold text-gray-800 mb-6 text-lg">Recent Transactions</h3>
+            <div className="bg-transparent backdrop-blur-sm px-2 py-4 sm:p-6 rounded-3xl shadow-sm border border-purple-100/50">
+                <h3 className="p-semibold text-gray-800 mb-6 px-2 text-lg">Recent Transactions</h3>
                 {isLoading ? (
                     <div>{Array(3).fill(0).map((_, i) => <div key={i} className="h-14 bg-gradient-to-r from-gray-100 to-gray-50 rounded-2xl mb-3 animate-pulse"></div>)}</div>
                 ) : (stats?.recentTransactions && stats.recentTransactions.length > 0) ? (
                     <div className="space-y-2">
                         {stats.recentTransactions.slice(0, 5).map(tx => (
-                            <div key={tx._id} className="flex justify-between items-center px-4 py-3 sm:p-4 bg-[#F9F2FD] hover:bg-gradient-to-r hover:from-purple-50/80 hover:to-pink-50/80 rounded-2xl transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer group">
+                            <div key={tx._id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 py-3 sm:p-4 bg-[#F9F2FD] hover:bg-gradient-to-r hover:from-purple-50/80 hover:to-pink-50/80 rounded-2xl transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer group gap-4">
                                 <div className="flex sm:flex-row flex-col items-start sm:items-center gap-4">
                                     <div className={`p-3 rounded-2xl transition-all duration-300 ${tx.type === 'income' ? 'bg-gradient-to-br from-green-100 to-emerald-50 group-hover:shadow-md' : 'bg-gradient-to-br from-red-100 to-rose-50 group-hover:shadow-md'}`}>
                                         {tx.type === 'income' ? <ArrowUpRight size={20} className="text-green-600" /> : <ArrowDownRight size={20} className="text-red-600" />}
