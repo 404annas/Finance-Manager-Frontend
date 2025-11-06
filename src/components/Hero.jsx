@@ -97,8 +97,8 @@ const StatCardSkeleton = () => (
 );
 
 // Skeleton for a chart area
-const ChartSkeleton = ({ height = 350 }) => (
-    <div className="rounded-2xl animate-pulse" style={{ height }}>
+const ChartSkeleton = ({ height = 0 }) => (
+    <div className="rounded-2xl animate-pulse h-68">
         <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
         <div className="h-full bg-gray-200 rounded"></div>
     </div>
@@ -186,7 +186,7 @@ const Hero = () => {
     const chartHeight = 350;
 
     return (
-        <div className="px-5 py-6 bg-[#F6F9FC] p-regular">
+        <div className="px-4 sm:px-5 py-6 bg-[#F6F9FC] p-regular">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                 <div>
@@ -199,7 +199,7 @@ const Hero = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {(isLoading || !stats) ? (
                     Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
                 ) : (
@@ -208,7 +208,7 @@ const Hero = () => {
                             <div className="p-3 bg-gray-100 rounded-full">{stat.icon}</div>
                             <div>
                                 <p className="text-gray-500 text-sm p-regular">{stat.label}</p>
-                                <p className="text-gray-800 p-semibold text-xl">{stat.value}</p>
+                                <p className="text-gray-800 p-semibold text-lg sm:text-xl">{stat.value}</p>
                             </div>
                         </div>
                     ))
@@ -243,15 +243,15 @@ const Hero = () => {
             </div>
 
             {/* Section 5: Recent Transactions */}
-            <div className="bg-transparent backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-purple-100/50">
+            <div className="bg-transparent backdrop-blur-sm p-4 sm:p-6 rounded-3xl shadow-sm border border-purple-100/50">
                 <h3 className="p-semibold text-gray-800 mb-6 text-lg">Recent Transactions</h3>
                 {isLoading ? (
                     <div>{Array(3).fill(0).map((_, i) => <div key={i} className="h-14 bg-gradient-to-r from-gray-100 to-gray-50 rounded-2xl mb-3 animate-pulse"></div>)}</div>
                 ) : (stats?.recentTransactions && stats.recentTransactions.length > 0) ? (
                     <div className="space-y-2">
                         {stats.recentTransactions.slice(0, 5).map(tx => (
-                            <div key={tx._id} className="flex justify-between items-center p-4 bg-[#F9F2FD] hover:bg-gradient-to-r hover:from-purple-50/80 hover:to-pink-50/80 rounded-2xl transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer group">
-                                <div className="flex items-center gap-4">
+                            <div key={tx._id} className="flex justify-between items-center px-4 py-3 sm:p-4 bg-[#F9F2FD] hover:bg-gradient-to-r hover:from-purple-50/80 hover:to-pink-50/80 rounded-2xl transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer group">
+                                <div className="flex sm:flex-row flex-col items-start sm:items-center gap-4">
                                     <div className={`p-3 rounded-2xl transition-all duration-300 ${tx.type === 'income' ? 'bg-gradient-to-br from-green-100 to-emerald-50 group-hover:shadow-md' : 'bg-gradient-to-br from-red-100 to-rose-50 group-hover:shadow-md'}`}>
                                         {tx.type === 'income' ? <ArrowUpRight size={20} className="text-green-600" /> : <ArrowDownRight size={20} className="text-red-600" />}
                                     </div>

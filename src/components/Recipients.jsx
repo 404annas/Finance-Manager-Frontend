@@ -66,8 +66,8 @@ const Recipients = () => {
     };
 
     const { sharedByMe, sharedWithMe } = useMemo(() => {
-        const byMe = sharedCards.filter(card => card.sharedBy._id === currentUser.id);
-        const withMe = sharedCards.filter(card => card.sharedBy._id !== currentUser.id);
+        const byMe = sharedCards.filter(card => card.sharedBy._id === currentUser._id);
+        const withMe = sharedCards.filter(card => card.sharedBy._id !== currentUser._id);
         return { sharedByMe: byMe, sharedWithMe: withMe };
     }, [sharedCards, currentUser.id]);
 
