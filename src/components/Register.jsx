@@ -10,7 +10,6 @@ const Register = () => {
     const { setUser } = useAppContext();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { token } = useParams()
 
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +35,7 @@ const Register = () => {
     });
 
     const handleSubmit = async (values) => {
+        console.log(values)
         setLoading(true);
         try {
             const formData = new FormData();
@@ -45,8 +45,8 @@ const Register = () => {
             if (values.file) {
                 formData.append("profileImage", values.file);
             }
-            if (inviteTokenFromUrl) {
-                formData.append("token", inviteTokenFromUrl);
+            if (values.inviteToken) {
+                formData.append("token", values.inviteToken);
             }
 
 

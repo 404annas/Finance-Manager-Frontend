@@ -121,7 +121,7 @@ const Users = () => {
                                     />
                                     <div>
                                         <h3 className="text-lg p-semibold">{user.name}</h3>
-                                        <p className="text-gray-500 p-regular break-all">{user.email}</p>
+                                        <p className="text-gray-500 p-regular break-all text-sm">{user.email}</p>
                                         <p
                                             className={`text-sm p-medium ${user.status === "accepted"
                                                 ? "text-green-600"
