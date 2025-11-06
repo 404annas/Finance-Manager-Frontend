@@ -1,4 +1,4 @@
-import { LogOut, UserRound } from 'lucide-react';
+import { BellDot, LogOut, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import NotificationBell from './NotificationBell';
@@ -26,7 +26,11 @@ const HeroNav = ({ role }) => {
                     <button className='p-regular bg-[#F6F9FC] hover:bg-blue-50 transition-all duration-300 py-2.5 px-4 rounded-xl cursor-pointer text-[#6667DD]'>Contact Us</button>
                 </Link>
 
-                <NotificationBell />
+                <button className="bg-purple-100 p-2.5 sm:p-3 rounded-xl hover:bg-purple-200 transition duration-300 cursor-pointer flex-shrink-0">
+                    <BellDot size={20} className="text-[#6667DD]" />
+                </button>
+
+                {/* <NotificationBell /> */}
 
                 {user && (
                     <button onClick={handleLogout} className="bg-gray-100 p-2.5 sm:p-3 rounded-xl hover:bg-gray-200 transition duration-300 cursor-pointer flex-shrink-0">

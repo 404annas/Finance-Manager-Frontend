@@ -11,10 +11,10 @@ const queryClient = new QueryClient();
 createRoot(document.getElementById('root')).render(
   <AppContextProvider>
     <QueryClientProvider client={queryClient}>
-      <SocketProvider>
-        <AppNotificationListener />
+      {/* <SocketProvider> */}
+        {/* <AppNotificationListener /> */}
         <App />
-      </SocketProvider>
+      {/* </SocketProvider> */}
     </QueryClientProvider>
   </AppContextProvider>,
 )
