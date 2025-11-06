@@ -44,6 +44,7 @@ export const AddTransactionModal = ({
                             <option value="Rent">Rent</option>
                             <option value="Shopping">Shopping</option>
                             <option value="Salary">Salary</option>
+                            <option value="Investment">Investment</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
@@ -161,7 +162,7 @@ export const ConfirmDeleteModal = ({
                 </div>
                 <h2 className="text-lg p-semibold text-gray-800 mb-2">{title}</h2>
                 <p className="text-gray-600 mb-6 p-regular text-sm">{description}</p>
-                <div className="flex justify-center gap-3">
+                <div className="flex sm:flex-row flex-col justify-center gap-3">
                     <button
                         onClick={() => setIsOpen(false)}
                         className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 outline-none cursor-pointer text-sm text-gray-700 p-regular"

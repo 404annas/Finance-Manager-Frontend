@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar, Clock, UserRoundCheck, UserPlus2Icon, Trash2, X, SquarePen } from "lucide-react";
@@ -35,7 +35,7 @@ const PaymentsRemaining = () => {
         onError: () => toast.error("Failed to fetch scheduled payments"),
     });
 
-    const { data: usersData, isLoading: isLoadingUsers } = useQuery({
+    const { data: usersData, isPending: isLoadingUsers } = useQuery({
         queryKey: ["users"],
         queryFn: fetchUsers,
         enabled: scheduleType === 'recipients',

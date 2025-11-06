@@ -92,7 +92,7 @@ const Users = () => {
     const invitedBy = usersData?.invitedBy || null;
 
     return (
-        <div className="p-4 sm:p-6 md:p-8 relative w-full">
+        <div className="p-4 sm:p-6 md:p-8 relative w-full bg-[#F6F9FC]">
             {/* SECTION 1: Users You Have Invited */}
             <div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-6">
@@ -111,7 +111,7 @@ const Users = () => {
                         {invitedUsers.map((user) => (
                             <div
                                 key={user._id}
-                                className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 px-2 py-6 bg-[#F6F9FC] shadow rounded-lg w-full"
+                                className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 px-2 py-6 bg-[#F6F9FC] shadow-sm rounded-lg w-full"
                             >
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 text-center sm:text-left">
                                     <img

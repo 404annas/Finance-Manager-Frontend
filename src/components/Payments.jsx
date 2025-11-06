@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, X } from "lucide-react";
-import PaymentsRemaining from "./PaymentsRemaining";
+import PaymentsRemaining from "./SchedulePayments";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchPaymentsDone, addPaymentDone, deletePaymentDone, deleteAllPaymentsDone } from "../hooks/payments";

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Share2, X, Trash2, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchShares, createShare, deleteShare, fetchRecipients } from "../hooks/shares";
+import { fetchShares, createShare, deleteShare, fetchRecipients } from "../hooks/recipientsShare";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
@@ -152,7 +152,7 @@ const Recipients = () => {
     return (
         <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-                <h2 className="text-2xl p-bold text-[#6667DD]">Shared Payments</h2>
+                <h2 className="text-2xl p-bold text-[#6667DD]">Share Payments With Recipients</h2>
                 <button
                     onClick={() => setIsOpen(true)}
                     className="flex items-center gap-2 bg-[#6667DD] text-white px-5 py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer w-full sm:w-auto justify-center"

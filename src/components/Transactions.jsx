@@ -22,6 +22,7 @@ const categoryColors = {
   Rent: "bg-yellow-200",
   Shopping: "bg-blue-200",
   Salary: "bg-green-200",
+  Investment: "bg-purple-200",
   Other: "bg-gray-200",
 };
 const categoryButtonColors = {
@@ -29,6 +30,7 @@ const categoryButtonColors = {
   Rent: "bg-yellow-500 text-white",
   Shopping: "bg-blue-500 text-white",
   Salary: "bg-green-500 text-white",
+  Investment: "bg-purple-500 text-white",
   Other: "bg-gray-500 text-white",
 };
 
@@ -232,7 +234,7 @@ const Transactions = () => {
           {row.amount} ({row.currency})
         </span>
       ),
-      width: "130px",
+      width: "180px",
     },
     {
       name: "Date",
@@ -280,11 +282,11 @@ const Transactions = () => {
               setTransactionToDelete(row._id);
               setIsDeleteModalOpen(true);
             }}
-            className="bg-red-100 hover:bg-red-200 p-2 rounded-full transition-all duration-300"
+            className="bg-red-100 hover:bg-red-200 p-2 cursor-pointer rounded-full transition-all duration-300"
           >
             <Trash2 size={16} className="sm:size-[18px] text-red-500" />
           </button>
-          <button className="bg-blue-100 hover:bg-blue-200 p-2 rounded-full transition-all duration-300">
+          <button className="bg-blue-100 hover:bg-blue-200 p-2 cursor-pointer rounded-full transition-all duration-300">
             <SquarePen size={16} className="sm:size-[18px] text-blue-500" />
           </button>
         </div>
@@ -304,7 +306,7 @@ const Transactions = () => {
     },
   };
 
-  const categories = ["All", "Food", "Rent", "Shopping", "Salary", "Other"];
+  const categories = ["All", "Food", "Rent", "Shopping", "Salary", "Investment", "Other"];
 
   const totalIncome = filteredTransactions
     .filter((txn) => txn.type === "income")
@@ -323,7 +325,7 @@ const Transactions = () => {
         </h2>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md hover:scale-[0.98] transition-all duration-300"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md cursor-pointer hover:scale-[0.98] transition-all duration-300"
         >
           <Plus size={16} className="sm:size-[18px]" /> Add Transaction
         </button>
@@ -336,7 +338,7 @@ const Transactions = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-300 ${selectedCategory === cat
+              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm cursor-pointer transition-all duration-300 ${selectedCategory === cat
                 ? categoryButtonColors[cat] || "bg-[#6667DD] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -360,7 +362,7 @@ const Transactions = () => {
             <button
               key={filter}
               onClick={() => setDateFilter(filter)}
-              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${dateFilter === filter
+              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm cursor-pointer transition-all duration-200 ${dateFilter === filter
                 ? "bg-[#6667DD] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -410,7 +412,7 @@ const Transactions = () => {
         <button
           onClick={handleDownload}
           disabled={isDownloading}
-          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading
+          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading
             ? "bg-gray-300 hover:cursor-not-allowed"
             : "bg-[#E0E2FD] hover:bg-[#C8CBFC] text-[#4447AA]"
             }`}

@@ -1,11 +1,19 @@
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { sendReminder } from "../hooks/reminder";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { PencilLine, Mail, CircleDollarSign, Wallet, MessagesSquare } from 'lucide-react';
+import { fetchUsers } from "../hooks/getUsers";
 
 const Reminder = () => {
+    const { data: usersData, isPending: isLoadingUsers } = useQuery({
+        queryKey: ["users"],
+        queryFn: fetchUsers,
+        // Optional: Cache this data so it doesn't refetch every time
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
     const { mutate, isPending } = useMutation({
         mutationFn: sendReminder,
         onSuccess: (data) => {
@@ -19,7 +27,7 @@ const Reminder = () => {
 
     const validationSchema = Yup.object({
         subject: Yup.string().required("Subject is required!"),
-        email: Yup.string().email("Invalid email!").required("Email is required!"),
+        email: Yup.string().required("Please select a recipient!"),
         amount: Yup.number().typeError("Amount must be a number").required("Amount is required!").positive("Amount must be positive!"),
         currency: Yup.string().required("Currency is required!"),
         message: Yup.string().required("Message cannot be empty!"),
@@ -69,13 +77,23 @@ const Reminder = () => {
                                         }`}
                                 >
                                     <Mail size={20} className="text-gray-500 mr-2" />
-                                    <Field
-                                        type="email"
+                                    <select
                                         name="email"
-                                        placeholder="Recipient Email"
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
-                                    />
+                                        value={values.email}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        disabled={isPending || isLoadingUsers} // Disable while loading users
+                                        className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                    >
+                                        <option value="">
+                                            {isLoadingUsers ? "Loading recipients..." : "Select a Recipient"}
+                                        </option>
+                                        {usersData?.invitedUsers?.map((user) => (
+                                            <option key={user._id} value={user.email}>
+                                                {user.name} ({user.email})
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                             </div>

@@ -1,176 +1,187 @@
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import {
-    Plus,
-    TrendingUp,
-    CreditCard,
     DollarSign,
-    PieChart,
-    Activity,
-    TrendingUp as TrendingUpIcon,
+    CreditCard,
+    List,
+    Users,
+    TrendingUp,
+    ArrowUpRight,
+    ArrowDownRight,
+    CalendarClock,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAppContext } from '../../context/AppContext';
 
-// Recharts
-import {
-    AreaChart,
-    Area,
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-} from 'recharts';
-
-// Chart.js
-import { Bar, Doughnut } from 'react-chartjs-2';
+// Import Charting Libraries and register necessary components
+import { Doughnut, Line, Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
+    PointElement,
+    LineElement,
     BarElement,
     ArcElement,
     Title,
     Tooltip as ChartTooltip,
     Legend,
+    Filler,
 } from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, ChartTooltip, Legend, Filler);
 
-// Nivo Radial Bar
-import { ResponsiveRadialBar } from '@nivo/radial-bar';
+// Import your custom data-fetching hook
+import { fetchDashboardStats } from '../hooks/dashboard';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, ChartTooltip, Legend);
 
-// ========================= DATA =========================
-const lineData = [
-    { month: 'Jan', balance: 400 },
-    { month: 'Feb', balance: 800 },
-    { month: 'Mar', balance: 600 },
-    { month: 'Apr', balance: 1000 },
-    { month: 'May', balance: 1200 },
-];
+// ========================= HELPER FUNCTIONS & CONFIG =========================
 
-const incomeExpenseData = [
-    { month: 'Jan', income: 1200, expense: 800 },
-    { month: 'Feb', income: 1500, expense: 1000 },
-    { month: 'Mar', income: 1000, expense: 700 },
-    { month: 'Apr', income: 1800, expense: 1200 },
-    { month: 'May', income: 2000, expense: 1500 },
-];
-
-const barData = {
-    labels: ['Savings', 'Expenses', 'Investments', 'Debt'],
-    datasets: [
-        {
-            label: 'Amount ($)',
-            data: [500, 300, 200, 100],
-            backgroundColor: ['#6667DD', '#FF6384', '#36A2EB', '#FFCE56'],
-        },
-    ],
+// Helper to format currency values
+const formatCurrency = (value = 0) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD', // You can make this dynamic later if needed
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(value);
 };
 
-const stackedBarData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-    datasets: [
-        {
-            label: 'Savings',
-            data: [500, 700, 600, 800, 900],
-            backgroundColor: '#6667DD',
-        },
-        {
-            label: 'Debt',
-            data: [200, 300, 250, 400, 350],
-            backgroundColor: '#FF6384',
-        },
-    ],
-};
-
-const doughnutData = {
-    labels: ['Food', 'Travel', 'Shopping', 'Bills'],
-    datasets: [
-        {
-            data: [150, 200, 100, 50],
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#6667DD'],
-            borderWidth: 1,
-        },
-    ],
-};
-
-const radialData = [
-    {
-        id: 'Budget',
-        data: [
-            { x: 'Used', y: 30 },
-            { x: 'Remaining', y: 30 },
-            { x: 'Saved', y: 40 }
-        ],
-    },
-];
-
-const quickStats = [
-    { icon: <DollarSign size={20} />, label: 'Income', value: '$7,000' },
-    { icon: <CreditCard size={20} />, label: 'Expenses', value: '$2,300' },
-    { icon: <PieChart size={20} />, label: 'Investments', value: '$1,200' },
-    { icon: <Activity size={20} />, label: 'Debt', value: '$800' },
-    { icon: <TrendingUpIcon size={20} />, label: 'Profit', value: '$3,000' },
-];
-
-// ========================= CHART OPTIONS =========================
-const barOptions = {
+// Common options for all charts to maintain a consistent look
+const commonChartOptions = (titleText) => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
         legend: {
-            labels: {
-                font: {
-                    family: "Poppins",
-                    size: 13,
-                },
-                color: "#333",
-            },
+            position: 'bottom',
+            labels: { font: { family: "Poppins", size: 12 }, color: "#333", padding: 20 },
         },
+        title: {
+            display: true,
+            text: titleText,
+            font: { size: 16, family: 'Poppins', weight: '600' },
+            color: '#333',
+            padding: { top: 10, bottom: 20 }
+        },
+    },
+});
+
+// Specific options for the bar chart
+const barChartOptions = (titleText) => ({
+    ...commonChartOptions(titleText),
+    plugins: { // Override plugins to hide legend for the bar chart
+        ...commonChartOptions(titleText).plugins,
+        legend: { display: false },
     },
     scales: {
-        x: {
-            ticks: {
-                font: {
-                    family: "Poppins",
-                    size: 12,
-                },
-                color: "#6667DD",
-            },
-        },
+        x: { grid: { display: false } },
         y: {
+            beginAtZero: true,
             ticks: {
-                font: {
-                    family: "Poppins",
-                    size: 12,
-                },
-                color: "#6667DD",
-            },
-        },
-    },
-};
+                stepSize: 1, // Ensures y-axis counts integers (1, 2, 3...)
+                precision: 0,
+            }
+        }
+    }
+});
 
-const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: {
-            position: "bottom",
-            labels: {
-                font: {
-                    family: "Poppins",
-                    size: 13,
-                },
-                color: "#444",
-            },
-        },
-    },
-};
 
-const Hero = ({ role }) => {
-    const navigate = useNavigate();
-    const { user } = useAppContext();
+// ========================= SKELETON LOADER COMPONENTS =========================
+
+// Skeleton for the small stat cards at the top
+const StatCardSkeleton = () => (
+    <div className="bg-transparent shadow-sm p-4 flex items-center gap-3 animate-pulse rounded-lg">
+        <div className="p-3 bg-gray-200 rounded-full h-12 w-12"></div>
+        <div>
+            <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+            <div className="h-6 bg-gray-300 rounded w-16"></div>
+        </div>
+    </div>
+);
+
+// Skeleton for a chart area
+const ChartSkeleton = ({ height = 350 }) => (
+    <div className="rounded-2xl animate-pulse" style={{ height }}>
+        <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+        <div className="h-full bg-gray-200 rounded"></div>
+    </div>
+);
+
+
+// ========================= MAIN COMPONENT =========================
+
+const Hero = () => {
+    // Fetch all dashboard data with a single, efficient useQuery call
+    const { data: stats, isLoading, isError } = useQuery({
+        queryKey: ['dashboardStats'],
+        queryFn: fetchDashboardStats,
+    });
+
+    // Handle Error State: Show a user-friendly error message
+    if (isError) {
+        return <div className="p-6 text-center text-red-500">Could not load dashboard data. Please try again later.</div>;
+    }
+
+    // --- Prepare Quick Stats Data (with safety checks) ---
+    const quickStats = isLoading || !stats
+        ? Array(5).fill({}) // Create placeholders for skeleton loaders
+        : [
+            { icon: <DollarSign size={20} className="text-green-500" />, label: 'Income', value: formatCurrency(stats.totalIncome) },
+            { icon: <CreditCard size={20} className="text-red-500" />, label: 'Expenses', value: formatCurrency(stats.totalExpenses) },
+            { icon: <List size={20} className="text-blue-500" />, label: 'Transactions', value: stats.totalTransactions },
+            { icon: <Users size={20} className="text-teal-500" />, label: 'Connected Users', value: stats.connectedUsers?.length || 0 },
+            { icon: <CalendarClock size={20} className="text-purple-500" />, label: 'Upcoming Schedules', value: stats.upcomingSchedules },
+        ];
+
+    // --- Prepare Chart Data (with robust safety checks) ---
+    const incomeData = {
+        labels: stats?.incomeByCategory?.map(item => item._id) || [],
+        datasets: [{
+            data: stats?.incomeByCategory?.map(item => item.totalAmount) || [],
+            backgroundColor: ['#4BC0C0', '#9966FF', '#FF9F40', '#36A2EB'],
+            borderColor: '#fff',
+            borderWidth: 2,
+        }],
+    };
+
+    const expenseData = {
+        labels: stats?.expenseByCategory?.map(item => item._id) || [],
+        datasets: [{
+            data: stats?.expenseByCategory?.map(item => item.totalAmount) || [],
+            backgroundColor: ['#fa7b8c', '#55575a', '#bf9aca', '#9966FF'],
+            borderColor: '#fff',
+            borderWidth: 2,
+        }],
+    };
+
+    const connectedUsersData = {
+        labels: stats?.connectedUsers?.map(user => user.name) || [],
+        datasets: [{
+            label: 'Users',
+            data: Array(stats?.connectedUsers?.length || 0).fill(1),
+            backgroundColor: '#6667DD',
+            borderRadius: 5,
+        }]
+    };
+
+    const usageData = {
+        labels: stats?.dailyUsage?.map(item => new Date(item.day).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })) || [],
+        datasets: [{
+            label: 'Transactions',
+            data: stats?.dailyUsage?.map(item => item.count) || [],
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.3,
+        }]
+    };
+
+    // const scheduledPaymentsChartData = {
+    //     labels: ['Scheduled Payments'],
+    //     datasets: [{
+    //         label: 'Count',
+    //         data: [stats?.upcomingSchedules || 0],
+    //         backgroundColor: '#9966FF',
+    //         borderRadius: 5,
+    //     }]
+    // };
 
     const chartHeight = 350;
 
@@ -179,127 +190,85 @@ const Hero = ({ role }) => {
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-[#6667DD] p-bold text-2xl sm:text-4xl tracking-tight">FinSync Dashboard</h1>
-                    <p className="text-gray-600 p-regular mt-1 text-sm sm:text-base">
-                        Overview of your balances, expenses, and investments
-                    </p>
+                    <h1 className="text-[#6667DD] p-bold text-2xl sm:text-4xl">FinSync Dashboard</h1>
+                    <p className="text-gray-600 p-regular mt-1">Your monthly financial and activity overview.</p>
                 </div>
-                <div className="flex gap-3">
-                    <Link to={"/transactions"} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 py-3 rounded-full hover:bg-[#5556cc] cursor-pointer hover:scale-95 transition-all duration-300 p-regular text-sm sm:text-base">
-                        <TrendingUp size={20} />
-                        Create Transaction 
-                    </Link>
-                </div>
+                <Link to={"/transactions"} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 py-3 rounded-full shadow-md hover:bg-[#5152b8] transition-all">
+                    <TrendingUp size={20} /> Create Transaction
+                </Link>
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                {quickStats.map((stat, index) => (
-                    <div key={index} className="bg-transparent shadow-sm p-4 flex items-center gap-3">
-                        <div className="p-3 bg-[#6667DD]/10 text-[#6667DD] rounded-full">{stat.icon}</div>
-                        <div>
-                            <p className="text-gray-500 p-regular">{stat.label}</p>
-                            <p className="text-gray-800 p-semibold text-base">{stat.value}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {(isLoading || !stats) ? (
+                    Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
+                ) : (
+                    quickStats.map((stat, index) => (
+                        <div key={index} className="bg-transparent shadow-sm p-4 flex items-center gap-3 rounded-lg">
+                            <div className="p-3 bg-gray-100 rounded-full">{stat.icon}</div>
+                            <div>
+                                <p className="text-gray-500 text-sm p-regular">{stat.label}</p>
+                                <p className="text-gray-800 p-semibold text-xl">{stat.value}</p>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Balance Trend */}
-                <div className="bg-transparent p-4 rounded-2xl shadow-sm text-sm" style={{ height: chartHeight }}>
-                    <h3 className="p-semibold text-gray-700 mb-2 text-base">Balance Trend</h3>
-                    <ResponsiveContainer width="100%" height="90%">
-                        <AreaChart data={lineData}>
-                            <XAxis dataKey="month" tick={{ fontFamily: "Poppins", fontSize: 12, fill: "#6667DD" }} />
-                            <YAxis tick={{ fontFamily: "Poppins", fontSize: 12, fill: "#6667DD" }} />
-                            <Tooltip />
-                            <Area type="monotone" dataKey="balance" stroke="#6667DD" fill="#6667DD" fillOpacity={0.2} />
-                        </AreaChart>
-                    </ResponsiveContainer>
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Chart 1: Income Categories */}
+                <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
+                    {isLoading ? <ChartSkeleton height={chartHeight} /> : (stats?.incomeByCategory.length > 0 ? <Doughnut data={incomeData} options={commonChartOptions('Income by Category (This Month)')} /> : <div className="h-full flex items-center justify-center text-gray-500">No income data this month.</div>)}
                 </div>
 
-                {/* Monthly Overview */}
+                {/* Chart 2: Expense Categories */}
                 <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
-                    <h3 className="p-semibold text-gray-700 mb-2">Monthly Overview</h3>
-                    <div className="h-[90%]">
-                        <Bar data={barData} options={barOptions} />
+                    {isLoading ? <ChartSkeleton height={chartHeight} /> : (stats?.expenseByCategory.length > 0 ? <Doughnut data={expenseData} options={commonChartOptions('Expenses by Category (This Month)')} /> : <div className="h-full flex items-center justify-center text-gray-500">No expense data this month.</div>)}
+                </div>
+
+                {/* Chart 3: Connected Users */}
+                <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
+                    {isLoading ? <ChartSkeleton height={chartHeight} /> : (stats?.connectedUsers.length > 0 ? <Bar data={connectedUsersData} options={barChartOptions('Connected Users')} /> : <div className="h-full flex items-center justify-center text-gray-500">No connected users yet.</div>)}
+                </div>
+
+                {/* Chart 4: App Usage */}
+                <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
+                    {isLoading ? <ChartSkeleton height={chartHeight} /> : (stats?.dailyUsage.length > 0 ? <Line data={usageData} options={commonChartOptions('App Usage (Transactions per Day)')} /> : <div className="h-full flex items-center justify-center text-gray-500">No app usage data this month.</div>)}
+                </div>
+
+                {/* <div className="bg-white p-4 rounded-2xl shadow-md" style={{ height: chartHeight }}>
+                    {isLoading ? <ChartSkeleton height={chartHeight} /> : (stats?.upcomingSchedules > 0 ? <Bar data={scheduledPaymentsChartData} options={barChartOptions('Upcoming Scheduled Payments')} /> : <div className="h-full flex items-center justify-center text-gray-500">No scheduled payments.</div>)}
+                </div> */}
+            </div>
+
+            {/* Section 5: Recent Transactions */}
+            <div className="bg-transparent backdrop-blur-sm p-6 rounded-3xl shadow-sm border border-purple-100/50">
+                <h3 className="p-semibold text-gray-800 mb-6 text-lg">Recent Transactions</h3>
+                {isLoading ? (
+                    <div>{Array(3).fill(0).map((_, i) => <div key={i} className="h-14 bg-gradient-to-r from-gray-100 to-gray-50 rounded-2xl mb-3 animate-pulse"></div>)}</div>
+                ) : (stats?.recentTransactions && stats.recentTransactions.length > 0) ? (
+                    <div className="space-y-2">
+                        {stats.recentTransactions.slice(0, 5).map(tx => (
+                            <div key={tx._id} className="flex justify-between items-center p-4 bg-[#F9F2FD] hover:bg-gradient-to-r hover:from-purple-50/80 hover:to-pink-50/80 rounded-2xl transition-all duration-300 hover:shadow-md hover:scale-[1.01] cursor-pointer group">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-2xl transition-all duration-300 ${tx.type === 'income' ? 'bg-gradient-to-br from-green-100 to-emerald-50 group-hover:shadow-md' : 'bg-gradient-to-br from-red-100 to-rose-50 group-hover:shadow-md'}`}>
+                                        {tx.type === 'income' ? <ArrowUpRight size={20} className="text-green-600" /> : <ArrowDownRight size={20} className="text-red-600" />}
+                                    </div>
+                                    <div>
+                                        <p className="p-semibold text-gray-800 mb-0.5">{tx.title}</p>
+                                        <p className="text-xs text-gray-500 font-medium">{tx.category}</p>
+                                    </div>
+                                </div>
+                                <p className={`p-semibold text-base ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {tx.type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
+                                </p>
+                            </div>
+                        ))}
                     </div>
-                </div>
-
-                {/* Spending Categories */}
-                <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
-                    <h3 className="p-semibold text-gray-700 mb-2">Spending Categories</h3>
-                    <div className="h-[90%]">
-                        <Doughnut data={doughnutData} options={doughnutOptions} />
-                    </div>
-                </div>
-
-                {/* Income vs Expenses (Line) */}
-                <div className="bg-transparent p-4 rounded-2xl shadow-sm text-sm" style={{ height: chartHeight }}>
-                    <h3 className="p-semibold text-gray-700 mb-2 text-base">Income vs Expenses</h3>
-                    <ResponsiveContainer width="100%" height="90%">
-                        <LineChart data={incomeExpenseData}>
-                            <XAxis dataKey="month" tick={{ fontFamily: "Poppins", fontSize: 12, fill: "#6667DD" }} />
-                            <YAxis tick={{ fontFamily: "Poppins", fontSize: 12, fill: "#6667DD" }} />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="income" stroke="#36A2EB" />
-                            <Line type="monotone" dataKey="expense" stroke="#FF6384" />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Savings vs Debt (Stacked Bar) */}
-                <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
-                    <h3 className="p-semibold text-gray-700 mb-2">Savings vs Debt</h3>
-                    <div className="h-[90%]">
-                        <Bar data={stackedBarData} options={barOptions} />
-                    </div>
-                </div>
-
-                {/* Budget Utilization (Radial) */}
-                <div className="bg-transparent p-4 rounded-2xl shadow-sm" style={{ height: chartHeight }}>
-                    <h3 className="p-semibold text-gray-700 mb-2">Budget Utilization</h3>
-                    <ResponsiveRadialBar
-                        data={radialData}
-                        valueFormat=">-.2f"
-                        colors={['#6667DD', '#FFCE56', '#FF4069']}
-                        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                        innerRadius={0.3}
-                        padding={0.4}
-                        cornerRadius={2}
-                        theme={{
-                            text: {
-                                fontFamily: "Poppins",
-                                fontSize: 12,
-                                fill: "#6667DD",
-                            },
-                            axis: {
-                                ticks: {
-                                    text: {
-                                        fontFamily: "Poppins",
-                                        fontSize: 12,
-                                        fill: "#6667DD",
-                                    },
-                                },
-                            },
-                            legends: {
-                                text: {
-                                    fontFamily: "Poppins",
-                                    fontSize: 12,
-                                    fill: "#444",
-                                },
-                            },
-                            tooltip: {
-                                container: {
-                                    fontFamily: "Poppins",
-                                    fontSize: 12,
-                                },
-                            },
-                        }}
-                    />
-                </div>
+                ) : (
+                    <div className="text-center text-gray-400 p-8 bg-gray-50/50 rounded-2xl">No recent transactions.</div>
+                )}
             </div>
         </div>
     );

@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, Upload, X, Trash2, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import DataTable from "react-data-table-component";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchPaymentsForShare, addPaymentToShare, deletePayment } from "../hooks/paymentsShareData";
+import { fetchPaymentsForShare, addPaymentToShare, deletePayment } from "../hooks/recipientsPaymentsShareData";
 
 const RecipientsData = () => {
     const navigate = useNavigate();
@@ -98,13 +98,25 @@ const RecipientsData = () => {
         },
     ];
 
+    const customStyles = {
+        headCells: {
+            style: {
+                fontSize: "14px",
+                fontWeight: "500",
+                fontFamily: "Poppins",
+                color: "#5759C7",
+                textTransform: "uppercase",
+            },
+        },
+    };
+
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
-            <div className="w-full text-center mb-4 md:hidden block">
+            {/* <div className="w-full text-center mb-4 md:hidden block">
                 <p className="text-sm sm:text-base text-[#6667DD] p-medium animate-bounce">
                     Zoom out to see the full table clearly! or Scroll Horizontally 👀
                 </p>
-            </div>
+            </div> */}
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -137,10 +149,7 @@ const RecipientsData = () => {
                             striped
                             fixedHeader
                             fixedHeaderScrollHeight="100%" // scrollable height
-                            customStyles={{
-                                headCells: { style: { fontSize: "14px", fontWeight: "600" } },
-                                cells: { style: { fontSize: "14px", fontWeight: "400" } }
-                            }}
+                            customStyles={customStyles}
                             noDataComponent={<div className="py-6 text-gray-500 p-medium">No payments added to this share yet.</div>}
                         />
                     </div>
@@ -203,7 +212,7 @@ const RecipientsData = () => {
             {/* Image Preview Modal */}
             {selectedImage && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4" onClick={() => setSelectedImage(null)}>
-                    <img src={selectedImage} alt="Full View" className="max-w-full sm:max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20" />
+                    <img src={selectedImage} alt="Full View" className="max-w-full object-cover sm:max-w-[90%] max-h-[90%] rounded-lg shadow-lg bg-white/20" />
                 </div>
             )}
 
