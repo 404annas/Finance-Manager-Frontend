@@ -56,7 +56,7 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
     return (
         <>
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
-                <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl overflow-y-auto p-5 sm:p-6 relative">
+                <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl h-[85vh] sm:h-fit overflow-y-auto p-5 sm:p-6 relative">
                     {/* Close Button */}
                     <button
                         onClick={onClose}
@@ -65,7 +65,7 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                         <X size={24} />
                     </button>
 
-                    <h2 className="text-lg sm:text-xl p-semibold text-[#6667DD] mb-4 text-center sm:text-left">
+                    <h2 className="text-base sm:text-xl p-semibold text-[#6667DD] mb-4 text-center sm:text-left">
                         <span className="text-gray-800">Manage Shared Transactions with</span> {user.name}
                     </h2>
 
@@ -208,7 +208,7 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                                     <button
                                         type="submit"
                                         disabled={isCreating}
-                                        className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#6667DD] to-[#7C81F8] cursor-pointer hover:scale-98 transition-all duration-300 text-white p-medium"
+                                        className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#6667DD] to-[#7C81F8] cursor-pointer hover:scale-98 transition-all duration-300 text-white p-medium sm:text-base text-sm"
                                     >
                                         {isCreating ? "Creating..." : "Create & View Shared Transaction"}
                                     </button>

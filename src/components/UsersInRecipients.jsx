@@ -99,17 +99,17 @@ const UsersInRecipients = () => {
 
     return (
         <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC]">
-            <div className="flex items-center justify-between border-b border-blue-100 pb-6">
+            <div className="flex lg:flex-row flex-col gap-4 items-start lg:items-center justify-between border-b border-blue-100 pb-6">
                 <div className="flex flex-col gap-1">
                     <h2 className="text-2xl p-bold text-[#6667DD]">Invite Recipients</h2>
-                    <p className="p-regular text-base text-gray-700">Add recipients to manage shared transactions efficiently and securely.</p>
+                    <p className="p-regular text-sm sm:text-base text-gray-700">Add recipients to manage shared transactions efficiently and securely.</p>
                 </div>
-                <button className="bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300 cursor-pointer flex items-center gap-2"><UserRoundPlus size={20} />Invite Recipients</button>
+                <button className="bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-2.5 sm:py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300 cursor-pointer flex items-center gap-2 sm:text-base text-sm"><UserRoundPlus size={20} />Invite Recipients</button>
             </div>
 
-            <h2 className="text-2xl p-bold text-[#6667DD] my-6">Share Payments With Your Recipients</h2>
+            <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD] my-6">Share Payments With Your Recipients</h2>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {allConnectedUsers.length > 0 ? (
                     allConnectedUsers.map((user) => {
                         const sharesWithThisUser = allShares.filter(share =>
