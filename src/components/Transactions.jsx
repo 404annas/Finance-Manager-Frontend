@@ -286,7 +286,8 @@ const Transactions = () => {
           >
             <Trash2 size={16} className="sm:size-[18px] text-red-500" />
           </button>
-          <button className="bg-blue-100 hover:bg-blue-200 p-2 cursor-pointer rounded-full transition-all duration-300">
+          <button onClick={() => toast.info("Edit Transaction Coming Soon.")}
+            className="bg-blue-100 hover:bg-blue-200 p-2 cursor-pointer rounded-full transition-all duration-300">
             <SquarePen size={16} className="sm:size-[18px] text-blue-500" />
           </button>
         </div>

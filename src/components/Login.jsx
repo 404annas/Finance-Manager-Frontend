@@ -125,8 +125,8 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`w-full bg-[#6667DD] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
-                                ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-[#5556cc] cursor-pointer"}`}
+                                className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
+                                ${loading ? "opacity-70 cursor-not-allowed" : "hover:bg-scale-97 cursor-pointer"}`}
                             >
                                 {loading ? "Logging..." : "Login"}
                             </button>

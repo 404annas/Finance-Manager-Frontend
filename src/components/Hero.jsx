@@ -193,7 +193,7 @@ const Hero = () => {
                     <h1 className="text-[#6667DD] p-bold text-2xl sm:text-4xl">FinSync Dashboard</h1>
                     <p className="text-gray-600 p-regular mt-1">Your monthly financial and activity overview.</p>
                 </div>
-                <Link to={"/transactions"} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 py-3 rounded-full shadow-md hover:bg-[#5152b8] transition-all">
+                <Link to={"/transactions"} className="flex items-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300">
                     <TrendingUp size={20} /> Create Transaction
                 </Link>
             </div>

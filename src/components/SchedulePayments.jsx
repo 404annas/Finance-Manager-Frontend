@@ -8,7 +8,6 @@ import Select from "react-select";
 import DataTable from "react-data-table-component";
 import { fetchSchedules, addSchedule, deleteSchedule, deleteAllSchedules } from "../hooks/schedule";
 import { fetchUsers } from "../hooks/getUsers";
-import moment from "moment";
 
 const PaymentsRemaining = () => {
     // --- Form State ---
@@ -81,8 +80,8 @@ const PaymentsRemaining = () => {
         }
         let scheduledForIds = [];
         if (scheduleType === "me") {
-            if (!currentUser?.id) return toast.error("Could not identify current user.");
-            scheduledForIds = [currentUser.id];
+            if (!currentUser?._id) return toast.error("Could not identify current user.");
+            scheduledForIds = [currentUser._id];
         } else {
             if (selectedRecipients.length === 0) {
                 return toast.error("Please select at least one recipient.");
@@ -90,14 +89,10 @@ const PaymentsRemaining = () => {
             scheduledForIds = selectedRecipients.map(option => option.value);
         }
 
-        // THE FIX: Format the date into a simple string that the backend can parse.
-        // This sends the "wall clock" time, without any timezone conversion.
-        const formattedDate = moment(selectedDate).format("YYYY-MM-DD HH:mm:ss");
-
         addScheduleMutate({
             title,
             message,
-            scheduledDate: formattedDate, // Send the formatted string
+            scheduledDate: selectedDate,
             scheduledForIds,
         });
     };
@@ -113,7 +108,7 @@ const PaymentsRemaining = () => {
         {
             name: "Actions",
             cell: (row) => {
-                if (currentUser.id !== row.createdBy?._id) return <p className="w-[120px]">Not Allowed</p>;
+                if (currentUser._id !== row.createdBy?._id) return <p className="w-[120px] p-regular text-gray-700">Not Allowed</p>;
                 const isCurrentlyDeleting = isDeleting && deletingId === row._id;
                 return (
                     <div className="flex items-center gap-2 w-[120px]">
@@ -184,7 +179,7 @@ const PaymentsRemaining = () => {
             </div>
             {/* Action Buttons */}
             <div className="flex items-center gap-4 py-2 flex-wrap">
-                <button onClick={handleSchedule} disabled={isScheduling} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isScheduling ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-[#6667DD] hover:bg-[#5253b8]"} text-white`}>
+                <button onClick={handleSchedule} disabled={isScheduling} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isScheduling ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"} text-white`}>
                     <Clock size={20} /> {isScheduling ? "Scheduling..." : "Schedule Payment"}
                 </button>
                 <button onClick={() => setScheduleType("me")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-green-700 ${scheduleType === 'me' ? 'bg-green-300 ring-2 ring-green-500' : 'bg-green-200 hover:bg-green-300'}`}>

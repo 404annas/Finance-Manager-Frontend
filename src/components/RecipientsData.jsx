@@ -79,23 +79,28 @@ const RecipientsData = () => {
         { name: <span className="p-semibold">Image</span>, cell: row => row.image ? <img src={row.image} alt={row.title} onClick={() => setSelectedImage(row.image)} className="w-12 h-12 rounded-md object-cover cursor-pointer" /> : <span className="text-gray-400 p-regular text-sm">No Image</span>, width: "100px" },
         {
             name: <span className="p-semibold">Actions</span>,
-            cell: row => row.createdBy._id === currentUser.id && (
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
-                        className="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-all duration-300 cursor-pointer"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                    <button
-                        // onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
-                        className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all duration-300 cursor-pointer"
-                    >
-                        <SquarePen size={18} />
-                    </button>
-                </div>
-            )
-        },
+            cell: row => {
+                if (row.createdBy._id === currentUser._id) {
+                    return (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => { setPaymentToDelete(row._id); setIsDeleteModalOpen(true); }}
+                                className="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-all duration-300 cursor-pointer"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                            <button
+                                onClick={() => toast.info("Edit Shared Transaction Coming Soon.")}
+                                className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-all duration-300 cursor-pointer"
+                            >
+                                <SquarePen size={18} />
+                            </button>
+                        </div>
+                    )
+                }
+                return <p className="text-gray-700 p-regular">Not Allowed</p>
+            },
+        }
     ];
 
     const customStyles = {
@@ -126,7 +131,7 @@ const RecipientsData = () => {
                     </button>
                     <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Shared Payment Details</h2>
                 </div>
-                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-[#6667DD] text-white px-4 sm:px-5 py-2 sm:py-3 rounded-full shadow-sm hover:bg-[#5152b8] transition-all duration-300 p-regular cursor-pointer text-sm sm:text-base">
+                <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 sm:px-5 py-2 sm:py-3 rounded-full shadow-sm hover:scale-97 transition-all duration-300 p-regular cursor-pointer text-sm sm:text-base">
                     <Plus size={18} /> Add Payment
                 </button>
             </div>

@@ -172,7 +172,7 @@ const Contact = () => {
                                 disabled={isPending}
                                 className={`w-full text-white py-3 sm:py-3.5 rounded-lg shadow-md transition-all duration-300 p-regular text-sm sm:text-base cursor-pointer ${isPending
                                     ? "bg-[#6667DD] opacity-70 hover:cursor-not-allowed"
-                                    : "bg-[#6667DD] hover:bg-[#5253b8]"
+                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"
                                     }`}
                             >
                                 {isPending ? "Sending..." : "Send Message"}

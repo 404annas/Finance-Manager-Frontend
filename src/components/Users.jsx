@@ -99,7 +99,7 @@ const Users = () => {
                     <h2 className="text-2xl p-bold text-[#6667DD]">Invited Users</h2>
                     <button
                         onClick={() => setIsInviteModalOpen(true)}
-                        className="flex items-center justify-center gap-2 p-regular bg-[#6667DD] px-4 sm:px-5 py-2.5 sm:py-3 cursor-pointer text-white hover:bg-[#4b4dc9] transition-all duration-300 rounded-full w-full sm:w-auto text-sm sm:text-base"
+                        className="flex items-center justify-center gap-2 p-regular bg-gradient-to-r from-[#6667DD] to-[#7C81F8] px-4 sm:px-5 py-2.5 sm:py-3 cursor-pointer text-white hover:scale-97 transition-all duration-300 rounded-full w-full sm:w-auto text-sm sm:text-base"
                     >
                         <UserPlus2 size={18} />
                         Invite Users
