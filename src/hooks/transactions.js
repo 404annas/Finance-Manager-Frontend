@@ -24,6 +24,16 @@ export const addTransactions = async (formData) => {
     return data;
 }
 
+export const updateTransaction = async ({ id, formData }) => {
+    const { data } = await axios.put(`${API_URL}/api/transactions/${id}`, formData, {
+        headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "multipart/form-data",
+        },
+    });
+    return data;
+}
+
 export const deleteTransaction = async (transactionId) => {
     const { data } = await axios.delete(`${API_URL}/api/transactions/${transactionId}`, {
         headers: getAuthHeaders(),

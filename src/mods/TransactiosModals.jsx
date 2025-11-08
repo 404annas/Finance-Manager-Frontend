@@ -7,6 +7,7 @@ export const AddTransactionModal = ({
     handleChange,
     formData,
     isAdding,
+    isEditing,
 }) => {
     if (!isOpen) return null;
 
@@ -20,7 +21,7 @@ export const AddTransactionModal = ({
                     <X size={22} />
                 </button>
                 <h2 className="text-xl p-semibold text-gray-800 mb-6">
-                    Add New Transaction
+                    {isEditing ? "Edit Transaction" : "Add New Transaction"}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,8 +77,8 @@ export const AddTransactionModal = ({
                             type="button"
                             onClick={() => handleChange({ target: { name: "type", value: "income" } })}
                             className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "income"
-                                    ? "bg-green-500 text-white border-green-500"
-                                    : "bg-white text-gray-700 border-gray-300"
+                                ? "bg-gradient-to-r from-green-400 to-green-600 text-white border-green-400"
+                                : "bg-green-100 text-gray-700 border-green-200"
                                 }`}
                         >
                             Income
@@ -86,8 +87,8 @@ export const AddTransactionModal = ({
                             type="button"
                             onClick={() => handleChange({ target: { name: "type", value: "expense" } })}
                             className={`flex-1 py-2 rounded-lg border-2 transition-all duration-300 cursor-pointer p-regular ${formData.type === "expense"
-                                    ? "bg-red-500 text-white border-red-500"
-                                    : "bg-white text-gray-700 border-gray-300"
+                                ? "bg-gradient-to-r from-red-400 to-red-600 text-white border-red-500"
+                                : "bg-red-100 text-gray-700 border-red-200"
                                 }`}
                         >
                             Expense
@@ -129,12 +130,11 @@ export const AddTransactionModal = ({
                         type="submit"
                         disabled={isAdding}
                         className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-[#6667DD] hover:bg-[#5253b8] cursor-pointer"
+                            ? "bg-gray-400 hover:cursor-not-allowed"
+                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97 cursor-pointer"
                             }`}
                     >
-                        {isAdding ? "Adding..." : "Add Transaction"}
-                    </button>
+                        {isAdding ? "Saving..." : (isEditing ? "Save Changes" : "Add Transaction")}                    </button>
                 </form>
             </div>
         </div>

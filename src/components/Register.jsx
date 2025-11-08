@@ -127,7 +127,7 @@ const Register = () => {
 
                             {/* Row 3 - Full Width Button */}
                             <div className="w-full md:col-span-2">
-                                <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 mt-2 p-regular cursor-pointer text-sm sm:text-base ${loading ? "opacity-70 cursor-not-allowed" : "hover:scale-97"}`}>
+                                <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 mt-2 p-regular cursor-pointer text-sm sm:text-base ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:scale-97"}`}>
                                     {loading ? "Creating Account..." : "Create Account"}
                                 </button>
                             </div>

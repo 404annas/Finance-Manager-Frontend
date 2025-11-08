@@ -32,6 +32,14 @@ export const addPaymentToShare = async ({ shareId, paymentFormData }) => {
     return data;
 };
 
+export const updatePayment = async ({ paymentId, paymentFormData }) => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.put(`/api/payments/${paymentId}`, paymentFormData, {
+        headers: { /* Axios handles Content-Type for FormData */ },
+    });
+    return data;
+};
+
 // 3. DELETE: Delete a single payment by its own ID
 export const deletePayment = async (paymentId) => {
     const apiClient = getApiClient();

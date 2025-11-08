@@ -114,7 +114,7 @@ const UpdateProfileModal = ({ isOpen, onRequestClose, user, onUpdate, isUpdating
                     </div>
                     <button
                         type="submit" disabled={isUpdating}
-                        className="w-full bg-[#6667DD] text-white py-3 px-4 rounded-lg p-semibold hover:bg-[#6667DD]transition-all duration-300 hover:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        className="w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-3 px-4 rounded-lg p-semibold transition-all duration-300 hover:scale-97 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     >
                         {isUpdating ? 'Saving...' : 'Save Changes'}
                     </button>

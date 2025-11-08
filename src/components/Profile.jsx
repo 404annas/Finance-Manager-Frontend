@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { UserRoundPen } from 'lucide-react';
-import UpdateProfileModal from "./UpdateProfileModal";
+import UpdateProfileModal from "../mods/UpdateProfileModal";
 import { useUpdateProfile } from "../hooks/updateProfile";
 
 // Global flag to remember skeleton loaded

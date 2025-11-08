@@ -5,8 +5,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchUsers, deleteUsers } from "../hooks/getUsers";
 import { fetchShares } from "../hooks/recipientsShare";
 import ManageUserSharesModal from "../mods/ManageUserSharesModal"; // We will create this
-import { Files, FilePlus, UserRoundMinusIcon, Trash2, SquarePen, UserRoundPlus } from "lucide-react";
+import { Files, FilePlus, UserRoundMinusIcon, Trash2, UserRoundPlus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import AddUsers from "./AddUsers";
 
 const UsersInRecipients = () => {
     const queryClient = useQueryClient();
@@ -16,6 +17,7 @@ const UsersInRecipients = () => {
     // State for modals
     const [isManageModalOpen, setIsManageModalOpen] = useState(false);
     const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
     // State to hold the user being acted upon
     const [selectedUser, setSelectedUser] = useState(null);
@@ -101,10 +103,12 @@ const UsersInRecipients = () => {
         <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC]">
             <div className="flex lg:flex-row flex-col gap-4 items-start lg:items-center justify-between border-b border-blue-100 pb-6">
                 <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl p-bold text-[#6667DD]">Invite Recipients</h2>
+                    <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Invite Recipients</h2>
                     <p className="p-regular text-sm sm:text-base text-gray-700">Add recipients to manage shared transactions efficiently and securely.</p>
                 </div>
-                <button className="bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-2.5 sm:py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300 cursor-pointer flex items-center gap-2 sm:text-base text-sm"><UserRoundPlus size={20} />Invite Recipients</button>
+                <button
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-2.5 sm:py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300 cursor-pointer flex items-center gap-2 sm:text-base text-sm"><UserRoundPlus size={20} />Invite Recipients</button>
             </div>
 
             <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD] my-6">Share Payments With Your Recipients</h2>
@@ -147,11 +151,11 @@ const UsersInRecipients = () => {
 
                                     {/* Right: Edit + Delete */}
                                     <div className="flex items-center gap-2">
-                                        <button
+                                        {/* <button
                                             onClick={() => toast.info("Edit Recipient Coming Soon.")}
                                             className="p-2.5 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all duration-300 cursor-pointer shadow-sm">
                                             <SquarePen size={16} />
-                                        </button>
+                                        </button> */}
                                         <button
                                             onClick={() => handleDeleteUserClick(user)}
                                             className="p-2.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer shadow-sm"
@@ -194,6 +198,19 @@ const UsersInRecipients = () => {
                     allUsers={allConnectedUsers}
                 />
             )}
+
+            <AnimatePresence>
+                {isInviteModalOpen && (
+                    <motion.div className="fixed inset-0 z-50 sm:px-0 px-4 flex items-center justify-center bg-black/50 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-blue-200/50 px-4 sm:px-8 pb-10 sm:pb-12 pt-4 sm:pt-6 rounded-2xl w-full max-w-xl">
+                            <button onClick={() => setIsInviteModalOpen(false)} className="absolute top-2 sm:top-3 right-3 text-white bg-gray-800/50 cursor-pointer transition-all duration-300 rounded-full p-1 hover:bg-gray-800/80 z-10">
+                                <X size={20} />
+                            </button>
+                            <AddUsers onInviteSuccess={() => setIsInviteModalOpen(false)} />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {isDeleteUserModalOpen && selectedUser && (

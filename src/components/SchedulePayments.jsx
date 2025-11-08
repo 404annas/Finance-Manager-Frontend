@@ -1,15 +1,17 @@
 import { useState, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Calendar, Clock, UserRoundCheck, UserPlus2Icon, Trash2, X, SquarePen } from "lucide-react";
+import { Calendar, Clock, UserRoundCheck, UserPlus2Icon, Trash2, X, SquarePen, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Select from "react-select";
 import DataTable from "react-data-table-component";
-import { fetchSchedules, addSchedule, deleteSchedule, deleteAllSchedules } from "../hooks/schedule";
+import { fetchSchedules, addSchedule, deleteSchedule, deleteAllSchedules, updateSchedule } from "../hooks/schedule";
 import { fetchUsers } from "../hooks/getUsers";
 
 const PaymentsRemaining = () => {
+    const [editingSchedule, setEditingSchedule] = useState(null);
+
     // --- Form State ---
     const [selectedDate, setSelectedDate] = useState(null);
     const [title, setTitle] = useState("");
@@ -40,7 +42,15 @@ const PaymentsRemaining = () => {
         enabled: scheduleType === 'recipients',
     });
 
-    const { mutate: addScheduleMutate, isPending: isScheduling } = useMutation({
+    const resetForm = () => {
+        setTitle("");
+        setMessage("");
+        setSelectedDate(null);
+        setSelectedRecipients([]);
+        setEditingSchedule(null);
+    };
+
+    const { mutate: addScheduleMutate, isPending: isAdding } = useMutation({
         mutationFn: addSchedule,
         onSuccess: () => {
             toast.success("Payment Scheduled Successfully");
@@ -53,15 +63,30 @@ const PaymentsRemaining = () => {
         onError: (err) => toast.error(err.response?.data?.message || "Failed to schedule payment"),
     });
 
+    const { mutate: updateScheduleMutate, isPending: isUpdating } = useMutation({
+        mutationFn: updateSchedule,
+        onSuccess: () => {
+            toast.success("Schedule Updated Successfully");
+            queryClient.invalidateQueries({ queryKey: ["schedules"] }); resetForm();
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to update schedule"),
+    });
+
     const { mutate: deleteScheduleMutate, isPending: isDeleting, variables: deletingId } = useMutation({
         mutationFn: deleteSchedule,
-        onSuccess: () => { toast.success("Schedule deleted"); queryClient.invalidateQueries({ queryKey: ["schedules"] }); },
+        onSuccess: () => {
+            toast.success("Schedule deleted");
+            queryClient.invalidateQueries({ queryKey: ["schedules"] });
+        },
         onError: (err) => toast.error(err.response?.data?.message || "Failed to delete schedule"),
     });
 
     const { mutate: deleteAllMutate, isPending: isDeletingAll } = useMutation({
         mutationFn: deleteAllSchedules,
-        onSuccess: () => { toast.success("All schedules deleted"); queryClient.invalidateQueries({ queryKey: ["schedules"] }); },
+        onSuccess: () => {
+            toast.success("All schedules deleted");
+            queryClient.invalidateQueries({ queryKey: ["schedules"] });
+        },
         onError: (err) => toast.error(err.response?.data?.message || "Failed to delete all schedules"),
     });
 
@@ -74,27 +99,37 @@ const PaymentsRemaining = () => {
         }));
     }, [usersData]);
 
-    const handleSchedule = () => {
-        if (!selectedDate || !title) {
-            return toast.error("Please provide a title and select a date.");
-        }
-        let scheduledForIds = [];
-        if (scheduleType === "me") {
-            if (!currentUser?._id) return toast.error("Could not identify current user.");
-            scheduledForIds = [currentUser._id];
-        } else {
-            if (selectedRecipients.length === 0) {
-                return toast.error("Please select at least one recipient.");
-            }
-            scheduledForIds = selectedRecipients.map(option => option.value);
-        }
+    const handleSubmit = () => {
+        if (!selectedDate || !title) return toast.error("Please provide a title and select a date.");
 
-        addScheduleMutate({
-            title,
-            message,
-            scheduledDate: selectedDate,
-            scheduledForIds,
-        });
+        if (editingSchedule) {
+            // If we are editing, call the update mutation
+            updateScheduleMutate({
+                id: editingSchedule._id,
+                scheduleData: { title, message, scheduledDate: selectedDate }
+            });
+        } else {
+            // Otherwise, call the add mutation
+            let scheduledForIds = [];
+            if (scheduleType === "me") {
+                if (!currentUser?._id) return toast.error("Could not identify current user.");
+                scheduledForIds = [currentUser._id];
+            } else {
+                if (selectedRecipients.length === 0) return toast.error("Please select at least one recipient.");
+                scheduledForIds = selectedRecipients.map(option => option.value);
+            }
+            addScheduleMutate({ title, message, scheduledDate: selectedDate, scheduledForIds });
+        }
+    };
+
+    const handleEditClick = (schedule) => {
+        setEditingSchedule(schedule);
+        setTitle(schedule.title);
+        setMessage(schedule.message || "");
+        setSelectedDate(new Date(schedule.scheduledDate));
+        setScheduleType("me");
+        setSelectedRecipients([]);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const scheduleColumns = [
@@ -112,10 +147,18 @@ const PaymentsRemaining = () => {
                 const isCurrentlyDeleting = isDeleting && deletingId === row._id;
                 return (
                     <div className="flex items-center gap-2 w-[120px]">
-                        <button onClick={() => { setScheduleToDelete(row._id); setIsDeleteModalOpen(true); }} disabled={isCurrentlyDeleting} className={`p-2 text-red-500 hover:text-red-600 cursor-pointer transition-all duration-300 bg-red-100 rounded-full`}>
+                        <button
+                            onClick={() => {
+                                setScheduleToDelete(row._id);
+                                setIsDeleteModalOpen(true);
+                            }}
+                            disabled={isCurrentlyDeleting}
+                            className={`p-2 text-red-500 hover:text-red-600 cursor-pointer transition-all duration-300 bg-red-100 rounded-full`}>
                             <Trash2 size={18} />
                         </button>
-                        <button className={`p-2 text-blue-500 hover:text-blue-600 bg-blue-100 cursor-pointer transition-all duration-300 rounded-full`}>
+                        <button
+                            onClick={() => handleEditClick(row)}
+                            className={`p-2 text-blue-500 hover:text-blue-600 bg-blue-100 cursor-pointer transition-all duration-300 rounded-full`}>
                             <SquarePen size={18} />
                         </button>
                     </div>
@@ -131,12 +174,12 @@ const PaymentsRemaining = () => {
                 <div className="flex-1 w-full">
                     <div className="flex items-center gap-3 mb-4">
                         <Calendar className="text-[#6667DD]" size={22} />
-                        <h2 className="text-lg sm:text-xl md:text-2xl p-semibold text-[#6667DD]">Schedule Payment</h2>
+                        <h2 className="text-lg sm:text-xl md:text-2xl p-semibold text-[#6667DD]">{editingSchedule ? "Update Scheduled Payment" : "Schedule New Payment"}</h2>
                     </div>
-                    <p className="text-gray-600 text-sm sm:text-base p-regular mb-4 leading-relaxed">Schedule a payment reminder for yourself or for users you've invited.</p>
+                    <p className="text-gray-600 text-sm sm:text-base p-regular mb-4 leading-relaxed">{editingSchedule ? `You are now editing the schedule for "${editingSchedule.title}".` : "Schedule a payment reminder for yourself or for users you've invited."}</p>
                     <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full mb-3 p-2 sm:p-3 border-2 border-[#6667DD] outline-none rounded-xl p-regular text-sm sm:text-base" />
                     <textarea placeholder="Message" value={message} onChange={(e) => setMessage(e.target.value)} className="w-full mb-4 p-2 sm:p-3 border-2 border-[#6667DD] outline-none p-regular rounded-xl resize-none text-sm sm:text-base" rows={3} />
-                    {scheduleType === "recipients" && (
+                    {scheduleType === "recipients" && !editingSchedule && (
                         <div className="mb-4">
                             <label className="block text-gray-700 text-sm p-medium mb-1">Select Recipients</label>
                             <Select
@@ -179,15 +222,24 @@ const PaymentsRemaining = () => {
             </div>
             {/* Action Buttons */}
             <div className="flex items-center gap-4 py-2 flex-wrap">
-                <button onClick={handleSchedule} disabled={isScheduling} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isScheduling ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"} text-white`}>
-                    <Clock size={20} /> {isScheduling ? "Scheduling..." : "Schedule Payment"}
+                <button onClick={handleSubmit} disabled={isAdding || isUpdating} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isAdding || isUpdating ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"} text-white`}>
+                    <Clock size={20} /> {isAdding ? "Scheduling..." : (isUpdating ? "Updating..." : (editingSchedule ? "Update Schedule" : "Schedule Payment"))}
                 </button>
-                <button onClick={() => setScheduleType("me")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-green-700 ${scheduleType === 'me' ? 'bg-green-300 ring-2 ring-green-500' : 'bg-green-200 hover:bg-green-300'}`}>
-                    <UserRoundCheck size={20} /> <p>For Me</p>
-                </button>
-                <button onClick={() => setScheduleType("recipients")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-orange-700 ${scheduleType === 'recipients' ? 'bg-orange-300 ring-2 ring-orange-500' : 'bg-orange-200 hover:bg-orange-300'}`}>
-                    <UserPlus2Icon size={20} /> <p>For Recipients</p>
-                </button>
+                {editingSchedule && (
+                    <button onClick={resetForm} className={`flex items-center gap-2 py-2.5 sm:py-3 px-5 rounded-full shadow-md bg-gray-500 hover:scale-97 transition-all duration-300 text-white cursor-pointer`}>
+                        <Ban size={20} /> Cancel Edit
+                    </button>
+                )}
+                {!editingSchedule && (
+                    <>
+                        <button onClick={() => setScheduleType("me")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-green-700 ${scheduleType === 'me' ? 'bg-green-300 ring-2 ring-green-500' : 'bg-green-200 hover:bg-green-300'}`}>
+                            <UserRoundCheck size={20} /> <p>For Me</p>
+                        </button>
+                        <button onClick={() => setScheduleType("recipients")} className={`flex items-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base text-orange-700 ${scheduleType === 'recipients' ? 'bg-orange-300 ring-2 ring-orange-500' : 'bg-orange-200 hover:bg-orange-300'}`}>
+                            <UserPlus2Icon size={20} /> <p>For Recipients</p>
+                        </button>
+                    </>
+                )}
             </div>
 
             {/* DataTable */}

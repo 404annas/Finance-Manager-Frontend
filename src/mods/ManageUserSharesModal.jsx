@@ -60,12 +60,12 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                     {/* Close Button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-all duration-300"
+                        className="absolute top-4 right-4 text-gray-500 cursor-pointer hover:text-gray-700 transition-all duration-300 bg-gray-200 p-1 hover:bg-gray-300 rounded-full"
                     >
-                        <X size={24} />
+                        <X size={20} />
                     </button>
 
-                    <h2 className="text-base sm:text-xl p-semibold text-[#6667DD] mb-4 text-center sm:text-left">
+                    <h2 className="text-base sm:text-xl p-semibold text-[#6667DD] pt-8 sm:pt-0 mb-4 text-center sm:text-left">
                         <span className="text-gray-800">Manage Shared Transactions with</span> {user.name}
                     </h2>
 

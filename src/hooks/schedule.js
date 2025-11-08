@@ -27,6 +27,12 @@ export const addSchedule = async (scheduleData) => {
     return data;
 };
 
+export const updateSchedule = async ({ id, scheduleData }) => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.put(`/api/schedule/${id}`, scheduleData);
+    return data;
+};
+
 // 3. DELETE: Delete a single schedule by ID
 export const deleteSchedule = async (scheduleId) => {
     const apiClient = getApiClient();

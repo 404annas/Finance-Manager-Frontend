@@ -6,6 +6,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   fetchTransactions,
   addTransactions,
+  updateTransaction,
   deleteTransaction,
   deleteAllTransactions,
 } from "../hooks/transactions";
@@ -36,6 +37,8 @@ const categoryButtonColors = {
 
 const Transactions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+
   const [formData, setFormData] = useState({
     title: "",
     amount: "",
@@ -46,13 +49,17 @@ const Transactions = () => {
     description: "",
     image: null,
   });
+
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedImage, setSelectedImage] = useState(null);
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState(null);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
+
   const [dateFilter, setDateFilter] = useState("Entire");
   const [customDateRange, setCustomDateRange] = useState({ from: "", to: "" });
+
   const [isDownloading, setIsDownloading] = useState(false);
 
   const queryClient = useQueryClient();
@@ -82,6 +89,19 @@ const Transactions = () => {
       toast.error(err.response?.data?.message || "Failed to add transaction"),
   });
 
+  const { mutate: updateTransactionMutate, isPending: isUpdating } = useMutation({
+    mutationFn: updateTransaction,
+    onSuccess: () => {
+      toast.success("Transaction updated successfully.")
+      queryClient.invalidateQueries({ queryKey: ["transactions"] })
+      setIsModalOpen(false);
+      setEditingTransaction(null);
+    },
+    onError: () => {
+      toast.error(err.response?.data?.message || "Failed to update transaction")
+    }
+  })
+
   const { mutate: deleteTransactionMutate } = useMutation({
     mutationFn: deleteTransaction,
     onSuccess: () => {
@@ -108,16 +128,41 @@ const Transactions = () => {
     else setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAddTransaction = (e) => {
+  // 4. CREATE a handler for opening the modal in "add" mode
+  const handleOpenAddModal = () => {
+    setEditingTransaction(null);
+    setFormData({ title: "", amount: "", category: "", currency: "USD", type: "income", date: new Date().toISOString().split("T")[0], description: "", image: null });
+    setIsModalOpen(true);
+  };
+
+  // 5. CREATE a handler for opening the modal in "edit" mode
+  const handleOpenEditModal = (transaction) => {
+    setEditingTransaction(transaction);
+    setFormData({
+      ...transaction,
+      date: new Date(transaction.date).toISOString().split("T")[0], // Format date correctly
+      image: null, // Reset image field
+    });
+    setIsModalOpen(true);
+  };
+
+  // 6. RENAME and UPDATE the form submission handler
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.amount || !formData.category)
-      return toast.error("Please fill in all fields.");
+    if (!formData.title || !formData.amount || !formData.category) return toast.error("Please fill in all required fields.");
 
     const body = new FormData();
     Object.keys(formData).forEach((key) => {
       if (formData[key]) body.append(key, formData[key]);
     });
-    addTransactionMutate(body);
+
+    if (editingTransaction) {
+      // If editing, call the update mutation
+      updateTransactionMutate({ id: editingTransaction._id, formData: body });
+    } else {
+      // If adding, call the add mutation
+      addTransactionMutate(body);
+    }
   };
 
   const filterByDate = (txn) => {
@@ -286,7 +331,8 @@ const Transactions = () => {
           >
             <Trash2 size={16} className="sm:size-[18px] text-red-500" />
           </button>
-          <button onClick={() => toast.info("Edit Transaction Coming Soon.")}
+          <button
+            onClick={() => handleOpenEditModal(row)}
             className="bg-blue-100 hover:bg-blue-200 p-2 cursor-pointer rounded-full transition-all duration-300">
             <SquarePen size={16} className="sm:size-[18px] text-blue-500" />
           </button>
@@ -325,7 +371,7 @@ const Transactions = () => {
           My Transactions
         </h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenAddModal}
           className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md cursor-pointer hover:scale-[0.98] transition-all duration-300"
         >
           <Plus size={16} className="sm:size-[18px]" /> Add Transaction
@@ -452,10 +498,11 @@ const Transactions = () => {
       <AddTransactionModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        handleSubmit={handleAddTransaction}
+        handleSubmit={handleSubmit}
         handleChange={handleChange}
         formData={formData}
-        isAdding={isAdding}
+        isAdding={isAdding || isUpdating}
+        isEditing={!!editingTransaction}
       />
 
       <ConfirmDeleteModal
