@@ -26,3 +26,13 @@ export const deleteUsers = async (userId) => {
     });
     return res.data;
 }
+
+export const resendInvite = async (email) => {
+    const res = await axios.post(`${API_URL}/api/invite`, { emails: [email] }, {
+        headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+        },
+    });
+    return res.data;
+}

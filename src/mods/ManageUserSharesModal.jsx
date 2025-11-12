@@ -129,91 +129,108 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                                 createShareMutate(payload);
                             }}
                         >
-                            {({ setFieldValue, values }) => (
-                                <Form className="space-y-4">
-                                    {/* Title + Category */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div className="flex flex-col gap-1">
-                                            <Field
-                                                name="title"
-                                                placeholder="Transaction Title (e.g., Business...)"
-                                                className="w-full p-2 border border-[#6667DD] rounded-lg outline-none bg-transparent"
-                                            />
-                                            <ErrorMessage
-                                                name="title"
-                                                component="div"
-                                                className="text-red-500 text-sm"
-                                            />
+                            {({ setFieldValue, values, errors, touched }) => {
+                                const isDisabled =
+                                    !values.title ||
+                                    !values.category ||
+                                    !values.sharedWith.length;
+
+                                return (
+                                    <Form className="space-y-4">
+                                        {/* Title + Category */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div className="flex flex-col gap-1">
+                                                <Field
+                                                    name="title"
+                                                    placeholder="Transaction Title (e.g: Business..."
+                                                    className={`w-full p-2 border rounded-lg outline-none text-sm sm:text-base ${errors.title && touched.title
+                                                        ? "border-red-500"
+                                                        : "border-[#6667DD]"
+                                                        }`}
+                                                />
+                                                <ErrorMessage
+                                                    name="title"
+                                                    component="div"
+                                                    className="text-red-500 text-sm"
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-1">
+                                                <Field
+                                                    as="select"
+                                                    name="category"
+                                                    className={`w-full p-2 border rounded-lg outline-none text-sm sm:text-base cursor-pointer ${errors.category && touched.category
+                                                        ? "border-red-500"
+                                                        : "border-[#6667DD]"
+                                                        }`}
+                                                >
+                                                    <option value="">Select Category</option>
+                                                    {categories.map((cat) => (
+                                                        <option key={cat} value={cat}>
+                                                            {cat}
+                                                        </option>
+                                                    ))}
+                                                </Field>
+                                                <ErrorMessage
+                                                    name="category"
+                                                    component="div"
+                                                    className="text-red-500 text-sm"
+                                                />
+                                            </div>
                                         </div>
 
-                                        <div className="flex flex-col gap-1">
-                                            <Field
-                                                as="select"
-                                                name="category"
-                                                className="w-full p-2 border border-[#6667DD] outline-none rounded-lg bg-transparent cursor-pointer"
-                                            >
-                                                <option value="">Select Category</option>
-                                                {categories.map((cat) => (
-                                                    <option key={cat} value={cat}>
-                                                        {cat}
-                                                    </option>
-                                                ))}
-                                            </Field>
-                                            <ErrorMessage
-                                                name="category"
-                                                component="div"
-                                                className="text-red-500 text-sm"
-                                            />
-                                        </div>
-                                    </div>
+                                        {/* Select Users */}
+                                        <Select
+                                            isMulti
+                                            options={userOptions}
+                                            placeholder="Share with..."
+                                            onChange={(option) => setFieldValue("sharedWith", option)}
+                                            value={values.sharedWith}
+                                            className="cursor-pointer"
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    borderColor: "#BFDBFE", // blue-100
+                                                    borderWidth: 2,
+                                                    borderRadius: "0.75rem",
+                                                    backgroundColor: "transparent",
+                                                    boxShadow: "none",
+                                                    cursor: "pointer",
+                                                    "&:hover": { borderColor: "#BFDBFE" },
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 50,
+                                                    overflowY: "auto",
+                                                }),
+                                                multiValue: (base) => ({
+                                                    ...base,
+                                                    backgroundColor: "#E9D4FF",
+                                                }),
+                                            }}
+                                        />
+                                        <ErrorMessage
+                                            name="sharedWith"
+                                            component="div"
+                                            className="text-red-500 text-sm"
+                                        />
 
-                                    {/* Select Users */}
-                                    <Select
-                                        isMulti
-                                        options={userOptions}
-                                        placeholder="Share with..."
-                                        onChange={(option) => setFieldValue("sharedWith", option)}
-                                        value={values.sharedWith}
-                                        className="cursor-pointer"
-                                        styles={{
-                                            control: (base) => ({
-                                                ...base,
-                                                borderColor: "#BFDBFE", // blue-100
-                                                borderWidth: 2,
-                                                borderRadius: "0.75rem",
-                                                backgroundColor: "transparent",
-                                                boxShadow: "none",
-                                                cursor: "pointer",
-                                                "&:hover": { borderColor: "#BFDBFE" },
-                                            }),
-                                            menu: (base) => ({
-                                                ...base,
-                                                zIndex: 50,
-                                                maxHeight: "150px",
-                                                overflowY: "auto",
-                                            }),
-                                            multiValue: (base) => ({
-                                                ...base,
-                                                backgroundColor: "#E9D4FF",
-                                            }),
-                                        }}
-                                    />
-                                    <ErrorMessage
-                                        name="sharedWith"
-                                        component="div"
-                                        className="text-red-500 text-sm"
-                                    />
-
-                                    {/* Submit Button */}
-                                    <button
-                                        type="submit"
-                                        disabled={isCreating}
-                                        className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#6667DD] to-[#7C81F8] cursor-pointer hover:scale-98 transition-all duration-300 text-white p-medium sm:text-base text-sm"
-                                    >
-                                        {isCreating ? "Creating..." : "Create & View Shared Transaction"}
-                                    </button>
-                                </Form>
-                            )}
+                                        {/* Submit Button */}
+                                        <button
+                                            type="submit"
+                                            disabled={isDisabled || isCreating}
+                                            className={`w-full px-4 py-2.5 rounded-lg text-white p-medium transition-all duration-300 ${isDisabled || isCreating
+                                                    ? "bg-[#9BA0E0] cursor-not-allowed"
+                                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98"
+                                                }`}
+                                        >
+                                            {isCreating
+                                                ? "Creating..."
+                                                : "Create & View Shared Transaction"}
+                                        </button>
+                                    </Form>
+                                )
+                            }}
                         </Formik>
                     </div>
                 </div>

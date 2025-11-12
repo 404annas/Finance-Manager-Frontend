@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppContext } from '../../context/AppContext';
@@ -21,7 +21,6 @@ const Register = () => {
 
     // Initialize Formik with the token from the URL.
     const initialValues = {
-        file: null,
         name: '',
         email: '',
         password: '',
@@ -42,9 +41,6 @@ const Register = () => {
             formData.append("name", values.name);
             formData.append("email", values.email);
             formData.append("password", values.password);
-            if (values.file) {
-                formData.append("profileImage", values.file);
-            }
             if (values.inviteToken) {
                 formData.append("token", values.inviteToken);
             }
@@ -94,55 +90,76 @@ const Register = () => {
                     onSubmit={handleSubmit}
                     enableReinitialize={true}
                 >
-                    {({ setFieldValue, errors, touched }) => (
-                        // --- UI FIX IS HERE: The grid layout is restored ---
-                        <Form className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                            {/* Row 1 */}
-                            <div className="flex flex-col">
-                                <label className="text-gray-700 p-medium mb-1">Name</label>
-                                <Field name="name" placeholder="Enter your full name" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.name && touched.name ? 'border-red-500' : 'border-[#6667DD]'}`} />
-                                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
-                            </div>
-                            <div className="flex flex-col">
-                                <label className="text-gray-700 p-medium mb-1">Email</label>
-                                <Field type="email" name="email" placeholder="Enter your email"
-                                    // disabled={loading || inviteTokenFromUrl} 
-                                    className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'} ${inviteTokenFromUrl ? 'bg-gray-100' : ''}`} />
-                                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-                            </div>
+                    {({ setFieldValue, errors, touched }) => {
+                        useEffect(() => {
+                            if (inviteTokenFromUrl) {
+                                try {
+                                    // Token ko decode karke email nikalein
+                                    const decodedToken = jwtDecode(inviteTokenFromUrl);
+                                    if (decodedToken.email) {
+                                        // Formik ki 'email' field ko update karein
+                                        setFieldValue('email', decodedToken.email);
+                                    }
+                                } catch (error) {
+                                    console.error("Invalid token:", error);
+                                    toast.error("The invite link is invalid or has expired.");
+                                    navigate("/register"); // Ghalat token per user ko normal register page per bhej dein
+                                }
+                            }
+                        }, [inviteTokenFromUrl, setFieldValue, navigate]);
 
-                            {/* Row 2 */}
-                            <div className="flex flex-col">
-                                <label className="text-gray-700 p-medium mb-1">Profile Picture (Optional)</label>
-                                <input type="file" name="file" accept="image/*" onChange={e => setFieldValue("file", e.currentTarget.files[0])} disabled={loading} className="w-full px-3 py-1.5 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-[#6667DD] hover:file:bg-purple-100 transition-all dur3\" />
-                            </div>
-                            <div className="flex flex-col relative">
-                                <label className="text-gray-700 p-medium mb-1">Password</label>
-                                <Field type={showPassword ? "text" : "password"} name="password" placeholder="Enter your password" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base pr-10 ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`} />
-                                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                                <div className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD]" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                        return (
+
+                            <Form className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                {/* Row 1 */}
+                                <div className="flex flex-col">
+                                    <label className="text-gray-700 p-medium mb-1">Name</label>
+                                    <Field name="name" placeholder="Enter your full name" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.name && touched.name ? 'border-red-500' : 'border-[#6667DD]'}`} />
+                                    <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
                                 </div>
-                            </div>
+                                <div className="flex flex-col">
+                                    <label className="text-gray-700 p-medium mb-1">Email</label>
+                                    <Field type="email" name="email" placeholder="Enter your email" readOnly={!!inviteTokenFromUrl}
+                                        // disabled={loading || inviteTokenFromUrl} 
+                                        className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'} ${inviteTokenFromUrl ? 'bg-gray-200 cursor-not-allowed' : ''}`} />
+                                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                                </div>
 
-                            {/* Row 3 - Full Width Button */}
-                            <div className="w-full md:col-span-2">
+                                {/* Row 2 */}
+                                <div className="flex flex-col relative">
+                                    <label className="text-gray-700 p-medium mb-1">Password</label>
+                                    <Field type={showPassword ? "text" : "password"} name="password" placeholder="Enter your password" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base pr-10 ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`} />
+                                    <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                                    <div className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD]" onClick={() => setShowPassword(!showPassword)}>
+                                        {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                    </div>
+                                </div>
+                                <div className='flex flex-col'>
+                                    <label className="text-gray-700 p-medium mb-1">Register</label>
+                                    <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-[9px] rounded-lg transition duration-300 p-regular cursor-pointer text-sm sm:text-base ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:scale-98"}`}>
+                                        {loading ? "Creating Account..." : "Create Account"}
+                                    </button>
+                                </div>
+
+                                {/* Row 3 - Full Width Button */}
+                                {/* <div className="w-full md:col-span-2">
                                 <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 mt-2 p-regular cursor-pointer text-sm sm:text-base ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:scale-97"}`}>
                                     {loading ? "Creating Account..." : "Create Account"}
                                 </button>
-                            </div>
+                            </div> */}
 
-                            {/* Row 4 - Full Width Link */}
-                            <div className="md:col-span-2 text-center mt-3">
-                                <p className="text-gray-600 p-regular text-sm sm:text-base">
-                                    Already have an account?{' '}
-                                    <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
-                                        Login Now
-                                    </Link>
-                                </p>
-                            </div>
-                        </Form>
-                    )}
+                                {/* Row 4 - Full Width Link */}
+                                <div className="md:col-span-2 text-center mt-3">
+                                    <p className="text-gray-600 p-regular text-sm sm:text-base">
+                                        Already have an account?{' '}
+                                        <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
+                                            Login Now
+                                        </Link>
+                                    </p>
+                                </div>
+                            </Form>
+                        )
+                    }}
                 </Formik>
             </div>
             {/* Animation Styles */}

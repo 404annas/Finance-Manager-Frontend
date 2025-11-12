@@ -8,6 +8,7 @@ import ManageUserSharesModal from "../mods/ManageUserSharesModal"; // We will cr
 import { Files, FilePlus, UserRoundMinusIcon, Trash2, UserRoundPlus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AddUsers from "./AddUsers";
+import ConnectionRequests from "./ConnectionRequests";
 
 const UsersInRecipients = () => {
     const queryClient = useQueryClient();
@@ -21,6 +22,9 @@ const UsersInRecipients = () => {
 
     // State to hold the user being acted upon
     const [selectedUser, setSelectedUser] = useState(null);
+
+    // For Filtering Cards
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Fetch all users (invited by me + invited me)
     const { data: usersData, isPending: isLoadingUsers } = useQuery({
@@ -56,6 +60,16 @@ const UsersInRecipients = () => {
         [...invited, ...inviter].forEach(user => userMap.set(user._id, user));
         return Array.from(userMap.values());
     }, [usersData]);
+
+    const filteredUsers = useMemo(() => {
+        if (!searchTerm) return allConnectedUsers;
+        const lower = searchTerm.toLowerCase();
+        return allConnectedUsers.filter(
+            (user) =>
+                user.name?.toLowerCase().includes(lower) ||
+                user.email?.toLowerCase().includes(lower)
+        );
+    }, [allConnectedUsers, searchTerm]);
 
     const handleManageClick = (user) => {
         setSelectedUser(user);
@@ -111,11 +125,26 @@ const UsersInRecipients = () => {
                     className="bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-2.5 sm:py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300 cursor-pointer flex items-center gap-2 sm:text-base text-sm"><UserRoundPlus size={20} />Invite Recipients</button>
             </div>
 
-            <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD] my-6">Share Payments With Your Recipients</h2>
+            <div className="my-6">
+                <ConnectionRequests />
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between my-6">
+                <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Share Payments With Your Recipients</h2>
+                <div className="">
+                    <input
+                        type="text"
+                        placeholder="Search recipients by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-96 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 shadow-sm outline-none"
+                    />
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {allConnectedUsers.length > 0 ? (
-                    allConnectedUsers.map((user) => {
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => {
                         const sharesWithThisUser = allShares.filter(share =>
                             (share.sharedBy._id === currentUser._id && share.sharedWith.some(u => u._id === user._id)) ||
                             (share.sharedBy._id === user._id && share.sharedWith.some(u => u._id === currentUser._id))
@@ -143,9 +172,10 @@ const UsersInRecipients = () => {
                                             <h3 className="p-semibold text-base sm:text-lg text-gray-800 leading-tight">
                                                 {user.name}
                                             </h3>
-                                            <p className="p-regular text-xs sm:text-sm text-gray-500 break-all">
+                                            <p className="p-regular text-sm text-gray-500 break-all">
                                                 {user.email}
                                             </p>
+                                            <p className={`${user.status === "accepted" ? "text-green-500" : "text-red-500"} text-xs p-semibold`}>Status: {user.status}</p>
                                         </div>
                                     </div>
 
@@ -181,7 +211,11 @@ const UsersInRecipients = () => {
                         );
                     })
                 ) : (
-                    <p className="text-center text-gray-500 p-4">You have no connected users to manage payments with.</p>
+                    <p className="text-center text-gray-500 p-4 bg-[#F3E8FF] mt-4">
+                        {searchTerm
+                            ? "No recipients found for your search."
+                            : "You have no connected users to manage payments with."}
+                    </p>
                 )}
             </div>
 

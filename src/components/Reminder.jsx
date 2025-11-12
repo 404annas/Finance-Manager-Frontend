@@ -43,157 +43,169 @@ const Reminder = () => {
             <Formik initialValues={{ subject: "", email: "", amount: "", currency: "", message: "" }} validationSchema={validationSchema} onSubmit={(values, { resetForm }) => {
                 mutate(values, { onSuccess: () => resetForm() });
             }}>
-                {({ errors, touched, handleChange, handleBlur, values }) => (
-                    <Form className="space-y-3 sm:space-y-4">
-                        {/* Subject + Email */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="flex flex-col">
-                                <div className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                {({ errors, touched, handleChange, handleBlur, values }) => {
+                    const isAnyFieldFilled =
+                        values.subject.trim() !== "" ||
+                        values.email.trim() !== "" ||
+                        values.amount !== "" ||
+                        values.currency.trim() !== "" ||
+                        values.message.trim() !== "";
+
+                    return (
+                        <Form className="space-y-3 sm:space-y-4">
+                            {/* Subject + Email */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex flex-col">
+                                    <div className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
                   transition-colors duration-200
                   ${isPending ? 'bg-[#ECECFB] border-[#b6b6e0]'
-                                        : errors.subject && touched.subject
-                                            ? 'border-red-500'
-                                            : 'border-[#6667DD]'}`}>
-                                    <PencilLine size={20} className="text-gray-500 mr-2" />
-                                    <Field
-                                        type="text"
-                                        name="subject"
-                                        placeholder="Reminder Title"
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
-                                    />
+                                            : errors.subject && touched.subject
+                                                ? 'border-red-500'
+                                                : 'border-[#6667DD]'}`}>
+                                        <PencilLine size={20} className="text-gray-500 mr-2" />
+                                        <Field
+                                            type="text"
+                                            name="subject"
+                                            placeholder="Reminder Title"
+                                            disabled={isPending}
+                                            className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                        />
+                                    </div>
+                                    <ErrorMessage name="subject" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                                 </div>
-                                <ErrorMessage name="subject" component="div" className="text-red-500 text-sm mt-1 p-regular" />
-                            </div>
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
       transition-colors duration-200
       ${isPending
-                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                            : errors.email && touched.email
-                                                ? "border-red-500"
-                                                : "border-[#6667DD]"
-                                        }`}
-                                >
-                                    <Mail size={20} className="text-gray-500 mr-2" />
-                                    <select
-                                        name="email"
-                                        value={values.email}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        disabled={isPending || isLoadingUsers} // Disable while loading users
-                                        className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                                ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                                : errors.email && touched.email
+                                                    ? "border-red-500"
+                                                    : "border-[#6667DD]"
+                                            }`}
                                     >
-                                        <option value="">
-                                            {isLoadingUsers ? "Loading recipients..." : "Select a Recipient"}
-                                        </option>
-                                        {usersData?.invitedUsers?.map((user) => (
-                                            <option key={user._id} value={user.email}>
-                                                {user.name} ({user.email})
+                                        <Mail size={20} className="text-gray-500 mr-2" />
+                                        <select
+                                            name="email"
+                                            value={values.email}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            disabled={isPending || isLoadingUsers} // Disable while loading users
+                                            className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                        >
+                                            <option value="">
+                                                {isLoadingUsers ? "Loading recipients..." : "Select a Recipient"}
                                             </option>
-                                        ))}
-                                    </select>
+                                            {usersData?.invitedUsers?.map((user) => (
+                                                <option key={user._id} value={user.email}>
+                                                    {user.name} ({user.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                                 </div>
-                                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                             </div>
-                        </div>
 
-                        {/* Amount + Currency */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                            {/* Amount + Currency */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
       transition-colors duration-200
       ${isPending
-                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                            : errors.currency && touched.currency
-                                                ? "border-red-500"
-                                                : "border-[#6667DD]"
-                                        }`}
-                                >
-                                    <CircleDollarSign size={20} className="text-gray-500 mr-2" />
-                                    <select
-                                        name="currency"
-                                        value={values.currency}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                                ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                                : errors.currency && touched.currency
+                                                    ? "border-red-500"
+                                                    : "border-[#6667DD]"
+                                            }`}
                                     >
-                                        <option value="">Select Currency</option>
-                                        <option value="USD">USD ($)</option>
-                                        <option value="EUR">EUR (€)</option>
-                                        <option value="PKR">PKR (₨)</option>
-                                        <option value="INR">INR (₹)</option>
-                                    </select>
-                                </div>
-                                <ErrorMessage
-                                    name="currency"
-                                    component="div"
-                                    className="text-red-500 text-sm mt-1"
-                                />
-                            </div>
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
-      transition-colors duration-200
-      ${isPending
-                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                            : errors.amount && touched.amount
-                                                ? "border-red-500"
-                                                : "border-[#6667DD]"
-                                        }`}
-                                >
-                                    <Wallet size={20} className="text-gray-500 mr-2" />
-                                    <Field
-                                        type="number"
-                                        name="amount"
-                                        placeholder="Amount"
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                        <CircleDollarSign size={20} className="text-gray-500 mr-2" />
+                                        <select
+                                            name="currency"
+                                            value={values.currency}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            disabled={isPending}
+                                            className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                        >
+                                            <option value="">Select Currency</option>
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
+                                            <option value="PKR">PKR (₨)</option>
+                                            <option value="INR">INR (₹)</option>
+                                        </select>
+                                    </div>
+                                    <ErrorMessage
+                                        name="currency"
+                                        component="div"
+                                        className="text-red-500 text-sm mt-1"
                                     />
                                 </div>
-                                <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1 p-regular" />
-                            </div>
-                        </div>
-
-                        {/* Message Box */}
-                        <div className="flex flex-col">
-                            <div
-                                className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
       transition-colors duration-200
       ${isPending
-                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                        : errors.message && touched.message
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
+                                                ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                                : errors.amount && touched.amount
+                                                    ? "border-red-500"
+                                                    : "border-[#6667DD]"
+                                            }`}
+                                    >
+                                        <Wallet size={20} className="text-gray-500 mr-2" />
+                                        <Field
+                                            type="number"
+                                            name="amount"
+                                            placeholder="Amount"
+                                            disabled={isPending}
+                                            className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                        />
+                                    </div>
+                                    <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                                </div>
+                            </div>
+
+                            {/* Message Box */}
+                            <div className="flex flex-col">
+                                <div
+                                    className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+      transition-colors duration-200
+      ${isPending
+                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                            : errors.message && touched.message
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
+                                        }`}
+                                >
+                                    <MessagesSquare size={20} className="text-gray-500 mr-2 mt-0.5" />
+                                    <Field
+                                        as="textarea"
+                                        name="message"
+                                        placeholder="Write a message..."
+                                        rows={4}
+                                        disabled={isPending}
+                                        className="w-full text-sm sm:text-base outline-none bg-transparent resize-none"
+                                    />
+                                </div>
+                                <ErrorMessage name="message" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={!isAnyFieldFilled || isPending}
+                                className={`w-full py-3 sm:py-3.5 rounded-lg shadow transition-all duration-300 p-regular text-sm sm:text-base text-white
+                  ${!isAnyFieldFilled || isPending
+                                        ? "bg-[#9BA0E0] cursor-not-allowed opacity-70"
+                                        : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 hover:opacity-90 cursor-pointer"
                                     }`}
                             >
-                                <MessagesSquare size={20} className="text-gray-500 mr-2 mt-0.5" />
-                                <Field
-                                    as="textarea"
-                                    name="message"
-                                    placeholder="Write a message..."
-                                    rows={4}
-                                    disabled={isPending}
-                                    className="w-full text-sm sm:text-base outline-none bg-transparent resize-none"
-                                />
-                            </div>
-                            <ErrorMessage name="message" component="div" className="text-red-500 text-sm mt-1 p-regular" />
-                        </div>
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isPending}
-                            className={`w-full ${isPending ? "bg-gray-400 hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"
-                                } text-white py-3 sm:py-3.5 rounded-lg shadow transition-all duration-300 cursor-pointer p-regular text-sm sm:text-base`}
-                        >
-                            {isPending ? "Reminding..." : "Send Reminder"}
-                        </button>
-                    </Form>
-                )}
+                                {isPending ? "Reminding..." : "Send Reminder"}
+                            </button>
+                        </Form>
+                    )
+                }}
             </Formik>
         </div>
     );

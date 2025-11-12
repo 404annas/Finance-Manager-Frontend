@@ -20,3 +20,13 @@ export const updateUserProfileAPI = async (formData) => {
     });
     return data;
 }
+
+export const forgotPasswordAPI = async (email) => {
+    const { data } = await api.post('/api/forgot-password', { email });
+    return data;
+}
+
+export const resetPasswordAPI = async (token, password) => {
+    const { data } = await api.post(`/api/reset-password/${token}`, { password });
+    return data;
+}

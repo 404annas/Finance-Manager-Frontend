@@ -228,6 +228,9 @@ const RecipientsData = () => {
         },
     };
 
+    const isSubmitDisabled =
+        !title || !category || !currency || !amount || !status || isAdding || isUpdating;
+
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -382,10 +385,10 @@ const RecipientsData = () => {
 
                         <button
                             onClick={handleSubmit}
-                            disabled={isAdding || isUpdating}
-                            className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAdding || isUpdating
-                                ? "bg-[#999] cursor-not-allowed"
-                                : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"
+                            disabled={isSubmitDisabled}
+                            className={`w-full py-3 rounded-lg shadow-md p-medium cursor-pointer transition-all duration-300 ${isSubmitDisabled
+                                    ? "bg-[#9BA0E0] cursor-not-allowed"
+                                    : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"
                                 } text-white`}
                         >
                             {isAdding || isUpdating

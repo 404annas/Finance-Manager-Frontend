@@ -11,6 +11,13 @@ export const AddTransactionModal = ({
 }) => {
     if (!isOpen) return null;
 
+    const isFormValid =
+        formData.title &&
+        formData.category &&
+        formData.amount &&
+        formData.type &&
+        formData.date;
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-0 bg-black/50 backdrop-blur-sm">
             <div className="bg-[#F6F9FC] rounded-2xl shadow-xl w-full max-w-2xl p-4 sm:p-6 relative animate-scaleUp border-2 border-[#6667DD] max-h-[80vh] sm:max-h-[90vh] overflow-y-auto">
@@ -128,13 +135,14 @@ export const AddTransactionModal = ({
 
                     <button
                         type="submit"
-                        disabled={isAdding}
-                        className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding
-                            ? "bg-gray-400 hover:cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97 cursor-pointer"
+                        disabled={isAdding || !isFormValid}
+                        className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding || !isFormValid
+                            ? "bg-[#9BA0E0] hover:cursor-not-allowed"
+                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
                             }`}
                     >
-                        {isAdding ? "Saving..." : (isEditing ? "Save Changes" : "Add Transaction")}                    </button>
+                        {isAdding ? "Saving..." : (isEditing ? "Save Changes" : "Add Transaction")}
+                    </button>
                 </form>
             </div>
         </div>

@@ -222,8 +222,16 @@ const PaymentsRemaining = () => {
             </div>
             {/* Action Buttons */}
             <div className="flex items-center gap-4 py-2 flex-wrap">
-                <button onClick={handleSubmit} disabled={isAdding || isUpdating} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isAdding || isUpdating ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"} text-white`}>
-                    <Clock size={20} /> {isAdding ? "Scheduling..." : (isUpdating ? "Updating..." : (editingSchedule ? "Update Schedule" : "Schedule Payment"))}
+                <button
+                    onClick={handleSubmit}
+                    disabled={isAdding || isUpdating || !title || !selectedDate}
+                    className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isAdding || isUpdating || !title || !selectedDate
+                            ? "bg-[#9ba0e0] hover:cursor-not-allowed"
+                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"
+                        } text-white`}
+                >
+                    <Clock size={20} />{" "}
+                    {isAdding ? "Scheduling..." : isUpdating ? "Updating..." : editingSchedule ? "Update Schedule" : "Schedule Payment"}
                 </button>
                 {editingSchedule && (
                     <button onClick={resetForm} className={`flex items-center gap-2 py-2.5 sm:py-3 px-5 rounded-full shadow-md bg-gray-500 hover:scale-97 transition-all duration-300 text-white cursor-pointer`}>

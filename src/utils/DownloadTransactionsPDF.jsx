@@ -6,6 +6,8 @@ const DownloadTransactionsPDF = (transactions, category, dateFilter, customRange
     if (!transactions || transactions.length === 0) {
         toast.error("No transactions to download!");
         return;
+    } else {
+        toast.success("Transactions downloaded successfully.")
     }
 
     const doc = new jsPDF();

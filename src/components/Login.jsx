@@ -125,7 +125,7 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
+                                className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base hover:scale-98
                                 ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:bg-scale-97 cursor-pointer"}`}
                             >
                                 {loading ? "Logging..." : "Login"}
@@ -134,12 +134,22 @@ const Login = () => {
                     )}
                 </Formik>
 
-                <p className="text-center text-gray-600 mt-4 p-regular text-sm sm:text-base">
-                    Account not exists?{' '}
-                    <Link to="/register" className="text-[#6667DD] p-medium hover:underline">
-                        Register Now
-                    </Link>
-                </p>
+                <div className="flex flex-col items-center mt-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/forgot-password")}
+                        className="text-[#6667DD] p-regular hover:underline text-sm sm:text-base mb-2 cursor-pointer"
+                    >
+                        Forgot Password?
+                    </button>
+                
+                    <p className="text-center text-gray-600 p-regular text-sm sm:text-base">
+                        Account not exists?{' '}
+                        <Link to="/register" className="text-[#6667DD] p-medium hover:underline">
+                            Register Now
+                        </Link>
+                    </p>
+                </div>
             </div>
 
             {/* Animation Styles */}

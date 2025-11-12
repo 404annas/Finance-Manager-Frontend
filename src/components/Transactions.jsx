@@ -128,25 +128,22 @@ const Transactions = () => {
     else setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 4. CREATE a handler for opening the modal in "add" mode
   const handleOpenAddModal = () => {
     setEditingTransaction(null);
     setFormData({ title: "", amount: "", category: "", currency: "USD", type: "income", date: new Date().toISOString().split("T")[0], description: "", image: null });
     setIsModalOpen(true);
   };
 
-  // 5. CREATE a handler for opening the modal in "edit" mode
   const handleOpenEditModal = (transaction) => {
     setEditingTransaction(transaction);
     setFormData({
       ...transaction,
-      date: new Date(transaction.date).toISOString().split("T")[0], // Format date correctly
-      image: null, // Reset image field
+      date: new Date(transaction.date).toISOString().split("T")[0],
+      image: null,
     });
     setIsModalOpen(true);
   };
 
-  // 6. RENAME and UPDATE the form submission handler
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title || !formData.amount || !formData.category) return toast.error("Please fill in all required fields.");
@@ -157,10 +154,8 @@ const Transactions = () => {
     });
 
     if (editingTransaction) {
-      // If editing, call the update mutation
       updateTransactionMutate({ id: editingTransaction._id, formData: body });
     } else {
-      // If adding, call the add mutation
       addTransactionMutate(body);
     }
   };
@@ -222,7 +217,7 @@ const Transactions = () => {
           dateFilter,
           customDateRange
         );
-        toast.success("Transactions downloaded successfully!");
+        // toast.success("Transactions downloaded successfully!");
       } catch {
         toast.error("Failed to download transactions!");
       } finally {
@@ -458,14 +453,18 @@ const Transactions = () => {
 
         <button
           onClick={handleDownload}
-          disabled={isDownloading}
-          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading
-            ? "bg-gray-300 hover:cursor-not-allowed"
+          disabled={isDownloading || filteredTransactions.length === 0}
+          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading || filteredTransactions.length === 0
+            ? "bg-gray-300 text-gray-700 hover:cursor-not-allowed"
             : "bg-[#E0E2FD] hover:bg-[#C8CBFC] text-[#4447AA]"
             }`}
         >
           <DownloadCloud size={16} className="sm:size-[18px]" />
-          {isDownloading ? "Downloading..." : "Download PDF"}
+          {isDownloading
+            ? "Downloading..."
+            : filteredTransactions.length === 0
+              ? "No Transactions"
+              : "Download PDF"}
         </button>
       </div>
 

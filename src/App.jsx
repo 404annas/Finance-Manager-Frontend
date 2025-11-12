@@ -3,6 +3,8 @@ import UserDashboard from "./screens/UserDashboard";
 import Hero from "./components/Hero";
 import Register from "./components/Register";
 import Login from "./components/Login";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 import { Toaster } from "sonner";
 import { useAppContext } from "../context/AppContext";
 import Profile from "./components/Profile";
@@ -44,6 +46,8 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" />} />
