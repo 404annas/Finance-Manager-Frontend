@@ -221,7 +221,7 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                                             disabled={isDisabled || isCreating}
                                             className={`w-full px-4 py-2.5 rounded-lg text-white p-medium transition-all duration-300 ${isDisabled || isCreating
                                                     ? "bg-[#9BA0E0] cursor-not-allowed"
-                                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98"
+                                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
                                                 }`}
                                         >
                                             {isCreating

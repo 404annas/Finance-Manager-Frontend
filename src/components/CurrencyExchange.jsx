@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRightLeft } from "lucide-react";
-import currencies from "./currencies";
+import currencies from "../utils/currencies.js";
 
 const CurrencyExchange = () => {
     const [fromCurrency, setFromCurrency] = useState("USD");

@@ -4,11 +4,11 @@ import {
     DollarSign,
     CreditCard,
     List,
-    Users,
     TrendingUp,
     ArrowUpRight,
     ArrowDownRight,
     CalendarClock,
+    UsersRound,
 } from 'lucide-react';
 
 // Import Charting Libraries and register necessary components
@@ -126,7 +126,7 @@ const Hero = () => {
             { icon: <DollarSign size={20} className="text-green-500" />, label: 'Income', value: formatCurrency(stats.totalIncome) },
             { icon: <CreditCard size={20} className="text-red-500" />, label: 'Expenses', value: formatCurrency(stats.totalExpenses) },
             { icon: <List size={20} className="text-blue-500" />, label: 'Transactions', value: stats.totalTransactions },
-            { icon: <Users size={20} className="text-teal-500" />, label: 'Connected Users', value: stats.connectedUsers?.length || 0 },
+            { icon: <UsersRound size={20} className="text-teal-500" />, label: 'Connected Users', value: stats.connectedUsers?.length || 0 },
             { icon: <CalendarClock size={20} className="text-purple-500" />, label: 'Upcoming Schedules', value: stats.upcomingSchedules },
         ];
 

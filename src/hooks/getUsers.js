@@ -12,12 +12,26 @@ const getAuthHeaders = () => {
 };
 
 // Fucntion for fetching users
-export const fetchUsers = async () => {
+export const fetchUsers = async ({ pageParam = 1 }) => {
     const res = await axios.get(`${API_URL}/api/users`, {
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders()
     });
     return res.data.users;
 }
+
+export const fetchPendingInvites = async ({ pageParam = 1 }) => {
+    const res = await axios.get(`${API_URL}/api/invites/pending`, {
+        headers: getAuthHeaders()
+    });
+    return res.data.invites;
+};
+
+export const deleteInvite = async (inviteId) => {
+    const res = await axios.delete(`${API_URL}/api/invites/pending/${inviteId}`, {
+        headers: getAuthHeaders(),
+    });
+    return res.data;
+};
 
 // Function to delete a user
 export const deleteUsers = async (userId) => {
@@ -27,6 +41,13 @@ export const deleteUsers = async (userId) => {
     return res.data;
 }
 
+export const removeConnection = async (userId) => {
+    const res = await axios.delete(`${API_URL}/api/connections/${userId}`, {
+        headers: getAuthHeaders(),
+    });
+    return res.data;
+};
+
 export const resendInvite = async (email) => {
     const res = await axios.post(`${API_URL}/api/invite`, { emails: [email] }, {
         headers: {
@@ -35,4 +56,4 @@ export const resendInvite = async (email) => {
         },
     });
     return res.data;
-}
+};

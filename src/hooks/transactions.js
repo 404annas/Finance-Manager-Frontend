@@ -7,8 +7,25 @@ const getAuthHeaders = () => {
     return { Authorization: `Bearer ${token}` };
 }
 
-export const fetchTransactions = async () => {
-    const { data } = await axios.get(`${API_URL}/api/transactions`, {
+export const fetchTransactions = async ({ page = 1, limit = 10, sort = 'date', order = 'desc', category, dateFrom, dateTo }) => {
+    const params = new URLSearchParams({
+        page,
+        limit,
+        sort,
+        order,
+    });
+
+    if (category && category !== 'All') {
+        params.append('category', category);
+    }
+    if (dateFrom) {
+        params.append('dateFrom', dateFrom);
+    }
+    if (dateTo) {
+        params.append('dateTo', dateTo);
+    }
+
+    const { data } = await axios.get(`${API_URL}/api/transactions?${params.toString()}`, {
         headers: getAuthHeaders(),
     });
     return data;

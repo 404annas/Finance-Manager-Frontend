@@ -14,10 +14,17 @@ const getApiClient = () => {
 };
 
 // 1. READ: Fetch all payment schedules
-export const fetchSchedules = async () => {
+export const fetchSchedules = async ({ page = 1, limit = 10, sort = 'scheduledDate', order = 'asc' }) => {
     const apiClient = getApiClient();
-    const { data } = await apiClient.get("/api/schedules");
-    return Array.isArray(data.schedules) ? data.schedules : [];
+    const params = new URLSearchParams({
+        page,
+        limit,
+        sort,
+        order,
+    });
+
+    const { data } = await apiClient.get(`/api/schedules?${params.toString()}`);
+    return data;
 };
 
 // 2. CREATE: Add a new payment schedule

@@ -21,25 +21,45 @@ export const fetchPendingRequests = async () => {
     return data || [];
 };
 
+export const fetchSentRequests = async ({ pageParam = 1 }) => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.get(`/api/connection-requests/sent`);
+    return data.requests || [];
+};
+
 export const acceptConnectionRequest = async (requestId) => {
     const apiClient = getApiClient();
-    const { data } = await apiClient.post(`/api/connection-requests/${requestId}/accept`);
+    const { data } = await apiClient.post(`/api/connection-requests/accept`);
+    return data;
+};
+
+export const resendConnectionEmail = async (email) => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.post(`/api/connection-requests/resend`, { email });
     return data;
 };
 
 export const useConnectionRequests = () => {
     const queryClient = useQueryClient();
 
-    const { data: pendingRequests = [], isLoading } = useQuery({
+    const { data: pendingRequests = [], isLoading: isLoadingPending } = useQuery({
         queryKey: ["pendingRequests"],
         queryFn: fetchPendingRequests,
+        placeholderData: (previousData) => previousData,
     });
+
+    const { data: sentRequests = [], isLoading: isLoadingSent } = useQuery({
+        queryKey: ["sentRequests"],
+        queryFn: fetchSentRequests,
+        placeholderData: (previousData) => previousData,
+    })
 
     const { mutate: acceptRequest, isPending: isAccepting } = useMutation({
         mutationFn: acceptConnectionRequest,
         onSuccess: () => {
             toast.success("Connection successful!");
             queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+            queryClient.invalidateQueries({ queryKey: ["sentRequests"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: (err) => {
@@ -49,7 +69,8 @@ export const useConnectionRequests = () => {
 
     return {
         pendingRequests,
-        isLoading,
+        sentRequests,
+        isLoading: isLoadingPending || isLoadingSent,
         acceptRequest,
         isAccepting,
     };

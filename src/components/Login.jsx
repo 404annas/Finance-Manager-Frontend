@@ -58,7 +58,7 @@ const Login = () => {
             <div className="absolute top-2/5 right-1/2 sm:right-3/4 w-24 sm:w-30 h-24 sm:h-30 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
 
             {/* Login Box */}
-            <div className="w-full max-w-md sm:max-w-lg bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
+            <div className="w-full max-w-md sm:max-w-xl bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
 
                 <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
 

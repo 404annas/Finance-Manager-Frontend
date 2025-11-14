@@ -14,7 +14,8 @@ const AddUsers = ({ onInviteSuccess }) => {
             data.results.forEach(result => {
                 toast.info(`${result.email}: ${result.status}`);
             });
-            queryClient.invalidateQueries({ queryKey: ["users"] });
+            queryClient.invalidateQueries({ queryKey: ["pendingInvites"] })
+            queryClient.invalidateQueries({ queryKey: ["sentRequests"] });
 
             if (onInviteSuccess) {
                 onInviteSuccess();
@@ -45,7 +46,6 @@ const AddUsers = ({ onInviteSuccess }) => {
                     Invite Friends to Your Finance
                 </h2>
                 <p className="text-gray-600 text-sm mb-6 text-center border-b border-blue-200 pb-6">Send email invitations to connect and collaborate on financial transactions seamlessly.</p>
-
 
                 <Formik
                     initialValues={initialValues}

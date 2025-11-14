@@ -131,6 +131,17 @@ const RecipientsData = () => {
         setIsOpen(true);
     };
 
+    // Filter for Search
+    const [searchPaymentTerm, setSearchPaymentTerm] = useState("");
+
+    // Filtered payments based on Category or Added By
+    const filteredPayments = payments.filter((payment) => {
+        const lowerTerm = searchPaymentTerm.toLowerCase();
+        const categoryMatch = payment.category?.toLowerCase().includes(lowerTerm);
+        const addedByMatch = payment.createdBy?.name?.toLowerCase().includes(lowerTerm);
+        return categoryMatch || addedByMatch;
+    });
+
     const columns = [
         {
             name: <span className="p-semibold">Title</span>,
@@ -252,6 +263,15 @@ const RecipientsData = () => {
                     <Plus size={18} /> Add Payment
                 </button>
             </div>
+            <div className="flex items-end justify-end pb-6">
+                <input
+                    type="text"
+                    placeholder="Search by Category or Added By..."
+                    value={searchPaymentTerm}
+                    onChange={(e) => setSearchPaymentTerm(e.target.value)}
+                    className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 shadow-sm outline-none text-sm"
+                />
+            </div>
 
             <div className="overflow-x-auto">
                 {isLoadingPayments ? (
@@ -267,7 +287,7 @@ const RecipientsData = () => {
                     <div className="max-h-[60vh] overflow-y-auto">
                         <DataTable
                             columns={columns}
-                            data={payments}
+                            data={filteredPayments}
                             pagination
                             highlightOnHover
                             striped
@@ -275,7 +295,7 @@ const RecipientsData = () => {
                             fixedHeaderScrollHeight="100%"
                             customStyles={customStyles}
                             noDataComponent={
-                                <div className="py-6 text-gray-500 p-medium">
+                                <div className="py-6 text-gray-500 p-medium bg-[#F3E8FF] w-full text-center">
                                     No payments added to this share yet.
                                 </div>
                             }
@@ -387,8 +407,8 @@ const RecipientsData = () => {
                             onClick={handleSubmit}
                             disabled={isSubmitDisabled}
                             className={`w-full py-3 rounded-lg shadow-md p-medium cursor-pointer transition-all duration-300 ${isSubmitDisabled
-                                    ? "bg-[#9BA0E0] cursor-not-allowed"
-                                    : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"
+                                ? "bg-[#9BA0E0] cursor-not-allowed"
+                                : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"
                                 } text-white`}
                         >
                             {isAdding || isUpdating

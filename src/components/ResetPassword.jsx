@@ -70,7 +70,7 @@ const ResetPassword = () => {
                         </p>
                         <button
                             onClick={() => navigate("/login")}
-                            className="w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium text-sm sm:text-base"
+                            className="w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition-all duration-300 p-medium text-sm sm:text-base cursor-pointer hover:scale-98"
                         >
                             Go to Login
                         </button>
@@ -155,8 +155,8 @@ const ResetPassword = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
-                                        ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:bg-scale-97 cursor-pointer"}`}
+                                        className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition-all duration-300 p-medium mt-2 text-sm sm:text-base
+                                        ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:bg-scale-98 cursor-pointer"}`}
                                     >
                                         {loading ? "Resetting..." : "Reset Password"}
                                     </button>

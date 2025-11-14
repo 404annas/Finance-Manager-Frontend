@@ -19,8 +19,8 @@ FILE CONTENTS:
 --- START OF FILE: .env ---
 
 VITE_CURRENCY_CONVERTER_BASE_URL=https://open.er-api.com/v6/latest
-# VITE_API_URL=http://localhost:5000
-VITE_API_URL=https://finance-manageb-b.vercel.app
+VITE_API_URL=http://localhost:5000
+# VITE_API_URL=https://finance-manageb-b.vercel.app
 
 
 --- END OF FILE: .env ---
@@ -360,8 +360,8 @@ FILE CONTENTS:
 --- START OF FILE: .env ---
 
 VITE_CURRENCY_CONVERTER_BASE_URL=https://open.er-api.com/v6/latest
-# VITE_API_URL=http://localhost:5000
-VITE_API_URL=https://finance-manageb-b.vercel.app
+VITE_API_URL=http://localhost:5000
+# VITE_API_URL=https://finance-manageb-b.vercel.app
 
 
 --- END OF FILE: .env ---
@@ -774,6 +774,7 @@ export default defineConfig([
         "install": "^0.13.0",
         "jspdf": "^3.0.3",
         "jspdf-autotable": "^5.0.2",
+        "jwt-decode": "^4.0.0",
         "lucide-react": "^0.542.0",
         "moment": "^2.30.1",
         "npm": "^11.6.2",
@@ -4983,6 +4984,15 @@ export default defineConfig([
       "license": "MIT",
       "peerDependencies": {
         "jspdf": "^2 || ^3"
+      }
+    },
+    "node_modules/jwt-decode": {
+      "version": "4.0.0",
+      "resolved": "https://registry.npmjs.org/jwt-decode/-/jwt-decode-4.0.0.tgz",
+      "integrity": "sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=18"
       }
     },
     "node_modules/keyv": {
@@ -9235,6 +9245,7 @@ export default defineConfig([
     "install": "^0.13.0",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.542.0",
     "moment": "^2.30.1",
     "npm": "^11.6.2",
@@ -9421,6 +9432,8 @@ import UserDashboard from "./screens/UserDashboard";
 import Hero from "./components/Hero";
 import Register from "./components/Register";
 import Login from "./components/Login";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 import { Toaster } from "sonner";
 import { useAppContext } from "../context/AppContext";
 import Profile from "./components/Profile";
@@ -9462,6 +9475,8 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" />} />
@@ -9626,6 +9641,16 @@ export const updateUserProfileAPI = async (formData) => {
     return data;
 }
 
+export const forgotPasswordAPI = async (email) => {
+    const { data } = await api.post('/api/forgot-password', { email });
+    return data;
+}
+
+export const resetPasswordAPI = async (token, password) => {
+    const { data } = await api.post(`/api/reset-password/${token}`, { password });
+    return data;
+}
+
 --- END OF FILE: src\api\userApi.js ---
 
 ================================================================================
@@ -9633,8 +9658,10 @@ export const updateUserProfileAPI = async (formData) => {
     └── assets/
     └── components/
             ├── AddUsers.jsx
+            ├── ConnectionRequests.jsx
             ├── Contact.jsx
             ├── CurrencyExchange.jsx
+            ├── ForgotPassword.jsx
             ├── Hero.jsx
             ├── HeroNav.jsx
             ├── Login.jsx
@@ -9645,6 +9672,7 @@ export const updateUserProfileAPI = async (formData) => {
             ├── RecipientsData.jsx
             ├── Register.jsx
             ├── Reminder.jsx
+            ├── ResetPassword.jsx
             ├── SchedulePayments.jsx
             ├── Sidebar.jsx
             ├── Transactions.jsx
@@ -9662,13 +9690,16 @@ import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
 const AddUsers = ({ onInviteSuccess }) => {
-     const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
     const { mutate, isPending } = useMutation({
         mutationFn: sendInvite,
         onSuccess: (data) => {
-            toast.success("Invites sent successfully!");
-            queryClient.invalidateQueries({ queryKey: ["users"] });
+            data.results.forEach(result => {
+                toast.info(`${result.email}: ${result.status}`);
+            });
+            queryClient.invalidateQueries({ queryKey: ["pendingInvites"] })
+            queryClient.invalidateQueries({ queryKey: ["sentRequests"] });
 
             if (onInviteSuccess) {
                 onInviteSuccess();
@@ -9700,7 +9731,6 @@ const AddUsers = ({ onInviteSuccess }) => {
                 </h2>
                 <p className="text-gray-600 text-sm mb-6 text-center border-b border-blue-200 pb-6">Send email invitations to connect and collaborate on financial transactions seamlessly.</p>
 
-
                 <Formik
                     initialValues={initialValues}
                     validationSchema={validationSchema}
@@ -9708,57 +9738,60 @@ const AddUsers = ({ onInviteSuccess }) => {
                         mutate({ emails: values.emails }, { onSuccess: () => resetForm() });
                     }}
                 >
-                    {({ values, errors, touched }) => (
-                        <Form className="space-y-4">
-                            <FieldArray name="emails">
-                                {({ push }) => (
-                                    <>
-                                        {values.emails.map((email, index) => (
-                                            <div key={index} className="flex flex-col">
-                                                <Field
-                                                    type="email"
-                                                    name={`emails.${index}`}
-                                                    placeholder={`Friend's Email ${index + 1}`}
-                                                    disabled={isPending}
-                                                    className={`p-regular w-full px-4 py-2 rounded-lg outline-none text-gray-700 text-sm sm:text-base disabled:bg-gray-100 disabled:text-gray-500 border-2 ${errors.emails?.[index] && touched.emails?.[index]
+                    {({ values, errors, touched, isValid, dirty }) => {
+                        return (
+                            <Form className="space-y-4">
+                                <FieldArray name="emails">
+                                    {({ push }) => (
+                                        <>
+                                            {values.emails.map((email, index) => (
+                                                <div key={index} className="flex flex-col">
+                                                    <Field
+                                                        type="email"
+                                                        name={`emails.${index}`}
+                                                        placeholder={`Friend's Email ${index + 1}`}
+                                                        disabled={isPending}
+                                                        className={`p-regular w-full px-4 py-2 rounded-lg outline-none text-gray-700 text-sm sm:text-base disabled:bg-gray-100 disabled:text-gray-500 border-2 ${errors.emails?.[index] && touched.emails?.[index]
                                                             ? "border-red-500"
                                                             : "border-[#6667DD]"
-                                                        }`}
-                                                />
-                                                <ErrorMessage
-                                                    name={`emails.${index}`}
-                                                    component="div"
-                                                    className="text-red-500 text-sm mt-1 p-regular"
-                                                />
-                                            </div>
-                                        ))}
+                                                            }`}
+                                                    />
+                                                    <ErrorMessage
+                                                        name={`emails.${index}`}
+                                                        component="div"
+                                                        className="text-red-500 text-sm mt-1 p-regular"
+                                                    />
+                                                </div>
+                                            ))}
 
-                                        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => push("")}
-                                                disabled={isPending}
-                                                className="flex items-center justify-center gap-2 flex-1 py-2 rounded-lg bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white p-medium hover:scale-97 transition-all duration-300 cursor-pointer w-full text-sm sm:text-base disabled:opacity-70"
-                                            >
-                                                <Plus size={18} /> Add Another
-                                            </button>
+                                            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => push("")}
+                                                    disabled={isPending}
+                                                    className="flex items-center justify-center gap-2 flex-1 py-2 rounded-lg bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white p-medium hover:scale-97 transition-all duration-300 cursor-pointer w-full text-sm sm:text-base disabled:opacity-70"
+                                                >
+                                                    <Plus size={18} /> Add Another
+                                                </button>
 
-                                            <button
-                                                type="submit"
-                                                disabled={isPending}
-                                                className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-97 w-full text-sm sm:text-base ${isPending
+                                                <button
+                                                    type="submit"
+                                                    disabled={isPending || !isValid || !dirty}
+                                                    className={`flex items-center justify-center gap-2 flex-1 py-2 rounded-lg text-white p-medium transition-all duration-300 cursor-pointer hover:scale-97 w-full text-sm sm:text-base ${isPending || !isValid || !dirty
                                                         ? "bg-green-300 hover:cursor-not-allowed"
                                                         : "bg-green-500 hover:bg-green-600"
-                                                    }`}
-                                            >
-                                                <Send size={18} /> {isPending ? "Sending..." : "Send Invites"}
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </FieldArray>
-                        </Form>
-                    )}
+                                                        }`}
+                                                >
+                                                    <Send size={18} /> {isPending ? "Sending..." : "Send Invites"}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </FieldArray>
+                            </Form>
+                        );
+                    }}
+
                 </Formik>
             </div>
         </div>
@@ -9769,6 +9802,76 @@ export default AddUsers;
 
 
 --- END OF FILE: src\components\AddUsers.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\ConnectionRequests.jsx ---
+
+import { useConnectionRequests } from "../hooks/connections";
+import { Check, UserRoundPlus } from "lucide-react";
+
+const ConnectionRequests = () => {
+    const { pendingRequests, isLoading, acceptRequest, isAccepting } = useConnectionRequests();
+
+    if (isLoading) {
+        return (
+            <div className="animate-pulse bg-purple-50 p-4 rounded-lg">
+                <div className="h-4 bg-purple-200 rounded w-1/3 mb-3"></div>
+                <div className="h-12 bg-purple-200 rounded"></div>
+            </div>
+        );
+    }
+
+    if (pendingRequests.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mb-8 p-4 bg-purple-50 border border-purple-200 rounded-xl shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+                <UserRoundPlus size={22} className="text-purple-600" />
+                <h3 className="text-lg p-semibold text-purple-800">Connection Requests</h3>
+                <span className="flex items-center justify-center w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded-full">
+                    {pendingRequests.length}
+                </span>
+            </div>
+
+            <div className="space-y-3">
+                {pendingRequests.map((req) => (
+                    <div
+                        key={req._id}
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-[#F6F9FC] rounded-lg shadow-sm"
+                    >
+                        <div className="flex items-center gap-3">
+                            <img
+                                src={req.requester.profileImage || "https://images.unsplash.com/photo-1615109398623-88346a601842?ixlib=rb-4.1.0&auto=format&fit=crop&q=60&w=500"}
+                                alt={req.requester.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                            />
+                            <div>
+                                <p className="p-medium text-gray-800">{req.requester.name}</p>
+                                <p className="text-xs text-gray-500">{req.requester.email}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => acceptRequest(req._id)}
+                            disabled={isAccepting}
+                            className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-300 p-medium disabled:bg-green-300 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            <Check size={16} />
+                            {isAccepting ? "Accepting..." : "Accept"}
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default ConnectionRequests;
+
+--- END OF FILE: src\components\ConnectionRequests.jsx ---
 
 ================================================================================
 
@@ -9827,39 +9930,80 @@ const Contact = () => {
                         });
                     }}
                 >
-                    {({ errors, touched }) => (
-                        <Form className="space-y-3 sm:space-y-4">
-                            {/* Name & Email Row */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="flex flex-col">
-                                    <div
-                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 ${errors.name && touched.name
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
-                                            } ${isPending
-                                                ? "bg-gray-100 text-gray-500 cursor-default"
-                                                : "bg-transparent"
-                                            }`}
-                                    >
-                                        <User className="text-gray-500 mr-2" size={18} />
-                                        <Field
-                                            type="text"
+                    {({ values, errors, touched }) => {
+                        const isAnyFieldFilled =
+                            values.name.trim() !== "" ||
+                            values.email.trim() !== "" ||
+                            values.type.trim() !== "" ||
+                            values.message.trim() !== "";
+
+                        return (
+                            <Form className="space-y-3 sm:space-y-4">
+                                {/* Name & Email Row */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="flex flex-col">
+                                        <div
+                                            className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 ${errors.name && touched.name
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
+                                                } ${isPending
+                                                    ? "bg-gray-100 text-gray-500 cursor-default"
+                                                    : "bg-transparent"
+                                                }`}
+                                        >
+                                            <User className="text-gray-500 mr-2" size={18} />
+                                            <Field
+                                                type="text"
+                                                name="name"
+                                                placeholder="Your Name"
+                                                disabled={isPending}
+                                                className="w-full outline-none bg-transparent p-regular text-sm sm:text-base"
+                                            />
+                                        </div>
+                                        <ErrorMessage
                                             name="name"
-                                            placeholder="Your Name"
-                                            disabled={isPending}
-                                            className="w-full outline-none bg-transparent p-regular text-sm sm:text-base"
+                                            component="div"
+                                            className="text-red-500 text-sm mt-1 p-regular"
                                         />
                                     </div>
-                                    <ErrorMessage
-                                        name="name"
-                                        component="div"
-                                        className="text-red-500 text-sm mt-1 p-regular"
-                                    />
+
+                                    <div className="flex flex-col">
+                                        <div
+                                            className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 ${errors.email && touched.email
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
+                                                } ${isPending
+                                                    ? "bg-gray-100 text-gray-500 cursor-default"
+                                                    : "bg-transparent"
+                                                }`}
+                                        >
+                                            <Mail className="text-gray-500 mr-2" size={18} />
+                                            <Field
+                                                type="email"
+                                                name="email"
+                                                placeholder="Your Email"
+                                                disabled={isPending}
+                                                className="w-full outline-none bg-transparent p-regular text-sm sm:text-base"
+                                            />
+                                        </div>
+                                        <ErrorMessage
+                                            name="email"
+                                            component="div"
+                                            className="text-red-500 text-sm mt-1 p-regular"
+                                        />
+                                    </div>
                                 </div>
 
+                                {/* Dropdown */}
                                 <div className="flex flex-col">
-                                    <div
-                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 ${errors.email && touched.email
+                                    <label className="block text-gray-700 text-sm mb-1 p-regular">
+                                        Type of Message
+                                    </label>
+                                    <Field
+                                        as="select"
+                                        name="type"
+                                        disabled={isPending}
+                                        className={`w-full border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 outline-none cursor-pointer text-sm sm:text-base ${errors.type && touched.type
                                             ? "border-red-500"
                                             : "border-[#6667DD]"
                                             } ${isPending
@@ -9867,95 +10011,63 @@ const Contact = () => {
                                                 : "bg-transparent"
                                             }`}
                                     >
-                                        <Mail className="text-gray-500 mr-2" size={18} />
-                                        <Field
-                                            type="email"
-                                            name="email"
-                                            placeholder="Your Email"
-                                            disabled={isPending}
-                                            className="w-full outline-none bg-transparent p-regular text-sm sm:text-base"
-                                        />
-                                    </div>
+                                        <option value="">Select Query</option>
+                                        <option value="support">Support</option>
+                                        <option value="recommendation">Recommendation</option>
+                                        <option value="bug">Report a Bug</option>
+                                        <option value="feature">Feature Request</option>
+                                        <option value="general">General Inquiry</option>
+                                    </Field>
                                     <ErrorMessage
-                                        name="email"
+                                        name="type"
                                         component="div"
                                         className="text-red-500 text-sm mt-1 p-regular"
                                     />
                                 </div>
-                            </div>
 
-                            {/* Dropdown */}
-                            <div className="flex flex-col">
-                                <label className="block text-gray-700 text-sm mb-1 p-regular">
-                                    Type of Message
-                                </label>
-                                <Field
-                                    as="select"
-                                    name="type"
-                                    disabled={isPending}
-                                    className={`w-full border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 outline-none cursor-pointer text-sm sm:text-base ${errors.type && touched.type
-                                        ? "border-red-500"
-                                        : "border-[#6667DD]"
-                                        } ${isPending
-                                            ? "bg-gray-100 text-gray-500 cursor-default"
-                                            : "bg-transparent"
-                                        }`}
-                                >
-                                    <option value="">Select Query</option>
-                                    <option value="support">Support</option>
-                                    <option value="recommendation">Recommendation</option>
-                                    <option value="bug">Report a Bug</option>
-                                    <option value="feature">Feature Request</option>
-                                    <option value="general">General Inquiry</option>
-                                </Field>
-                                <ErrorMessage
-                                    name="type"
-                                    component="div"
-                                    className="text-red-500 text-sm mt-1 p-regular"
-                                />
-                            </div>
-
-                            {/* Message Box */}
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 ${errors.message && touched.message
-                                        ? "border-red-500"
-                                        : "border-[#6667DD]"
-                                        } ${isPending
-                                            ? "bg-gray-100 text-gray-500 cursor-default"
-                                            : "bg-transparent"
-                                        }`}
-                                >
-                                    <MessageSquare className="text-gray-500 mt-1 mr-2" size={18} />
-                                    <Field
-                                        as="textarea"
+                                {/* Message Box */}
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 ${errors.message && touched.message
+                                            ? "border-red-500"
+                                            : "border-[#6667DD]"
+                                            } ${isPending
+                                                ? "bg-gray-100 text-gray-500 cursor-default"
+                                                : "bg-transparent"
+                                            }`}
+                                    >
+                                        <MessageSquare className="text-gray-500 mt-1 mr-2" size={18} />
+                                        <Field
+                                            as="textarea"
+                                            name="message"
+                                            placeholder="Your message..."
+                                            rows="4"
+                                            disabled={isPending}
+                                            className="w-full outline-none bg-transparent resize-none p-regular text-sm sm:text-base"
+                                        />
+                                    </div>
+                                    <ErrorMessage
                                         name="message"
-                                        placeholder="Your message..."
-                                        rows="4"
-                                        disabled={isPending}
-                                        className="w-full outline-none bg-transparent resize-none p-regular text-sm sm:text-base"
+                                        component="div"
+                                        className="text-red-500 text-sm mt-1 p-regular"
                                     />
                                 </div>
-                                <ErrorMessage
-                                    name="message"
-                                    component="div"
-                                    className="text-red-500 text-sm mt-1 p-regular"
-                                />
-                            </div>
 
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                disabled={isPending}
-                                className={`w-full text-white py-3 sm:py-3.5 rounded-lg shadow-md transition-all duration-300 p-regular text-sm sm:text-base cursor-pointer ${isPending
-                                    ? "bg-[#6667DD] opacity-70 hover:cursor-not-allowed"
-                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"
-                                    }`}
-                            >
-                                {isPending ? "Sending..." : "Send Message"}
-                            </button>
-                        </Form>
-                    )}
+                                {/* Submit Button */}
+                                <button
+                                    type="submit"
+                                    disabled={!isAnyFieldFilled || isPending}
+                                    className={`w-full text-white py-3 sm:py-3.5 rounded-lg shadow-md transition-all duration-300 p-regular text-sm sm:text-base 
+    ${!isAnyFieldFilled || isPending
+                                            ? "bg-[#9BA0E0] cursor-not-allowed opacity-70"
+                                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 hover:opacity-90 cursor-pointer"
+                                        }`}
+                                >
+                                    {isPending ? "Sending..." : "Send Message"}
+                                </button>
+                            </Form>
+                        );
+                    }}
                 </Formik>
             </div>
         </div>
@@ -10111,6 +10223,162 @@ export default CurrencyExchange;
 ================================================================================
 
 
+--- START OF FILE: src\components\ForgotPassword.jsx ---
+
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Formik, Form, Field } from 'formik';
+
+const ForgotPassword = () => {
+    const [loading, setLoading] = useState(false);
+    const [emailSent, setEmailSent] = useState(false);
+    const API_URL = import.meta.env.VITE_API_URL;
+    const navigate = useNavigate();
+
+    const handleSubmit = async (values) => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/api/forgot-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.message || "Failed to send reset email");
+            } else {
+                toast.success("Password reset link has been sent to your email");
+                setEmailSent(true);
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to send reset email");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="relative flex items-center justify-center min-h-screen overflow-hidden px-4 sm:px-6 lg:px-8">
+            {/* Floating Gradient Circles */}
+            <div className="absolute top-10 left-10 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FFCE56] opacity-30 animate-bounce-slow"></div>
+            <div className="absolute top-1/4 right-10 sm:right-20 w-20 sm:w-28 h-20 sm:h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-25 animate-bounce-medium"></div>
+            <div className="absolute bottom-32 left-1/4 sm:left-1/3 w-16 sm:w-24 h-16 sm:h-24 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#6667DD] opacity-20 animate-bounce-fast"></div>
+            <div className="absolute bottom-10 right-10 sm:right-1/4 w-24 sm:w-32 h-24 sm:h-32 rounded-full bg-gradient-to-r from-[#FF6384] to-[#6667DD] opacity-15 animate-bounce-slower"></div>
+            <div className="absolute top-1/3 left-16 sm:left-1/4 w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-20 animate-bounce-fast"></div>
+            <div className="absolute bottom-1/4 right-1/4 sm:right-1/3 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#FF6384] to-[#36A2EB] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-3/4 left-10 sm:left-1/5 w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FF6384] opacity-25 animate-bounce-slower"></div>
+            <div className="absolute bottom-10 left-4 sm:left-1/6 w-24 sm:w-28 h-24 sm:h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-20 animate-bounce-slow"></div>
+            <div className="absolute top-1/6 right-4 sm:right-1/5 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-2/5 right-1/2 sm:right-3/4 w-24 sm:w-30 h-24 sm:h-30 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
+
+            {/* Forgot Password Box */}
+            <div className="w-full max-w-md sm:max-w-lg bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
+
+                <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">
+                    {emailSent ? "Check Your Email" : "Forgot Password"}
+                </h1>
+
+                {emailSent ? (
+                    <div className="text-center">
+                        <p className="text-gray-700 p-regular mb-6">
+                            A password reset link has been sent to your email address. Please check your inbox.
+                        </p>
+                        <button
+                            onClick={() => navigate("/login")}
+                            className="w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium text-sm sm:text-base cursor-pointer hover:scale-98"
+                        >
+                            Back to Login
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-gray-600 text-center p-regular mb-6">
+                            Enter your email address and we'll send you a link to reset your password.
+                        </p>
+
+                        <Formik
+                            initialValues={{ email: '' }}
+                            validate={values => {
+                                const errors = {};
+                                if (!values.email) {
+                                    errors.email = "Email is required";
+                                } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+                                    errors.email = "Invalid email address";
+                                }
+                                return errors;
+                            }}
+                            onSubmit={handleSubmit}
+                        >
+                            {({ values, handleChange, errors, touched }) => (
+                                <Form className="flex flex-col gap-4">
+                                    <div className="flex flex-col">
+                                        <label className="text-gray-700 p-medium mb-1">Email</label>
+                                        <Field
+                                            type="email"
+                                            name="email"
+                                            value={values.email}
+                                            onChange={handleChange}
+                                            placeholder="Enter your email"
+                                            disabled={loading}
+                                            className={`w-full px-3 py-2 rounded-lg outline-none p-regular text-sm sm:text-base
+                                                border
+                                                ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                        />
+                                        {errors.email && touched.email && (
+                                            <div className="text-red-500 text-sm mt-1 transition-opacity duration-300 opacity-100">{errors.email}</div>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base hover:scale-98
+                                        ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:bg-scale-97 cursor-pointer"}`}
+                                    >
+                                        {loading ? "Sending..." : "Send Reset Link"}
+                                    </button>
+                                </Form>
+                            )}
+                        </Formik>
+
+                        <div className="flex flex-col items-center mt-4">
+                            <p className="text-center text-gray-600 p-regular text-sm sm:text-base">
+                                Remember your password?{' '}
+                                <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
+                                    Back to Login
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Animation Styles */}
+            <style>{`
+                @keyframes bounce-slow { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+                @keyframes bounce-medium { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-30px);} }
+                @keyframes bounce-fast { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-40px);} }
+                @keyframes bounce-slower { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
+
+                .animate-bounce-slow { animation: bounce-slow 6s infinite ease-in-out; }
+                .animate-bounce-medium { animation: bounce-medium 5s infinite ease-in-out; }
+                .animate-bounce-fast { animation: bounce-fast 4s infinite ease-in-out; }
+                .animate-bounce-slower { animation: bounce-slower 7s infinite ease-in-out; }
+            `}</style>
+        </div>
+    );
+};
+
+export default ForgotPassword;
+
+--- END OF FILE: src\components\ForgotPassword.jsx ---
+
+================================================================================
+
+
 --- START OF FILE: src\components\Hero.jsx ---
 
 import { useQuery } from '@tanstack/react-query';
@@ -10119,11 +10387,11 @@ import {
     DollarSign,
     CreditCard,
     List,
-    Users,
     TrendingUp,
     ArrowUpRight,
     ArrowDownRight,
     CalendarClock,
+    UsersRound,
 } from 'lucide-react';
 
 // Import Charting Libraries and register necessary components
@@ -10241,7 +10509,7 @@ const Hero = () => {
             { icon: <DollarSign size={20} className="text-green-500" />, label: 'Income', value: formatCurrency(stats.totalIncome) },
             { icon: <CreditCard size={20} className="text-red-500" />, label: 'Expenses', value: formatCurrency(stats.totalExpenses) },
             { icon: <List size={20} className="text-blue-500" />, label: 'Transactions', value: stats.totalTransactions },
-            { icon: <Users size={20} className="text-teal-500" />, label: 'Connected Users', value: stats.connectedUsers?.length || 0 },
+            { icon: <UsersRound size={20} className="text-teal-500" />, label: 'Connected Users', value: stats.connectedUsers?.length || 0 },
             { icon: <CalendarClock size={20} className="text-purple-500" />, label: 'Upcoming Schedules', value: stats.upcomingSchedules },
         ];
 
@@ -10398,7 +10666,7 @@ export default Hero;
 
 --- START OF FILE: src\components\HeroNav.jsx ---
 
-import { BellDot, LogOut, UserRound } from 'lucide-react';
+import { BellDot, LogOut, Phone, PhoneCall, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import NotificationBell from './NotificationBell';
@@ -10421,9 +10689,9 @@ const HeroNav = ({ role }) => {
                 </h1>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <Link to={"/contact"}>
-                    <button className='p-regular bg-[#F6F9FC] hover:bg-blue-50 transition-all duration-300 py-2.5 px-4 rounded-xl cursor-pointer text-[#6667DD]'>Contact Us</button>
+                    <button className='p-regular bg-[#F6F9FC] hover:bg-blue-50 transition-all duration-300 p-2.5 sm:p-3 rounded-xl cursor-pointer text-[#6667DD]'><span><Phone size={20}/></span></button>
                 </Link>
 
                 <button className="bg-purple-100 p-2.5 sm:p-3 rounded-xl hover:bg-purple-200 transition duration-300 cursor-pointer flex-shrink-0">
@@ -10541,7 +10809,7 @@ const Login = () => {
             <div className="absolute top-2/5 right-1/2 sm:right-3/4 w-24 sm:w-30 h-24 sm:h-30 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
 
             {/* Login Box */}
-            <div className="w-full max-w-md sm:max-w-lg bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
+            <div className="w-full max-w-md sm:max-w-xl bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
 
                 <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
 
@@ -10608,7 +10876,7 @@ const Login = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base
+                                className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 p-medium mt-2 text-sm sm:text-base hover:scale-98
                                 ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:bg-scale-97 cursor-pointer"}`}
                             >
                                 {loading ? "Logging..." : "Login"}
@@ -10617,12 +10885,22 @@ const Login = () => {
                     )}
                 </Formik>
 
-                <p className="text-center text-gray-600 mt-4 p-regular text-sm sm:text-base">
-                    Account not exists?{' '}
-                    <Link to="/register" className="text-[#6667DD] p-medium hover:underline">
-                        Register Now
-                    </Link>
-                </p>
+                <div className="flex flex-col items-center mt-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/forgot-password")}
+                        className="text-[#6667DD] p-regular hover:underline text-sm sm:text-base mb-2 cursor-pointer"
+                    >
+                        Forgot Password?
+                    </button>
+                
+                    <p className="text-center text-gray-600 p-regular text-sm sm:text-base">
+                        Account not exists?{' '}
+                        <Link to="/register" className="text-[#6667DD] p-medium hover:underline">
+                            Register Now
+                        </Link>
+                    </p>
+                </div>
             </div>
 
             {/* Animation Styles */}
@@ -11154,37 +11432,37 @@ const Recipients = () => {
         deleteShareMutate(selectedDeleteId);
     };
 
-    if (isLoadingShares || isLoadingRecipients) {
-        return (
-            <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">
-                {/* Header Skeleton */}
-                <div className="flex justify-between items-center gap-4">
-                    <div className="h-6 w-48 bg-gray-300 rounded"></div>
-                    <div className="h-10 w-32 bg-gray-300 rounded-full md:block hidden"></div>
-                </div>
+    // if (isLoadingShares || isLoadingRecipients) {
+    //     return (
+    //         <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">
+    //             {/* Header Skeleton */}
+    //             <div className="flex justify-between items-center gap-4">
+    //                 <div className="h-6 w-48 bg-gray-300 rounded"></div>
+    //                 <div className="h-10 w-32 bg-gray-300 rounded-full md:block hidden"></div>
+    //             </div>
 
-                {/* Shared By Me Title Skeleton */}
-                <div className="h-5 w-32 bg-gray-300 rounded mt-4"></div>
+    //             {/* Shared By Me Title Skeleton */}
+    //             <div className="h-5 w-32 bg-gray-300 rounded mt-4"></div>
 
-                {/* Shared By Me Cards Skeleton */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                    {Array.from({ length: 2 }).map((_, idx) => (
-                        <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
-                    ))}
-                </div>
+    //             {/* Shared By Me Cards Skeleton */}
+    //             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+    //                 {Array.from({ length: 2 }).map((_, idx) => (
+    //                     <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
+    //                 ))}
+    //             </div>
 
-                {/* Shared With Me Title Skeleton */}
-                <div className="h-5 w-32 bg-gray-300 rounded mt-6"></div>
+    //             {/* Shared With Me Title Skeleton */}
+    //             <div className="h-5 w-32 bg-gray-300 rounded mt-6"></div>
 
-                {/* Shared With Me Cards Skeleton */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-                    {Array.from({ length: 2 }).map((_, idx) => (
-                        <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+    //             {/* Shared With Me Cards Skeleton */}
+    //             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+    //                 {Array.from({ length: 2 }).map((_, idx) => (
+    //                     <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-gray-200 h-32"></div>
+    //                 ))}
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     const CardGrid = ({ cards, showDelete }) => (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -11498,6 +11776,17 @@ const RecipientsData = () => {
         setIsOpen(true);
     };
 
+    // Filter for Search
+    const [searchPaymentTerm, setSearchPaymentTerm] = useState("");
+
+    // Filtered payments based on Category or Added By
+    const filteredPayments = payments.filter((payment) => {
+        const lowerTerm = searchPaymentTerm.toLowerCase();
+        const categoryMatch = payment.category?.toLowerCase().includes(lowerTerm);
+        const addedByMatch = payment.createdBy?.name?.toLowerCase().includes(lowerTerm);
+        return categoryMatch || addedByMatch;
+    });
+
     const columns = [
         {
             name: <span className="p-semibold">Title</span>,
@@ -11595,6 +11884,9 @@ const RecipientsData = () => {
         },
     };
 
+    const isSubmitDisabled =
+        !title || !category || !currency || !amount || !status || isAdding || isUpdating;
+
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -11616,6 +11908,15 @@ const RecipientsData = () => {
                     <Plus size={18} /> Add Payment
                 </button>
             </div>
+            <div className="flex items-end justify-end pb-6">
+                <input
+                    type="text"
+                    placeholder="Search by Category or Added By..."
+                    value={searchPaymentTerm}
+                    onChange={(e) => setSearchPaymentTerm(e.target.value)}
+                    className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 shadow-sm outline-none text-sm"
+                />
+            </div>
 
             <div className="overflow-x-auto">
                 {isLoadingPayments ? (
@@ -11631,7 +11932,7 @@ const RecipientsData = () => {
                     <div className="max-h-[60vh] overflow-y-auto">
                         <DataTable
                             columns={columns}
-                            data={payments}
+                            data={filteredPayments}
                             pagination
                             highlightOnHover
                             striped
@@ -11639,7 +11940,7 @@ const RecipientsData = () => {
                             fixedHeaderScrollHeight="100%"
                             customStyles={customStyles}
                             noDataComponent={
-                                <div className="py-6 text-gray-500 p-medium">
+                                <div className="py-6 text-gray-500 p-medium bg-[#F3E8FF] w-full text-center">
                                     No payments added to this share yet.
                                 </div>
                             }
@@ -11749,9 +12050,9 @@ const RecipientsData = () => {
 
                         <button
                             onClick={handleSubmit}
-                            disabled={isAdding || isUpdating}
-                            className={`w-full py-3 rounded-lg shadow-md p-medium transition-all duration-300 ${isAdding || isUpdating
-                                ? "bg-[#999] cursor-not-allowed"
+                            disabled={isSubmitDisabled}
+                            className={`w-full py-3 rounded-lg shadow-md p-medium cursor-pointer transition-all duration-300 ${isSubmitDisabled
+                                ? "bg-[#9BA0E0] cursor-not-allowed"
                                 : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"
                                 } text-white`}
                         >
@@ -11861,13 +12162,14 @@ export default RecipientsData;
 
 --- START OF FILE: src\components\Register.jsx ---
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppContext } from '../../context/AppContext';
 import { EyeOff, Eye } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { jwtDecode } from "jwt-decode"
 
 const Register = () => {
     const { setUser } = useAppContext();
@@ -11884,7 +12186,6 @@ const Register = () => {
 
     // Initialize Formik with the token from the URL.
     const initialValues = {
-        file: null,
         name: '',
         email: '',
         password: '',
@@ -11905,9 +12206,6 @@ const Register = () => {
             formData.append("name", values.name);
             formData.append("email", values.email);
             formData.append("password", values.password);
-            if (values.file) {
-                formData.append("profileImage", values.file);
-            }
             if (values.inviteToken) {
                 formData.append("token", values.inviteToken);
             }
@@ -11957,55 +12255,76 @@ const Register = () => {
                     onSubmit={handleSubmit}
                     enableReinitialize={true}
                 >
-                    {({ setFieldValue, errors, touched }) => (
-                        // --- UI FIX IS HERE: The grid layout is restored ---
-                        <Form className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                            {/* Row 1 */}
-                            <div className="flex flex-col">
-                                <label className="text-gray-700 p-medium mb-1">Name</label>
-                                <Field name="name" placeholder="Enter your full name" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.name && touched.name ? 'border-red-500' : 'border-[#6667DD]'}`} />
-                                <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
-                            </div>
-                            <div className="flex flex-col">
-                                <label className="text-gray-700 p-medium mb-1">Email</label>
-                                <Field type="email" name="email" placeholder="Enter your email"
-                                    // disabled={loading || inviteTokenFromUrl} 
-                                    className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'} ${inviteTokenFromUrl ? 'bg-gray-100' : ''}`} />
-                                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-                            </div>
+                    {({ setFieldValue, errors, touched }) => {
+                        useEffect(() => {
+                            if (inviteTokenFromUrl) {
+                                try {
+                                    // Token ko decode karke email nikalein
+                                    const decodedToken = jwtDecode(inviteTokenFromUrl);
+                                    if (decodedToken.email) {
+                                        // Formik ki 'email' field ko update karein
+                                        setFieldValue('email', decodedToken.email);
+                                    }
+                                } catch (error) {
+                                    console.error("Invalid token:", error);
+                                    toast.error("The invite link is invalid or has expired.");
+                                    navigate("/register"); // Ghalat token per user ko normal register page per bhej dein
+                                }
+                            }
+                        }, [inviteTokenFromUrl, setFieldValue, navigate]);
 
-                            {/* Row 2 */}
-                            <div className="flex flex-col">
-                                <label className="text-gray-700 p-medium mb-1">Profile Picture (Optional)</label>
-                                <input type="file" name="file" accept="image/*" onChange={e => setFieldValue("file", e.currentTarget.files[0])} disabled={loading} className="w-full px-3 py-1.5 border border-[#6667DD] rounded-lg outline-none p-regular text-sm sm:text-base file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-[#6667DD] hover:file:bg-purple-100 transition-all dur3\" />
-                            </div>
-                            <div className="flex flex-col relative">
-                                <label className="text-gray-700 p-medium mb-1">Password</label>
-                                <Field type={showPassword ? "text" : "password"} name="password" placeholder="Enter your password" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base pr-10 ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`} />
-                                <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
-                                <div className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD]" onClick={() => setShowPassword(!showPassword)}>
-                                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                        return (
+
+                            <Form className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                {/* Row 1 */}
+                                <div className="flex flex-col">
+                                    <label className="text-gray-700 p-medium mb-1">Name</label>
+                                    <Field name="name" placeholder="Enter your full name" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.name && touched.name ? 'border-red-500' : 'border-[#6667DD]'}`} />
+                                    <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
                                 </div>
-                            </div>
+                                <div className="flex flex-col">
+                                    <label className="text-gray-700 p-medium mb-1">Email</label>
+                                    <Field type="email" name="email" placeholder="Enter your email" readOnly={!!inviteTokenFromUrl}
+                                        // disabled={loading || inviteTokenFromUrl} 
+                                        className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base ${errors.email && touched.email ? 'border-red-500' : 'border-[#6667DD]'} ${inviteTokenFromUrl ? 'bg-gray-200 cursor-not-allowed' : ''}`} />
+                                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                                </div>
 
-                            {/* Row 3 - Full Width Button */}
-                            <div className="w-full md:col-span-2">
+                                {/* Row 2 */}
+                                <div className="flex flex-col relative">
+                                    <label className="text-gray-700 p-medium mb-1">Password</label>
+                                    <Field type={showPassword ? "text" : "password"} name="password" placeholder="Enter your password" disabled={loading} className={`w-full px-3 py-2 border rounded-lg outline-none p-regular text-sm sm:text-base pr-10 ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`} />
+                                    <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                                    <div className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD]" onClick={() => setShowPassword(!showPassword)}>
+                                        {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                    </div>
+                                </div>
+                                <div className='flex flex-col'>
+                                    <label className="text-gray-700 p-medium mb-1">Register</label>
+                                    <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-[9px] rounded-lg transition duration-300 p-regular cursor-pointer text-sm sm:text-base ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:scale-98"}`}>
+                                        {loading ? "Creating Account..." : "Create Account"}
+                                    </button>
+                                </div>
+
+                                {/* Row 3 - Full Width Button */}
+                                {/* <div className="w-full md:col-span-2">
                                 <button type="submit" disabled={loading} className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition duration-300 mt-2 p-regular cursor-pointer text-sm sm:text-base ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:scale-97"}`}>
                                     {loading ? "Creating Account..." : "Create Account"}
                                 </button>
-                            </div>
+                            </div> */}
 
-                            {/* Row 4 - Full Width Link */}
-                            <div className="md:col-span-2 text-center mt-3">
-                                <p className="text-gray-600 p-regular text-sm sm:text-base">
-                                    Already have an account?{' '}
-                                    <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
-                                        Login Now
-                                    </Link>
-                                </p>
-                            </div>
-                        </Form>
-                    )}
+                                {/* Row 4 - Full Width Link */}
+                                <div className="md:col-span-2 text-center mt-3">
+                                    <p className="text-gray-600 p-regular text-sm sm:text-base">
+                                        Already have an account?{' '}
+                                        <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
+                                            Login Now
+                                        </Link>
+                                    </p>
+                                </div>
+                            </Form>
+                        )
+                    }}
                 </Formik>
             </div>
             {/* Animation Styles */}
@@ -12077,157 +12396,169 @@ const Reminder = () => {
             <Formik initialValues={{ subject: "", email: "", amount: "", currency: "", message: "" }} validationSchema={validationSchema} onSubmit={(values, { resetForm }) => {
                 mutate(values, { onSuccess: () => resetForm() });
             }}>
-                {({ errors, touched, handleChange, handleBlur, values }) => (
-                    <Form className="space-y-3 sm:space-y-4">
-                        {/* Subject + Email */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="flex flex-col">
-                                <div className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                {({ errors, touched, handleChange, handleBlur, values }) => {
+                    const isAnyFieldFilled =
+                        values.subject.trim() !== "" ||
+                        values.email.trim() !== "" ||
+                        values.amount !== "" ||
+                        values.currency.trim() !== "" ||
+                        values.message.trim() !== "";
+
+                    return (
+                        <Form className="space-y-3 sm:space-y-4">
+                            {/* Subject + Email */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex flex-col">
+                                    <div className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
                   transition-colors duration-200
                   ${isPending ? 'bg-[#ECECFB] border-[#b6b6e0]'
-                                        : errors.subject && touched.subject
-                                            ? 'border-red-500'
-                                            : 'border-[#6667DD]'}`}>
-                                    <PencilLine size={20} className="text-gray-500 mr-2" />
-                                    <Field
-                                        type="text"
-                                        name="subject"
-                                        placeholder="Reminder Title"
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
-                                    />
+                                            : errors.subject && touched.subject
+                                                ? 'border-red-500'
+                                                : 'border-[#6667DD]'}`}>
+                                        <PencilLine size={20} className="text-gray-500 mr-2" />
+                                        <Field
+                                            type="text"
+                                            name="subject"
+                                            placeholder="Reminder Title"
+                                            disabled={isPending}
+                                            className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                        />
+                                    </div>
+                                    <ErrorMessage name="subject" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                                 </div>
-                                <ErrorMessage name="subject" component="div" className="text-red-500 text-sm mt-1 p-regular" />
-                            </div>
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
       transition-colors duration-200
       ${isPending
-                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                            : errors.email && touched.email
-                                                ? "border-red-500"
-                                                : "border-[#6667DD]"
-                                        }`}
-                                >
-                                    <Mail size={20} className="text-gray-500 mr-2" />
-                                    <select
-                                        name="email"
-                                        value={values.email}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        disabled={isPending || isLoadingUsers} // Disable while loading users
-                                        className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                                ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                                : errors.email && touched.email
+                                                    ? "border-red-500"
+                                                    : "border-[#6667DD]"
+                                            }`}
                                     >
-                                        <option value="">
-                                            {isLoadingUsers ? "Loading recipients..." : "Select a Recipient"}
-                                        </option>
-                                        {usersData?.invitedUsers?.map((user) => (
-                                            <option key={user._id} value={user.email}>
-                                                {user.name} ({user.email})
+                                        <Mail size={20} className="text-gray-500 mr-2" />
+                                        <select
+                                            name="email"
+                                            value={values.email}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            disabled={isPending || isLoadingUsers} // Disable while loading users
+                                            className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                        >
+                                            <option value="">
+                                                {isLoadingUsers ? "Loading recipients..." : "Select a Recipient"}
                                             </option>
-                                        ))}
-                                    </select>
+                                            {usersData?.invitedUsers?.map((user) => (
+                                                <option key={user._id} value={user.email}>
+                                                    {user.name} ({user.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                                 </div>
-                                <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1 p-regular" />
                             </div>
-                        </div>
 
-                        {/* Amount + Currency */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                            {/* Amount + Currency */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
       transition-colors duration-200
       ${isPending
-                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                            : errors.currency && touched.currency
-                                                ? "border-red-500"
-                                                : "border-[#6667DD]"
-                                        }`}
-                                >
-                                    <CircleDollarSign size={20} className="text-gray-500 mr-2" />
-                                    <select
-                                        name="currency"
-                                        value={values.currency}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                                ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                                : errors.currency && touched.currency
+                                                    ? "border-red-500"
+                                                    : "border-[#6667DD]"
+                                            }`}
                                     >
-                                        <option value="">Select Currency</option>
-                                        <option value="USD">USD ($)</option>
-                                        <option value="EUR">EUR (€)</option>
-                                        <option value="PKR">PKR (₨)</option>
-                                        <option value="INR">INR (₹)</option>
-                                    </select>
-                                </div>
-                                <ErrorMessage
-                                    name="currency"
-                                    component="div"
-                                    className="text-red-500 text-sm mt-1"
-                                />
-                            </div>
-                            <div className="flex flex-col">
-                                <div
-                                    className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
-      transition-colors duration-200
-      ${isPending
-                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                            : errors.amount && touched.amount
-                                                ? "border-red-500"
-                                                : "border-[#6667DD]"
-                                        }`}
-                                >
-                                    <Wallet size={20} className="text-gray-500 mr-2" />
-                                    <Field
-                                        type="number"
-                                        name="amount"
-                                        placeholder="Amount"
-                                        disabled={isPending}
-                                        className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                        <CircleDollarSign size={20} className="text-gray-500 mr-2" />
+                                        <select
+                                            name="currency"
+                                            value={values.currency}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            disabled={isPending}
+                                            className="w-full text-sm sm:text-base bg-transparent outline-none cursor-pointer"
+                                        >
+                                            <option value="">Select Currency</option>
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
+                                            <option value="PKR">PKR (₨)</option>
+                                            <option value="INR">INR (₹)</option>
+                                        </select>
+                                    </div>
+                                    <ErrorMessage
+                                        name="currency"
+                                        component="div"
+                                        className="text-red-500 text-sm mt-1"
                                     />
                                 </div>
-                                <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1 p-regular" />
-                            </div>
-                        </div>
-
-                        {/* Message Box */}
-                        <div className="flex flex-col">
-                            <div
-                                className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+                                <div className="flex flex-col">
+                                    <div
+                                        className={`flex items-center border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
       transition-colors duration-200
       ${isPending
-                                        ? "bg-[#ECECFB] border-[#b6b6e0]"
-                                        : errors.message && touched.message
-                                            ? "border-red-500"
-                                            : "border-[#6667DD]"
+                                                ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                                : errors.amount && touched.amount
+                                                    ? "border-red-500"
+                                                    : "border-[#6667DD]"
+                                            }`}
+                                    >
+                                        <Wallet size={20} className="text-gray-500 mr-2" />
+                                        <Field
+                                            type="number"
+                                            name="amount"
+                                            placeholder="Amount"
+                                            disabled={isPending}
+                                            className="w-full text-sm sm:text-base outline-none bg-transparent"
+                                        />
+                                    </div>
+                                    <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                                </div>
+                            </div>
+
+                            {/* Message Box */}
+                            <div className="flex flex-col">
+                                <div
+                                    className={`flex items-start border-2 rounded-lg px-3 sm:px-4 py-2 sm:py-3 
+      transition-colors duration-200
+      ${isPending
+                                            ? "bg-[#ECECFB] border-[#b6b6e0]"
+                                            : errors.message && touched.message
+                                                ? "border-red-500"
+                                                : "border-[#6667DD]"
+                                        }`}
+                                >
+                                    <MessagesSquare size={20} className="text-gray-500 mr-2 mt-0.5" />
+                                    <Field
+                                        as="textarea"
+                                        name="message"
+                                        placeholder="Write a message..."
+                                        rows={4}
+                                        disabled={isPending}
+                                        className="w-full text-sm sm:text-base outline-none bg-transparent resize-none"
+                                    />
+                                </div>
+                                <ErrorMessage name="message" component="div" className="text-red-500 text-sm mt-1 p-regular" />
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={!isAnyFieldFilled || isPending}
+                                className={`w-full py-3 sm:py-3.5 rounded-lg shadow transition-all duration-300 p-regular text-sm sm:text-base text-white
+                  ${!isAnyFieldFilled || isPending
+                                        ? "bg-[#9BA0E0] cursor-not-allowed opacity-70"
+                                        : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 hover:opacity-90 cursor-pointer"
                                     }`}
                             >
-                                <MessagesSquare size={20} className="text-gray-500 mr-2 mt-0.5" />
-                                <Field
-                                    as="textarea"
-                                    name="message"
-                                    placeholder="Write a message..."
-                                    rows={4}
-                                    disabled={isPending}
-                                    className="w-full text-sm sm:text-base outline-none bg-transparent resize-none"
-                                />
-                            </div>
-                            <ErrorMessage name="message" component="div" className="text-red-500 text-sm mt-1 p-regular" />
-                        </div>
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isPending}
-                            className={`w-full ${isPending ? "bg-gray-400 hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"
-                                } text-white py-3 sm:py-3.5 rounded-lg shadow transition-all duration-300 cursor-pointer p-regular text-sm sm:text-base`}
-                        >
-                            {isPending ? "Reminding..." : "Send Reminder"}
-                        </button>
-                    </Form>
-                )}
+                                {isPending ? "Reminding..." : "Send Reminder"}
+                            </button>
+                        </Form>
+                    )
+                }}
             </Formik>
         </div>
     );
@@ -12237,6 +12568,209 @@ export default Reminder;
 
 
 --- END OF FILE: src\components\Reminder.jsx ---
+
+================================================================================
+
+
+--- START OF FILE: src\components\ResetPassword.jsx ---
+
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { EyeOff, Eye } from 'lucide-react';
+import { Formik, Form, Field } from 'formik';
+
+const ResetPassword = () => {
+    const { token } = useParams();
+    const [loading, setLoading] = useState(false);
+    const [passwordReset, setPasswordReset] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const API_URL = import.meta.env.VITE_API_URL;
+    const navigate = useNavigate();
+
+    const handleSubmit = async (values) => {
+        if (values.password !== values.confirmPassword) {
+            toast.error("Passwords do not match");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/api/reset-password/${token}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: values.password }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.message || "Failed to reset password");
+            } else {
+                toast.success("Password has been reset successfully");
+                setPasswordReset(true);
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to reset password");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="relative flex items-center justify-center min-h-screen overflow-hidden px-4 sm:px-6 lg:px-8">
+            {/* Floating Gradient Circles */}
+            <div className="absolute top-10 left-10 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FFCE56] opacity-30 animate-bounce-slow"></div>
+            <div className="absolute top-1/4 right-10 sm:right-20 w-20 sm:w-28 h-20 sm:h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-25 animate-bounce-medium"></div>
+            <div className="absolute bottom-32 left-1/4 sm:left-1/3 w-16 sm:w-24 h-16 sm:h-24 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#6667DD] opacity-20 animate-bounce-fast"></div>
+            <div className="absolute bottom-10 right-10 sm:right-1/4 w-24 sm:w-32 h-24 sm:h-32 rounded-full bg-gradient-to-r from-[#FF6384] to-[#6667DD] opacity-15 animate-bounce-slower"></div>
+            <div className="absolute top-1/3 left-16 sm:left-1/4 w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-20 animate-bounce-fast"></div>
+            <div className="absolute bottom-1/4 right-1/4 sm:right-1/3 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#FF6384] to-[#36A2EB] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-3/4 left-10 sm:left-1/5 w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-gradient-to-r from-[#6667DD] to-[#FF6384] opacity-25 animate-bounce-slower"></div>
+            <div className="absolute bottom-10 left-4 sm:left-1/6 w-24 sm:w-28 h-24 sm:h-28 rounded-full bg-gradient-to-r from-[#FFCE56] to-[#36A2EB] opacity-20 animate-bounce-slow"></div>
+            <div className="absolute top-1/6 right-4 sm:right-1/5 w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
+            <div className="absolute top-2/5 right-1/2 sm:right-3/4 w-24 sm:w-30 h-24 sm:h-30 rounded-full bg-gradient-to-r from-[#36A2EB] to-[#FFCE56] opacity-15 animate-bounce-medium"></div>
+
+            {/* Reset Password Box */}
+            <div className="w-full max-w-md sm:max-w-lg bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
+
+                <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">
+                    {passwordReset ? "Password Reset Successful" : "Reset Password"}
+                </h1>
+
+                {passwordReset ? (
+                    <div className="text-center">
+                        <p className="text-gray-700 p-regular mb-6">
+                            Your password has been successfully reset. You can now log in with your new password.
+                        </p>
+                        <button
+                            onClick={() => navigate("/login")}
+                            className="w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition-all duration-300 p-medium text-sm sm:text-base cursor-pointer hover:scale-98"
+                        >
+                            Go to Login
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-gray-600 text-center p-regular mb-6">
+                            Enter your new password below to reset it.
+                        </p>
+
+                        <Formik
+                            initialValues={{ password: '', confirmPassword: '' }}
+                            validate={values => {
+                                const errors = {};
+                                
+                                if (!values.password) {
+                                    errors.password = "Password is required";
+                                } else if (values.password.length < 6) {
+                                    errors.password = "Password must be at least 6 characters";
+                                }
+                                
+                                if (!values.confirmPassword) {
+                                    errors.confirmPassword = "Please confirm your password";
+                                } else if (values.password !== values.confirmPassword) {
+                                    errors.confirmPassword = "Passwords do not match";
+                                }
+                                
+                                return errors;
+                            }}
+                            onSubmit={handleSubmit}
+                        >
+                            {({ values, handleChange, errors, touched }) => (
+                                <Form className="flex flex-col gap-4">
+                                    <div className="flex flex-col relative">
+                                        <label className="text-gray-700 p-medium mb-1">New Password</label>
+                                        <Field
+                                            type={showPassword ? "text" : "password"}
+                                            name="password"
+                                            value={values.password}
+                                            onChange={handleChange}
+                                            placeholder="Enter new password"
+                                            disabled={loading}
+                                            className={`w-full px-3 py-2 rounded-lg outline-none p-regular text-sm sm:text-base pr-10
+                                                border
+                                                ${errors.password && touched.password ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                        />
+                                        {errors.password && touched.password && (
+                                            <div className="text-red-500 text-sm mt-1 transition-opacity duration-300 opacity-100">{errors.password}</div>
+                                        )}
+                                        <div
+                                            className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD] transition"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
+                                            {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col relative">
+                                        <label className="text-gray-700 p-medium mb-1">Confirm New Password</label>
+                                        <Field
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            name="confirmPassword"
+                                            value={values.confirmPassword}
+                                            onChange={handleChange}
+                                            placeholder="Confirm new password"
+                                            disabled={loading}
+                                            className={`w-full px-3 py-2 rounded-lg outline-none p-regular text-sm sm:text-base pr-10
+                                                border
+                                                ${errors.confirmPassword && touched.confirmPassword ? 'border-red-500' : 'border-[#6667DD]'}`}
+                                        />
+                                        {errors.confirmPassword && touched.confirmPassword && (
+                                            <div className="text-red-500 text-sm mt-1 transition-opacity duration-300 opacity-100">{errors.confirmPassword}</div>
+                                        )}
+                                        <div
+                                            className="absolute right-3 top-[38px] cursor-pointer text-gray-600 hover:text-[#6667DD] transition"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        >
+                                            {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className={`w-full bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white py-2.5 sm:py-3 rounded-lg transition-all duration-300 p-medium mt-2 text-sm sm:text-base
+                                        ${loading ? "opacity-70 hover:cursor-not-allowed" : "hover:bg-scale-98 cursor-pointer"}`}
+                                    >
+                                        {loading ? "Resetting..." : "Reset Password"}
+                                    </button>
+                                </Form>
+                            )}
+                        </Formik>
+
+                        <div className="flex flex-col items-center mt-4">
+                            <p className="text-center text-gray-600 p-regular text-sm sm:text-base">
+                                Remember your password?{' '}
+                                <Link to="/login" className="text-[#6667DD] p-medium hover:underline">
+                                    Back to Login
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Animation Styles */}
+            <style>{`
+                @keyframes bounce-slow { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);} }
+                @keyframes bounce-medium { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-30px);} }
+                @keyframes bounce-fast { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-40px);} }
+                @keyframes bounce-slower { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-15px);} }
+
+                .animate-bounce-slow { animation: bounce-slow 6s infinite ease-in-out; }
+                .animate-bounce-medium { animation: bounce-medium 5s infinite ease-in-out; }
+                .animate-bounce-fast { animation: bounce-fast 4s infinite ease-in-out; }
+                .animate-bounce-slower { animation: bounce-slower 7s infinite ease-in-out; }
+            `}</style>
+        </div>
+    );
+};
+
+export default ResetPassword;
+
+--- END OF FILE: src\components\ResetPassword.jsx ---
 
 ================================================================================
 
@@ -12379,8 +12913,8 @@ const PaymentsRemaining = () => {
 
     const scheduleColumns = [
         { name: "Title", selector: (row) => row.title, sortable: true, width: "200px" },
-        { name: "Scheduled For", selector: (row) => row.scheduledFor?.name || 'N/A', sortable: true, width: "200px" },
-        { name: "Scheduled By", selector: (row) => row.createdBy?.name || 'N/A', sortable: true, width: "200px" },
+        { name: "Scheduled For", selector: (row) => row.scheduledFor?.name || 'Profile Deactivated', sortable: true, width: "200px" },
+        { name: "Scheduled By", selector: (row) => row.createdBy?.name || 'Profile Deactivated', sortable: true, width: "200px" },
         // Display the date in the user's local format
         { name: "Date & Time", selector: (row) => new Date(row.scheduledDate).toLocaleString(), sortable: true, width: "180px" },
         { name: "Status", cell: (row) => <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === "done" ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"}`}>{row.status.toUpperCase()}</span> },
@@ -12467,8 +13001,16 @@ const PaymentsRemaining = () => {
             </div>
             {/* Action Buttons */}
             <div className="flex items-center gap-4 py-2 flex-wrap">
-                <button onClick={handleSubmit} disabled={isAdding || isUpdating} className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isAdding || isUpdating ? "bg-[#9ba0e0] hover:cursor-not-allowed" : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"} text-white`}>
-                    <Clock size={20} /> {isAdding ? "Scheduling..." : (isUpdating ? "Updating..." : (editingSchedule ? "Update Schedule" : "Schedule Payment"))}
+                <button
+                    onClick={handleSubmit}
+                    disabled={isAdding || isUpdating || !title || !selectedDate}
+                    className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 sm:px-5 rounded-full p-regular shadow-md transition-all duration-300 cursor-pointer w-full sm:w-auto text-sm sm:text-base ${isAdding || isUpdating || !title || !selectedDate
+                            ? "bg-[#9ba0e0] hover:cursor-not-allowed"
+                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97"
+                        } text-white`}
+                >
+                    <Clock size={20} />{" "}
+                    {isAdding ? "Scheduling..." : isUpdating ? "Updating..." : editingSchedule ? "Update Schedule" : "Schedule Payment"}
                 </button>
                 {editingSchedule && (
                     <button onClick={resetForm} className={`flex items-center gap-2 py-2.5 sm:py-3 px-5 rounded-full shadow-md bg-gray-500 hover:scale-97 transition-all duration-300 text-white cursor-pointer`}>
@@ -12881,25 +13423,22 @@ const Transactions = () => {
     else setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 4. CREATE a handler for opening the modal in "add" mode
   const handleOpenAddModal = () => {
     setEditingTransaction(null);
     setFormData({ title: "", amount: "", category: "", currency: "USD", type: "income", date: new Date().toISOString().split("T")[0], description: "", image: null });
     setIsModalOpen(true);
   };
 
-  // 5. CREATE a handler for opening the modal in "edit" mode
   const handleOpenEditModal = (transaction) => {
     setEditingTransaction(transaction);
     setFormData({
       ...transaction,
-      date: new Date(transaction.date).toISOString().split("T")[0], // Format date correctly
-      image: null, // Reset image field
+      date: new Date(transaction.date).toISOString().split("T")[0],
+      image: null,
     });
     setIsModalOpen(true);
   };
 
-  // 6. RENAME and UPDATE the form submission handler
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title || !formData.amount || !formData.category) return toast.error("Please fill in all required fields.");
@@ -12910,10 +13449,8 @@ const Transactions = () => {
     });
 
     if (editingTransaction) {
-      // If editing, call the update mutation
       updateTransactionMutate({ id: editingTransaction._id, formData: body });
     } else {
-      // If adding, call the add mutation
       addTransactionMutate(body);
     }
   };
@@ -12975,7 +13512,7 @@ const Transactions = () => {
           dateFilter,
           customDateRange
         );
-        toast.success("Transactions downloaded successfully!");
+        // toast.success("Transactions downloaded successfully!");
       } catch {
         toast.error("Failed to download transactions!");
       } finally {
@@ -13211,14 +13748,18 @@ const Transactions = () => {
 
         <button
           onClick={handleDownload}
-          disabled={isDownloading}
-          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading
-            ? "bg-gray-300 hover:cursor-not-allowed"
+          disabled={isDownloading || filteredTransactions.length === 0}
+          className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading || filteredTransactions.length === 0
+            ? "bg-gray-300 text-gray-700 hover:cursor-not-allowed"
             : "bg-[#E0E2FD] hover:bg-[#C8CBFC] text-[#4447AA]"
             }`}
         >
           <DownloadCloud size={16} className="sm:size-[18px]" />
-          {isDownloading ? "Downloading..." : "Download PDF"}
+          {isDownloading
+            ? "Downloading..."
+            : filteredTransactions.length === 0
+              ? "No Transactions"
+              : "Download PDF"}
         </button>
       </div>
 
@@ -13565,12 +14106,15 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchUsers, deleteUsers } from "../hooks/getUsers";
+import { fetchUsers, removeConnection, resendInvite, fetchPendingInvites, deleteInvite } from "../hooks/getUsers";
 import { fetchShares } from "../hooks/recipientsShare";
-import ManageUserSharesModal from "../mods/ManageUserSharesModal"; // We will create this
-import { Files, FilePlus, UserRoundMinusIcon, Trash2, UserRoundPlus, X } from "lucide-react";
+import ManageUserSharesModal from "../mods/ManageUserSharesModal";
+import { Files, FilePlus, UserRoundMinusIcon, RefreshCw, UserRoundPlus, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AddUsers from "./AddUsers";
+import ConnectionRequests from "./ConnectionRequests";
+import { useConnectionRequests } from "../hooks/connections";
+import { resendConnectionEmail } from "../hooks/connections";
 
 const UsersInRecipients = () => {
     const queryClient = useQueryClient();
@@ -13585,10 +14129,25 @@ const UsersInRecipients = () => {
     // State to hold the user being acted upon
     const [selectedUser, setSelectedUser] = useState(null);
 
+    // For Filtering Cards
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Filter for pending, accepted, all users card
+    const [selectedFilter, setSelectedFilter] = useState("All");
+
+    const { sentRequests, isLoading: isLoadingSentRequests } = useConnectionRequests();
+
     // Fetch all users (invited by me + invited me)
     const { data: usersData, isPending: isLoadingUsers } = useQuery({
         queryKey: ["users"],
         queryFn: fetchUsers,
+        placeholderData: (previousData) => previousData,
+    });
+
+    const { data: pendingInvites = [], isLoading: isLoadingInvites } = useQuery({
+        queryKey: ['pendingInvites'],
+        queryFn: fetchPendingInvites,
+        placeholderData: (previousData) => previousData,
     });
 
     // Fetch ALL shared cards involving the current user
@@ -13597,40 +14156,111 @@ const UsersInRecipients = () => {
         queryFn: fetchShares,
     });
 
-    // Mutation for deleting a user
-    const { mutate: deleteUserMutate, isPending: isDeletingUser } = useMutation({
-        mutationFn: deleteUsers,
+    // Mutation for removing connection for a user
+    const { mutate: removeConnectionMutate, isPending: isRemovingConnection } = useMutation({
+        mutationFn: removeConnection,
         onSuccess: (data) => {
-            toast.success(data.message || "User deleted successfully");
+            toast.success(data.message || "Connection removed successfully");
             queryClient.invalidateQueries({ queryKey: ["users"] });
             queryClient.invalidateQueries({ queryKey: ["shares"] });
             setIsDeleteUserModalOpen(false);
             setSelectedUser(null);
         },
-        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete user"),
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to remove connection"),
+    });
+
+    const { mutate: resendInviteMutate, isPending: isResendingInvite, variables: resendingInviteEmail } = useMutation({
+        mutationFn: resendInvite,
+        onSuccess: (data) => toast.success("Invite resent successfully!"),
+        onError: (err) => toast.error("Failed to resend invite."),
+    });
+
+    const { mutate: resendConnectionMutate, isPending: isResendingConnection, variables: resendingUserEmail } = useMutation({
+        mutationFn: resendConnectionEmail,
+        onSuccess: (data) => toast.success(data.message || "Connection request resent!"),
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to resend request."),
+    });
+
+    const { mutate: deleteInviteMutate, isPending: isDeletingInvite, variables: deletingInviteId } = useMutation({
+        mutationFn: deleteInvite,
+        onSuccess: (data) => {
+            toast.success(data.message || "Invite cancelled successfully.");
+            queryClient.invalidateQueries({ queryKey: ["pendingInvites"] });
+            setIsDeleteUserModalOpen(false);
+        },
+        onError: (err) => toast.error(err.response?.data?.message || "Failed to cancel invite."),
     });
 
     // Combine invited users and the user who invited me into one list
-    const allConnectedUsers = useMemo(() => {
-        if (!usersData) return [];
-        const invited = usersData.invitedUsers || [];
-        const inviter = usersData.invitedBy ? [usersData.invitedBy] : [];
-        const userMap = new Map(); // Use a map to prevent duplicates
-        [...invited, ...inviter].forEach(user => userMap.set(user._id, user));
+    const allUsersWithStatus = useMemo(() => {
+        if (!usersData && !sentRequests && !pendingInvites) return [];
+
+        const userMap = new Map();
+
+        // Connected users
+        const invited = usersData?.invitedUsers || [];
+        const inviter = usersData?.invitedBy ? [usersData.invitedBy] : [];
+        [...invited, ...inviter].forEach(user => {
+            if (user) userMap.set(user._id, { ...user, connectionStatus: 'Connected' });
+        });
+
+        // Pending Connection Requests (for existing users)
+        sentRequests.forEach(req => {
+            if (req.recipient && !userMap.has(req.recipient._id)) {
+                userMap.set(req.recipient._id, { ...req.recipient, connectionStatus: 'Pending' });
+            }
+        });
+
+        // Pending Invites (for new, unregistered users)
+        pendingInvites.forEach(invite => {
+            if (!userMap.has(invite.email)) {
+                userMap.set(invite.email, invite);
+            }
+        });
+
         return Array.from(userMap.values());
-    }, [usersData]);
+    }, [usersData, sentRequests, pendingInvites]);
+
+    const filteredUsers = useMemo(() => {
+        let filtered = allUsersWithStatus;
+
+        // Apply Search Filter
+        if (searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            filtered = filtered.filter(
+                (user) =>
+                    user.name?.toLowerCase().includes(lower) ||
+                    user.email?.toLowerCase().includes(lower)
+            );
+        }
+
+        // Apply Status Filter
+        if (selectedFilter === "Accepted") {
+            filtered = filtered.filter((user) => user.connectionStatus === "Connected");
+        } else if (selectedFilter === "Pending") {
+            filtered = filtered.filter((user) =>
+                user.connectionStatus?.startsWith("Pending")
+            );
+        }
+
+        return filtered;
+    }, [allUsersWithStatus, searchTerm, selectedFilter]);
 
     const handleManageClick = (user) => {
+        if (user.connectionStatus?.startsWith('Pending')) {
+            toast.info("You can manage payments once the user accepts your request.");
+            return;
+        }
         setSelectedUser(user);
         setIsManageModalOpen(true);
     };
 
-    const handleDeleteUserClick = (user) => {
+    const handleRemoveConnectionClick = (user) => {
         setSelectedUser(user);
         setIsDeleteUserModalOpen(true);
     };
 
-    if (isLoadingUsers || isLoadingShares) {
+    if (isLoadingUsers || isLoadingShares || isLoadingSentRequests || isLoadingInvites) {
         return (
             <div className="w-full px-4 sm:px-6 md:px-8 py-6 bg-[#F6F9FC] space-y-6 animate-pulse">
                 {/* Header Skeleton */}
@@ -13674,11 +14304,49 @@ const UsersInRecipients = () => {
                     className="bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-5 py-2.5 sm:py-3 rounded-full shadow-md hover:scale-97 transition-all duration-300 cursor-pointer flex items-center gap-2 sm:text-base text-sm"><UserRoundPlus size={20} />Invite Recipients</button>
             </div>
 
-            <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD] my-6">Share Payments With Your Recipients</h2>
+            <div className="my-6">
+                <ConnectionRequests />
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between my-6">
+                <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Share Payments With Your Connections</h2>
+                <div className="flex flex-col items-end">
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Search recipients by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 shadow-sm outline-none text-sm"
+                        />
+                    </div>
+                    <div className="flex gap-3 mt-4">
+                        {["All", "Accepted", "Pending"].map((filter) => (
+                            <button
+                                key={filter}
+                                onClick={() => setSelectedFilter(filter)}
+                                className={`px-4 py-1.5 rounded-full text-xs cursor-pointer p-medium transition-all duration-300 ${selectedFilter === filter
+                                    ? "bg-[#6667DD] text-white shadow-md scale-105"
+                                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                    }`}
+                            >
+                                {filter}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {allConnectedUsers.length > 0 ? (
-                    allConnectedUsers.map((user) => {
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => {
+                        const isCurrentlyResendingInvite = isResendingInvite && resendingInviteEmail === user.email;
+                        const isCurrentlyResendingConnection = isResendingConnection && resendingUserEmail === user.email;
+                        const isThisCardResending = isCurrentlyResendingInvite || isCurrentlyResendingConnection;
+
+                        const isCurrentlyDeletingInvite = isDeletingInvite && deletingInviteId === user._id;
+                        const isThisCardDeleting = isRemovingConnection || isCurrentlyDeletingInvite;
+
                         const sharesWithThisUser = allShares.filter(share =>
                             (share.sharedBy._id === currentUser._id && share.sharedWith.some(u => u._id === user._id)) ||
                             (share.sharedBy._id === user._id && share.sharedWith.some(u => u._id === currentUser._id))
@@ -13706,21 +14374,35 @@ const UsersInRecipients = () => {
                                             <h3 className="p-semibold text-base sm:text-lg text-gray-800 leading-tight">
                                                 {user.name}
                                             </h3>
-                                            <p className="p-regular text-xs sm:text-sm text-gray-500 break-all">
+                                            <p className="p-regular text-sm text-gray-500 break-all">
                                                 {user.email}
                                             </p>
+                                            <div className={`flex items-center gap-1.5 mt-1 text-xs p-semibold ${user.connectionStatus === "Connected" ? "text-green-600" : "text-orange-500"
+                                                }`}>
+                                                {user.connectionStatus === "Pending" && <Clock size={12} />}
+                                                <span>Status: {user.connectionStatus}</span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Right: Edit + Delete */}
                                     <div className="flex items-center gap-2">
-                                        {/* <button
-                                            onClick={() => toast.info("Edit Recipient Coming Soon.")}
-                                            className="p-2.5 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all duration-300 cursor-pointer shadow-sm">
-                                            <SquarePen size={16} />
-                                        </button> */}
+                                        {user.connectionStatus?.startsWith('Pending') && (
+                                            <button
+                                                onClick={() => {
+                                                    if (user.connectionStatus === 'Pending (Unregistered)') {
+                                                        resendInviteMutate(user.email);
+                                                    } else {
+                                                        resendConnectionMutate(user.email);
+                                                    }
+                                                }}
+                                                disabled={isThisCardResending}
+                                                className="p-2.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all duration-300 cursor-pointer shadow-sm"
+                                            >
+                                                <RefreshCw size={16} className={isThisCardResending ? 'animate-spin' : ''} />
+                                            </button>
+                                        )}
                                         <button
-                                            onClick={() => handleDeleteUserClick(user)}
+                                            onClick={() => handleRemoveConnectionClick(user)}
                                             className="p-2.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-all duration-300 cursor-pointer shadow-sm"
                                         >
                                             <UserRoundMinusIcon size={16} />
@@ -13731,20 +14413,41 @@ const UsersInRecipients = () => {
                                 {/* Bottom: Manage Button */}
                                 <button
                                     onClick={() => handleManageClick(user)}
-                                    className={`flex items-center justify-center gap-2 text-sm p-regular px-3.5 py-2.5 rounded-lg transition-all duration-500 cursor-pointer shadow-sm w-full sm:w-auto ${hasShares
-                                        ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200"
-                                        : "bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200"
+                                    disabled={user.connectionStatus?.startsWith('Pending')}
+                                    className={`flex items-center justify-center gap-2 text-sm p-regular px-3.5 py-2.5 rounded-lg transition-all duration-500 shadow-sm w-full sm:w-auto ${user.connectionStatus?.startsWith('Pending')
+                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                        : hasShares
+                                            ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200 cursor-pointer"
+                                            : "bg-gradient-to-r from-green-50 to-green-100 text-green-700 hover:from-green-100 hover:to-green-200 cursor-pointer"
                                         }`}
                                 >
-                                    {hasShares ? <Files size={16} /> : <FilePlus size={16} />}
-                                    {hasShares ? "View / Add Payments" : "Create Shared Card"}
+                                    {user.connectionStatus?.startsWith('Pending') ? (
+                                        <>
+                                            <Clock size={16} />
+                                            Awaiting Acceptance
+                                        </>
+                                    ) : hasShares ? (
+                                        <>
+                                            <Files size={16} />
+                                            View / Add Payments
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FilePlus size={16} />
+                                            Create Shared Card
+                                        </>
+                                    )}
                                 </button>
                             </div>
 
                         );
                     })
                 ) : (
-                    <p className="text-center text-gray-500 p-4">You have no connected users to manage payments with.</p>
+                    <p className="text-center text-gray-500 p-4 bg-[#F3E8FF] mt-4">
+                        {searchTerm
+                            ? "No recipients found for your search."
+                            : "You have no connected users to manage payments with."}
+                    </p>
                 )}
             </div>
 
@@ -13757,8 +14460,7 @@ const UsersInRecipients = () => {
                         (share.sharedBy._id === currentUser._id && share.sharedWith.some(u => u._id === selectedUser._id)) ||
                         (share.sharedBy._id === selectedUser._id && share.sharedWith.some(u => u._id === currentUser._id))
                     )}
-                    // --- THIS IS THE NEW PROP ---
-                    allUsers={allConnectedUsers}
+                    allUsers={allUsersWithStatus}
                 />
             )}
 
@@ -13791,11 +14493,27 @@ const UsersInRecipients = () => {
                             className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center flex flex-col items-center"
                         >
                             <p className="bg-red-200 text-red-600 p-3 rounded-full mb-4">
-                                <Trash2 size={20} />
+                                <UserRoundMinusIcon size={20} />
                             </p>
-                            <h2 className="text-lg p-semibold text-gray-800 mb-2">Confirm Deletion</h2>
+                            <h2 className="text-lg p-semibold text-gray-800 mb-2">Confirm Removal</h2>
                             <p className="text-gray-600 mb-6 p-regular text-sm">
-                                Are you sure you want to delete {selectedUser.name}? This action cannot be undone.
+                                {selectedUser.connectionStatus === "Pending (Unregistered)" ? (
+                                    <>
+                                        Are you sure you want to cancel the invitation for{" "}
+                                        <span className="text-[#6667DD] p-semibold">
+                                            {selectedUser.email}
+                                        </span>
+                                        ?
+                                    </>
+                                ) : (
+                                    <>
+                                        Are you sure you want to remove your connection with{" "}
+                                        <span className="text-[#6667DD] p-semibold">
+                                            {selectedUser.name}
+                                        </span>
+                                        ?
+                                    </>
+                                )}
                             </p>
                             <div className="flex justify-center gap-3">
                                 <button
@@ -13805,11 +14523,17 @@ const UsersInRecipients = () => {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => deleteUserMutate(selectedUser._id)}
-                                    disabled={isDeletingUser}
+                                    onClick={() => {
+                                        if (selectedUser.connectionStatus === 'Pending (Unregistered)') {
+                                            deleteInviteMutate(selectedUser._id);
+                                        } else {
+                                            removeConnectionMutate(selectedUser._id);
+                                        }
+                                    }}
+                                    disabled={isRemovingConnection || isDeletingInvite}
                                     className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all duration-300 cursor-pointer text-sm border border-red-600 hover:border-red-700 text-white"
                                 >
-                                    {isDeletingUser ? "Deleting..." : "Delete"}
+                                    {(isRemovingConnection || isDeletingInvite) ? "Removing..." : "Confirm"}
                                 </button>
                             </div>
                         </motion.div>
@@ -14938,6 +15662,7 @@ export default currencies;
 ================================================================================
 
     └── hooks/
+            ├── connections.js
             ├── contact.js
             ├── dashboard.js
             ├── getUsers.js
@@ -14950,6 +15675,91 @@ export default currencies;
             ├── schedule.js
             ├── transactions.js
             ├── updateProfile.js
+
+--- START OF FILE: src\hooks\connections.js ---
+
+import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+const getApiClient = () => {
+    const token = localStorage.getItem("token");
+    return axios.create({
+        baseURL: API_URL,
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+    });
+};
+
+export const fetchPendingRequests = async () => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.get("/api/connection-requests");
+    return data || [];
+};
+
+export const fetchSentRequests = async () => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.get("/api/connection-requests/sent");
+    return data || [];
+};
+
+export const acceptConnectionRequest = async (requestId) => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.post(`/api/connection-requests/${requestId}/accept`);
+    return data;
+};
+
+export const resendConnectionEmail = async (email) => {
+    const apiClient = getApiClient();
+    const { data } = await apiClient.post(`/api/connection-requests/resend`, { email });
+    return data;
+};
+
+export const useConnectionRequests = () => {
+    const queryClient = useQueryClient();
+
+    const { data: pendingRequests = [], isLoading: isLoadingPending } = useQuery({
+        queryKey: ["pendingRequests"],
+        queryFn: fetchPendingRequests,
+        placeholderData: (previousData) => previousData,
+    });
+
+    const { data: sentRequests = [], isLoading: isLoadingSent } = useQuery({
+        queryKey: ["sentRequests"],
+        queryFn: fetchSentRequests,
+        placeholderData: (previousData) => previousData,
+    })
+
+    const { mutate: acceptRequest, isPending: isAccepting } = useMutation({
+        mutationFn: acceptConnectionRequest,
+        onSuccess: () => {
+            toast.success("Connection successful!");
+            queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+            queryClient.invalidateQueries({ queryKey: ["sentRequests"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
+        },
+        onError: (err) => {
+            toast.error(err.response?.data?.message || "Failed to accept request.");
+        },
+    });
+
+    return {
+        pendingRequests,
+        sentRequests,
+        isLoading: isLoadingPending || isLoadingSent,
+        acceptRequest,
+        isAccepting,
+    };
+};
+
+--- END OF FILE: src\hooks\connections.js ---
+
+================================================================================
+
 
 --- START OF FILE: src\hooks\contact.js ---
 
@@ -15011,6 +15821,20 @@ export const fetchUsers = async () => {
     return res.data.users;
 }
 
+export const fetchPendingInvites = async () => {
+    const res = await axios.get(`${API_URL}/api/invites/pending`, {
+        headers: getAuthHeaders(),
+    });
+    return res.data;
+};
+
+export const deleteInvite = async (inviteId) => {
+    const res = await axios.delete(`${API_URL}/api/invites/pending/${inviteId}`, {
+        headers: getAuthHeaders(),
+    });
+    return res.data;
+};
+
 // Function to delete a user
 export const deleteUsers = async (userId) => {
     const res = await axios.delete(`${API_URL}/api/delete-user/${userId}`, {
@@ -15018,6 +15842,23 @@ export const deleteUsers = async (userId) => {
     });
     return res.data;
 }
+
+export const removeConnection = async (userId) => {
+    const res = await axios.delete(`${API_URL}/api/connections/${userId}`, {
+        headers: getAuthHeaders(),
+    });
+    return res.data;
+};
+
+export const resendInvite = async (email) => {
+    const res = await axios.post(`${API_URL}/api/invite`, { emails: [email] }, {
+        headers: {
+            ...getAuthHeaders(),
+            "Content-Type": "application/json",
+        },
+    });
+    return res.data;
+};
 
 --- END OF FILE: src\hooks\getUsers.js ---
 
@@ -15597,91 +16438,108 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                                 createShareMutate(payload);
                             }}
                         >
-                            {({ setFieldValue, values }) => (
-                                <Form className="space-y-4">
-                                    {/* Title + Category */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div className="flex flex-col gap-1">
-                                            <Field
-                                                name="title"
-                                                placeholder="Transaction Title (e.g., Business...)"
-                                                className="w-full p-2 border border-[#6667DD] rounded-lg outline-none bg-transparent"
-                                            />
-                                            <ErrorMessage
-                                                name="title"
-                                                component="div"
-                                                className="text-red-500 text-sm"
-                                            />
+                            {({ setFieldValue, values, errors, touched }) => {
+                                const isDisabled =
+                                    !values.title ||
+                                    !values.category ||
+                                    !values.sharedWith.length;
+
+                                return (
+                                    <Form className="space-y-4">
+                                        {/* Title + Category */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <div className="flex flex-col gap-1">
+                                                <Field
+                                                    name="title"
+                                                    placeholder="Transaction Title (e.g: Business..."
+                                                    className={`w-full p-2 border rounded-lg outline-none text-sm sm:text-base ${errors.title && touched.title
+                                                        ? "border-red-500"
+                                                        : "border-[#6667DD]"
+                                                        }`}
+                                                />
+                                                <ErrorMessage
+                                                    name="title"
+                                                    component="div"
+                                                    className="text-red-500 text-sm"
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-1">
+                                                <Field
+                                                    as="select"
+                                                    name="category"
+                                                    className={`w-full p-2 border rounded-lg outline-none text-sm sm:text-base cursor-pointer ${errors.category && touched.category
+                                                        ? "border-red-500"
+                                                        : "border-[#6667DD]"
+                                                        }`}
+                                                >
+                                                    <option value="">Select Category</option>
+                                                    {categories.map((cat) => (
+                                                        <option key={cat} value={cat}>
+                                                            {cat}
+                                                        </option>
+                                                    ))}
+                                                </Field>
+                                                <ErrorMessage
+                                                    name="category"
+                                                    component="div"
+                                                    className="text-red-500 text-sm"
+                                                />
+                                            </div>
                                         </div>
 
-                                        <div className="flex flex-col gap-1">
-                                            <Field
-                                                as="select"
-                                                name="category"
-                                                className="w-full p-2 border border-[#6667DD] outline-none rounded-lg bg-transparent cursor-pointer"
-                                            >
-                                                <option value="">Select Category</option>
-                                                {categories.map((cat) => (
-                                                    <option key={cat} value={cat}>
-                                                        {cat}
-                                                    </option>
-                                                ))}
-                                            </Field>
-                                            <ErrorMessage
-                                                name="category"
-                                                component="div"
-                                                className="text-red-500 text-sm"
-                                            />
-                                        </div>
-                                    </div>
+                                        {/* Select Users */}
+                                        <Select
+                                            isMulti
+                                            options={userOptions}
+                                            placeholder="Share with..."
+                                            onChange={(option) => setFieldValue("sharedWith", option)}
+                                            value={values.sharedWith}
+                                            className="cursor-pointer"
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    borderColor: "#BFDBFE", // blue-100
+                                                    borderWidth: 2,
+                                                    borderRadius: "0.75rem",
+                                                    backgroundColor: "transparent",
+                                                    boxShadow: "none",
+                                                    cursor: "pointer",
+                                                    "&:hover": { borderColor: "#BFDBFE" },
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 50,
+                                                    overflowY: "auto",
+                                                }),
+                                                multiValue: (base) => ({
+                                                    ...base,
+                                                    backgroundColor: "#E9D4FF",
+                                                }),
+                                            }}
+                                        />
+                                        <ErrorMessage
+                                            name="sharedWith"
+                                            component="div"
+                                            className="text-red-500 text-sm"
+                                        />
 
-                                    {/* Select Users */}
-                                    <Select
-                                        isMulti
-                                        options={userOptions}
-                                        placeholder="Share with..."
-                                        onChange={(option) => setFieldValue("sharedWith", option)}
-                                        value={values.sharedWith}
-                                        className="cursor-pointer"
-                                        styles={{
-                                            control: (base) => ({
-                                                ...base,
-                                                borderColor: "#BFDBFE", // blue-100
-                                                borderWidth: 2,
-                                                borderRadius: "0.75rem",
-                                                backgroundColor: "transparent",
-                                                boxShadow: "none",
-                                                cursor: "pointer",
-                                                "&:hover": { borderColor: "#BFDBFE" },
-                                            }),
-                                            menu: (base) => ({
-                                                ...base,
-                                                zIndex: 50,
-                                                maxHeight: "150px",
-                                                overflowY: "auto",
-                                            }),
-                                            multiValue: (base) => ({
-                                                ...base,
-                                                backgroundColor: "#E9D4FF",
-                                            }),
-                                        }}
-                                    />
-                                    <ErrorMessage
-                                        name="sharedWith"
-                                        component="div"
-                                        className="text-red-500 text-sm"
-                                    />
-
-                                    {/* Submit Button */}
-                                    <button
-                                        type="submit"
-                                        disabled={isCreating}
-                                        className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#6667DD] to-[#7C81F8] cursor-pointer hover:scale-98 transition-all duration-300 text-white p-medium sm:text-base text-sm"
-                                    >
-                                        {isCreating ? "Creating..." : "Create & View Shared Transaction"}
-                                    </button>
-                                </Form>
-                            )}
+                                        {/* Submit Button */}
+                                        <button
+                                            type="submit"
+                                            disabled={isDisabled || isCreating}
+                                            className={`w-full px-4 py-2.5 rounded-lg text-white p-medium transition-all duration-300 ${isDisabled || isCreating
+                                                    ? "bg-[#9BA0E0] cursor-not-allowed"
+                                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
+                                                }`}
+                                        >
+                                            {isCreating
+                                                ? "Creating..."
+                                                : "Create & View Shared Transaction"}
+                                        </button>
+                                    </Form>
+                                )
+                            }}
                         </Formik>
                     </div>
                 </div>
@@ -15757,6 +16615,13 @@ export const AddTransactionModal = ({
     isEditing,
 }) => {
     if (!isOpen) return null;
+
+    const isFormValid =
+        formData.title &&
+        formData.category &&
+        formData.amount &&
+        formData.type &&
+        formData.date;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-0 bg-black/50 backdrop-blur-sm">
@@ -15875,13 +16740,14 @@ export const AddTransactionModal = ({
 
                     <button
                         type="submit"
-                        disabled={isAdding}
-                        className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding
-                            ? "bg-gray-400 hover:cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-97 cursor-pointer"
+                        disabled={isAdding || !isFormValid}
+                        className={`w-full py-3 rounded-lg shadow transition-all duration-300 p-regular text-white ${isAdding || !isFormValid
+                            ? "bg-[#9BA0E0] hover:cursor-not-allowed"
+                            : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
                             }`}
                     >
-                        {isAdding ? "Saving..." : (isEditing ? "Save Changes" : "Add Transaction")}                    </button>
+                        {isAdding ? "Saving..." : (isEditing ? "Save Changes" : "Add Transaction")}
+                    </button>
                 </form>
             </div>
         </div>
@@ -16156,6 +17022,8 @@ const DownloadTransactionsPDF = (transactions, category, dateFilter, customRange
     if (!transactions || transactions.length === 0) {
         toast.error("No transactions to download!");
         return;
+    } else {
+        toast.success("Transactions downloaded successfully.")
     }
 
     const doc = new jsPDF();

@@ -5,6 +5,7 @@ import { useAppContext } from '../../context/AppContext';
 import { EyeOff, Eye } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import { jwtDecode } from "jwt-decode"
 
 const Register = () => {
     const { setUser } = useAppContext();

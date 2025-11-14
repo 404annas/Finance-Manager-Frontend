@@ -17,6 +17,7 @@ import Payments from "./components/Payments";
 import Contact from "./components/Contact";
 import Recipients from "./components/Recipients";
 import RecipientsData from "./components/RecipientsData";
+import NotFound from "./screens/NotFound";
 
 function App() {
   const { user } = useAppContext();
@@ -50,7 +51,7 @@ function App() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
