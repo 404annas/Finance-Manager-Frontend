@@ -7,6 +7,14 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchPaymentsDone, addPaymentDone, deletePaymentDone, deleteAllPaymentsDone } from "../hooks/payments";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const Payments = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({ title: "", receiver: "", amount: "", message: "" });
@@ -19,7 +27,7 @@ const Payments = () => {
     const { data: payments = [], isPending: isLoadingPayments } = useQuery({
         queryKey: ["paymentsDone"],
         queryFn: fetchPaymentsDone,
-        onError: () => toast.error("Could Not Fetch Payments")
+        onError: (error) => handleApiError(error, "Could Not Fetch Payments History"),
     });
 
     const { mutate: addPaymentMutate, isPending: isAddingPayment } = useMutation({
@@ -30,7 +38,7 @@ const Payments = () => {
             setIsOpen(false);
             setFormData({ title: "", receiver: "", amount: "", message: "" });
         },
-        onError: (err) => toast.error(err.response?.data?.message || "Failed to add payment."),
+        onError: (error) => handleApiError(error, "Failed to add payment."),
     });
 
     const { mutate: deletePaymentMutate, isPending: isDeleting, variables: deletingId } = useMutation({
@@ -39,7 +47,7 @@ const Payments = () => {
             toast.success("Payment deleted.");
             queryClient.invalidateQueries({ queryKey: ["paymentsDone"] });
         },
-        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete payment."),
+        onError: (error) => handleApiError(error, "Failed to delete payment."),
     });
 
     const { mutate: deleteAllMutate, isPending: isDeletingAll } = useMutation({
@@ -48,7 +56,7 @@ const Payments = () => {
             toast.success("All payments have been cleared.");
             queryClient.invalidateQueries({ queryKey: ["paymentsDone"] });
         },
-        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete payments."),
+        onError: (error) => handleApiError(error, "Failed to delete payments."),
     });
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });

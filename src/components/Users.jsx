@@ -5,6 +5,14 @@ import { fetchUsers, deleteUsers } from "../hooks/getUsers";
 import { useState } from "react";
 import AddUsers from "./AddUsers";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const Users = () => {
     const queryClient = useQueryClient();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -22,11 +30,7 @@ const Users = () => {
             toast.success(data.message || "User Deleted Successfully");
             queryClient.invalidateQueries({ queryKey: ["users"] });
         },
-        onError: (err) => {
-            const errorMessage =
-                err.response?.data?.message || err.message || "Failed To Delete User";
-            toast.error(errorMessage);
-        },
+        onError: (error) => handleApiError(error, "Failed To Delete User"),
     });
 
     if (isLoading) {

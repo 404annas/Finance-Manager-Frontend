@@ -5,6 +5,14 @@ import { sendInvite } from "../hooks/invite";
 import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const AddUsers = ({ onInviteSuccess }) => {
     const queryClient = useQueryClient();
 
@@ -21,12 +29,7 @@ const AddUsers = ({ onInviteSuccess }) => {
                 onInviteSuccess();
             }
         },
-        onError: (err) => {
-            const errorMessage =
-                err.response?.data?.message ||
-                "Something went wrong while sending invites.";
-            toast.error(errorMessage);
-        },
+        onError: (error) => handleApiError(error, "Something went wrong while sending invites."),
     });
 
     const validationSchema = Yup.object({

@@ -9,6 +9,14 @@ import { createShare, deleteShare } from "../hooks/recipientsShare";
 import { X, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -27,7 +35,7 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
             navigate(`/recipient/${data.share._id}`);
             onClose();
         },
-        onError: (err) => toast.error(err.response?.data?.message || "Failed to create share."),
+        onError: (error) => handleApiError(error, "Failed to create shared payment."),
     });
 
     // Mutation to DELETE an existing share
@@ -39,7 +47,7 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
             setIsDeleteModalOpen(false);
             setShareToDelete(null);
         },
-        onError: (err) => toast.error(err.response?.data?.message || "Failed to delete."),
+        onError: (error) => handleApiError(error, "Failed to delete shared payment."),
     });
 
     const validationSchema = Yup.object({
@@ -220,8 +228,8 @@ const ManageUserSharesModal = ({ isOpen, onClose, user, shares, allUsers }) => {
                                             type="submit"
                                             disabled={isDisabled || isCreating}
                                             className={`w-full px-4 py-2.5 rounded-lg text-white p-medium transition-all duration-300 ${isDisabled || isCreating
-                                                    ? "bg-[#9BA0E0] cursor-not-allowed"
-                                                    : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
+                                                ? "bg-[#9BA0E0] cursor-not-allowed"
+                                                : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
                                                 }`}
                                         >
                                             {isCreating

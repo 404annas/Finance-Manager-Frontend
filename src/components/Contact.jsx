@@ -5,18 +5,21 @@ import { sendContactMessage } from "../hooks/contact";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const Contact = () => {
     const { mutate, isPending } = useMutation({
         mutationFn: sendContactMessage,
         onSuccess: (data) => {
             toast.success(data.message || "Your message has been sent!");
         },
-        onError: (err) => {
-            const errorMessage =
-                err.response?.data?.message ||
-                "Failed to send message. Please try again.";
-            toast.error(errorMessage);
-        },
+        onError: (error) => handleApiError(error, "Failed to send message. Please try again."),
     });
 
     const validationSchema = Yup.object({

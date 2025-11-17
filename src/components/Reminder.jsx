@@ -6,6 +6,14 @@ import * as Yup from "yup";
 import { PencilLine, Mail, CircleDollarSign, Wallet, MessagesSquare } from 'lucide-react';
 import { fetchUsers } from "../hooks/getUsers";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const Reminder = () => {
     const { data: usersData, isPending: isLoadingUsers } = useQuery({
         queryKey: ["users"],
@@ -19,10 +27,7 @@ const Reminder = () => {
         onSuccess: (data) => {
             toast.success(data.message || "Reminder sent successfully!");
         },
-        onError: (err) => {
-            const errorMessage = err.response?.data?.message || "Error occurred while sending the reminder.";
-            toast.error(errorMessage);
-        }
+        onError: (error) => handleApiError(error, "Error occurred while sending the reminder."),
     });
 
     const validationSchema = Yup.object({

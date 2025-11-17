@@ -4,6 +4,14 @@ import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 const getApiClient = () => {
     const token = localStorage.getItem("token");
     return axios.create({
@@ -46,12 +54,14 @@ export const useConnectionRequests = () => {
         queryKey: ["pendingRequests"],
         queryFn: fetchPendingRequests,
         placeholderData: (previousData) => previousData,
+        onError: (error) => handleApiError(error, "Failed to fetch pending requests."),
     });
 
     const { data: sentRequests = [], isLoading: isLoadingSent } = useQuery({
         queryKey: ["sentRequests"],
         queryFn: fetchSentRequests,
         placeholderData: (previousData) => previousData,
+        onError: (error) => handleApiError(error, "Failed to fetch sent requests."),
     })
 
     const { mutate: acceptRequest, isPending: isAccepting } = useMutation({
@@ -62,9 +72,7 @@ export const useConnectionRequests = () => {
             queryClient.invalidateQueries({ queryKey: ["sentRequests"] });
             queryClient.invalidateQueries({ queryKey: ["users"] });
         },
-        onError: (err) => {
-            toast.error(err.response?.data?.message || "Failed to accept request.");
-        },
+        onError: (error) => handleApiError(error, "Failed to accept request."),
     });
 
     return {

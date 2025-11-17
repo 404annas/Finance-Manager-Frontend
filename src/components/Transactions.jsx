@@ -17,6 +17,14 @@ import {
   ImagePreviewModal,
 } from "../mods/TransactiosModals";
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+  if (error.response) {
+    toast.error(error.response.data.message || customMessage);
+  } else {
+    toast.error("A network error occurred. Please check your connection.");
+  }
+};
+
 const currencySymbols = { USD: "$", EUR: "€", PKR: "₨", INR: "₹" };
 const categoryColors = {
   Food: "bg-red-200",
@@ -120,6 +128,7 @@ const Transactions = () => {
       dateTo: apiDateParams.dateTo,
     }),
     keepPreviousData: true,
+    onError: (error) => handleApiError(error, "Failed to fetch transactions."),
   });
 
   const transactions = data?.transactions || [];
@@ -136,7 +145,7 @@ const Transactions = () => {
         date: new Date().toISOString().split("T")[0], description: "", image: null,
       });
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to add transaction"),
+    onError: (error) => handleApiError(error, "Failed to add transaction."),
   });
 
   const { mutate: updateTransactionMutate, isPending: isUpdating } = useMutation({
@@ -147,7 +156,7 @@ const Transactions = () => {
       setIsModalOpen(false);
       setEditingTransaction(null);
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to update transaction"),
+    onError: (error) => handleApiError(error, "Failed to update transaction."),
   });
 
   const { mutate: deleteTransactionMutate } = useMutation({
@@ -156,7 +165,7 @@ const Transactions = () => {
       toast.success("Transaction deleted.");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete transaction"),
+    onError: (error) => handleApiError(error, "Failed to delete transaction."),
   });
 
   const { mutate: deleteAllMutate } = useMutation({
@@ -165,9 +174,8 @@ const Transactions = () => {
       toast.success("All transactions have been deleted.");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to delete all transactions"),
+    onError: (error) => handleApiError(error, "Failed to delete all transactions."),
   });
-
 
   // --- Handlers ---
   const handleChange = (e) => {
@@ -333,7 +341,7 @@ const Transactions = () => {
       <ConfirmDeleteModal isOpen={isDeleteModalOpen} setIsOpen={setIsDeleteModalOpen} onConfirm={() => { deleteTransactionMutate(transactionToDelete); setIsDeleteModalOpen(false); }} title="Are you sure?" description="Do you really want to delete this transaction? This action cannot be undone." />
 
       <ConfirmDeleteModal isOpen={isDeleteAllModalOpen} setIsOpen={setIsDeleteAllModalOpen} onConfirm={() => { deleteAllMutate(); setIsDeleteAllModalOpen(false); }} title="Are you sure?" description="Do you really want to delete all transactions? This action cannot be undone." />
-        
+
       <ImagePreviewModal image={selectedImage} onClose={() => setSelectedImage(null)} />
     </div>
   );

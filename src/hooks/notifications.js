@@ -6,6 +6,14 @@ import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response) {
+        toast.error(error.response.data.message || customMessage);
+    } else {
+        toast.error("A network error occurred. Please check your connection.");
+    }
+};
+
 // --- API Functions for Notifications ---
 const fetchNotifications = async () => {
     const token = localStorage.getItem("token");
@@ -40,6 +48,7 @@ export const useNotifications = () => {
         queryKey: ["notifications"],
         queryFn: fetchNotifications,
         staleTime: Infinity, // The data is only ever changed by real-time events or mutations
+        onError: (error) => handleApiError(error, "Failed to fetch notifications."),
     });
 
     const { mutate: markAllAsRead } = useMutation({
@@ -49,6 +58,7 @@ export const useNotifications = () => {
                 oldData.map(n => ({ ...n, read: true }))
             );
         },
+        onError: (error) => handleApiError(error, "Failed to mark notifications as read."),
     });
 
     const { mutate: deleteNotification } = useMutation({
@@ -58,6 +68,7 @@ export const useNotifications = () => {
                 oldData.filter((n) => n._id !== notificationId)
             );
         },
+        onError: (error) => handleApiError(error, "Failed to delete notification."),
     });
 
     const unreadCount = notifications.filter(n => !n.read).length;
