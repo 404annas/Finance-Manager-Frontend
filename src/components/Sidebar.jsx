@@ -71,7 +71,7 @@ const Sidebar = () => {
         {/* Header with heading + close icon */}
         <div className="flex items-center justify-between mb-6 lg:mb-4">
           <h2 className="text-xl p-bold text-[#6667DD]">
-            FinSync
+            Finantic
             <span className="text-xs sm:text-sm p-medium"> - Track Finances</span>
           </h2>
           <div className="lg:hidden">
@@ -107,7 +107,7 @@ const Sidebar = () => {
         })}
 
         {/* My Profile for small screens only */}
-        <div className="lg:hidden">
+        {/* <div className="lg:hidden">
           <Link
             to="/profile"
             onClick={() => setIsOpen(false)}
@@ -122,7 +122,7 @@ const Sidebar = () => {
             <UsersRound size={23} />
             <span className="p-medium">My Profile</span>
           </Link>
-        </div>
+        </div> */}
       </div>
     </>
   );

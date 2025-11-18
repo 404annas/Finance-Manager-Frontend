@@ -263,15 +263,17 @@ const RecipientsData = () => {
                     <Plus size={18} /> Add Payment
                 </button>
             </div>
-            <div className="flex items-end justify-end pb-6">
-                <input
-                    type="text"
-                    placeholder="Search by Category or Added By..."
-                    value={searchPaymentTerm}
-                    onChange={(e) => setSearchPaymentTerm(e.target.value)}
-                    className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 shadow-sm outline-none text-sm"
-                />
-            </div>
+            {payments.length > 0 && (
+                <div className="flex items-end justify-end pb-6">
+                    <input
+                        type="text"
+                        placeholder="Search by Category or Added By..."
+                        value={searchPaymentTerm}
+                        onChange={(e) => setSearchPaymentTerm(e.target.value)}
+                        className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 shadow-sm outline-none text-sm"
+                    />
+                </div>
+            )}
 
             <div className="overflow-x-auto">
                 {isLoadingPayments ? (

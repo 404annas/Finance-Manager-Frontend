@@ -9,6 +9,7 @@ import {
   updateTransaction,
   deleteTransaction,
   deleteAllTransactions,
+  transactionPictureUploadSignature
 } from "../hooks/transactions";
 import DownloadTransactionsPDF from "../utils/DownloadTransactionsPDF";
 import {
@@ -16,6 +17,7 @@ import {
   ConfirmDeleteModal,
   ImagePreviewModal,
 } from "../mods/TransactiosModals";
+import axios from "axios";
 
 const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
   if (error.response) {
@@ -62,6 +64,8 @@ const Transactions = () => {
   const [dateFilter, setDateFilter] = useState("Entire");
   const [customDateRange, setCustomDateRange] = useState({ from: "", to: "" });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Pagination & Sort State
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -99,10 +103,10 @@ const Transactions = () => {
         start = new Date(today.getFullYear(), 0, 1);
         end = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999);
         break;
-      case "Custom":
-        start = customDateRange.from ? new Date(customDateRange.from) : null;
-        end = customDateRange.to ? new Date(new Date(customDateRange.to).setHours(23, 59, 59, 999)) : null;
-        break;
+      // case "Custom":
+      //   start = customDateRange.from ? new Date(customDateRange.from) : null;
+      //   end = customDateRange.to ? new Date(new Date(customDateRange.to).setHours(23, 59, 59, 999)) : null;
+      //   break;
       default: // 'Entire'
         start = null;
         end = null;
@@ -146,6 +150,7 @@ const Transactions = () => {
       });
     },
     onError: (error) => handleApiError(error, "Failed to add transaction."),
+    onSettled: () => setIsSubmitting(false),
   });
 
   const { mutate: updateTransactionMutate, isPending: isUpdating } = useMutation({
@@ -157,6 +162,7 @@ const Transactions = () => {
       setEditingTransaction(null);
     },
     onError: (error) => handleApiError(error, "Failed to update transaction."),
+    onSettled: () => setIsSubmitting(false),
   });
 
   const { mutate: deleteTransactionMutate } = useMutation({
@@ -199,15 +205,64 @@ const Transactions = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.amount || !formData.category) return toast.error("Please fill in all required fields.");
-    const body = new FormData();
-    Object.keys(formData).forEach((key) => { if (formData[key]) body.append(key, formData[key]); });
+    if (!formData.title || !formData.amount || !formData.category) {
+      return toast.error("Please fill in all required fields.");
+    }
+
+    setIsSubmitting(true);
+
+    let finalImageUrl = editingTransaction ? editingTransaction.imageUrl : null;
+
+    // Step 1: Check if a new image file was selected
+    if (formData.image) {
+      try {
+        // Step 1a: Get permission (signature) from our backend
+        toast.info("Uploading image...");
+        const signatureData = await transactionPictureUploadSignature();
+
+        // Step 1b: Prepare the form data for Cloudinary
+        const cloudinaryFormData = new FormData();
+        cloudinaryFormData.append("file", formData.image);
+        cloudinaryFormData.append("api_key", signatureData.api_key);
+        cloudinaryFormData.append("timestamp", signatureData.timestamp);
+        cloudinaryFormData.append("signature", signatureData.signature);
+        cloudinaryFormData.append("folder", "user_uploads");
+
+        // Step 1c: Upload DIRECTLY to Cloudinary's API endpoint
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`;
+        const cloudinaryRes = await axios.post(cloudinaryUrl, cloudinaryFormData);
+
+        finalImageUrl = cloudinaryRes.data.secure_url; // This is the final URL of the uploaded image
+        toast.success("Image uploaded successfully!");
+
+      } catch (error) {
+        console.error("Cloudinary upload failed:", error);
+        handleApiError(error, "Failed to upload image. Please try again.");
+        setIsSubmitting(false);
+        return; // Stop if the image upload fails
+      }
+    }
+
+    // Step 2: Prepare the final transaction data for OUR backend
+    // We are NOT sending the file anymore, just the URL string.
+    const finalTransactionData = {
+      title: formData.title,
+      amount: formData.amount,
+      category: formData.category,
+      currency: formData.currency,
+      type: formData.type,
+      date: formData.date,
+      description: formData.description,
+      imageUrl: finalImageUrl, // Use the URL from Cloudinary (or existing URL)
+    };
+
+    // Step 3: Submit the transaction data to our backend
     if (editingTransaction) {
-      updateTransactionMutate({ id: editingTransaction._id, formData: body });
+      updateTransactionMutate({ id: editingTransaction._id, formData: finalTransactionData });
     } else {
-      addTransactionMutate(body);
+      addTransactionMutate(finalTransactionData);
     }
   };
 
@@ -250,6 +305,7 @@ const Transactions = () => {
 
   const customStyles = { headCells: { style: { fontSize: "14px", fontWeight: "500", fontFamily: "Poppins", color: "#5759C7", textTransform: "uppercase" } } };
   const categories = ["All", "Food", "Rent", "Shopping", "Salary", "Investment", "Other"];
+  const dateFilters = ["Entire", "Today", "Last Week", "This Month", "Last Month", "Last 3 Months", "This Year"];
 
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
   const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
@@ -257,54 +313,56 @@ const Transactions = () => {
   return (
     <div className="bg-[#F7F9FC] p-3 sm:p-6 relative max-w-7xl mx-auto min-h-[80vh] w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-4 mb-6">
         <h2 className="text-xl sm:text-2xl p-semibold text-[#6667DD]">My Transactions</h2>
         <button onClick={handleOpenAddModal} className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#6667DD] to-[#7C81F8] text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-md cursor-pointer hover:scale-[0.98] transition-all duration-300">
           <Plus size={16} className="sm:size-[18px]" /> Add Transaction
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-transparent p-3 sm:p-4 rounded-xl shadow-sm mb-5 flex flex-col lg:flex-row flex-wrap justify-between items-start lg:items-center gap-3">
-        <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full lg:w-auto">
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-3 py-1.5 rounded-full text-xs sm:text-sm cursor-pointer transition-all duration-300 ${selectedCategory === cat ? categoryButtonColors[cat] || "bg-[#6667DD] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
-              {cat}
-            </button>
-          ))}
+      {/* Stats + Dropdowns + Download */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Left: Income & Expense */}
+        <div className="flex gap-3">
+          <div className="bg-[#D4F5E9] text-gray-700 px-4 py-2 rounded-lg text-sm p-medium">💰 Income: {currencySymbols["USD"]} {totalIncome}</div>
+          <div className="bg-[#FFDADA] text-gray-700 px-4 py-2 rounded-lg text-sm p-medium">💸 Expense: {currencySymbols["USD"]} {totalExpense}</div>
         </div>
-        <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full lg:w-auto">
-          {["Entire", "Today", "Last Week", "This Month", "Last Month", "Last 3 Months", "This Year", "Custom"].map((filter) => (
-            <button key={filter} onClick={() => setDateFilter(filter)} className={`px-3 py-1.5 rounded-full text-xs sm:text-sm cursor-pointer transition-all duration-200 ${dateFilter === filter ? "bg-[#6667DD] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
-              {filter}
-            </button>
-          ))}
+
+        {/* Right: Category, Date, Download */}
+        <div className="flex gap-2 items-center">
+          {/* Category Select */}
+          <div className="flex flex-col text-sm -translate-y-2">
+            <span className="text-gray-600 p-regular mb-1 text-xs">Category</span>
+            <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="rounded-lg border border-[#6667DD] bg-blue-50 px-3 py-[6px] text-sm outline-none cursor-pointer p-regular">
+              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+
+          {/* Date/Time Select */}
+          <div className="flex flex-col text-sm -translate-y-2">
+            <span className="text-gray-600 p-regular mb-1 text-xs">Time</span>
+            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="rounded-lg border border-[#6667DD] bg-blue-50 px-3 py-[6px] text-sm outline-none cursor-pointer p-regular">
+              {dateFilters.map(df => <option key={df} value={df}>{df}</option>)}
+            </select>
+          </div>
+
+          <button onClick={handleDownload} disabled={isDownloading || transactions.length === 0} className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 ${isDownloading || transactions.length === 0 ? "bg-gray-300 text-gray-700 hover:cursor-not-allowed" : "bg-[#E0E2FD] hover:bg-[#C8CBFC] text-[#4447AA]"}`}>
+            <DownloadCloud size={16} className="sm:size-[18px]" />
+            {isDownloading ? "Downloading..." : transactions.length === 0 ? "No Transactions" : "Download PDF"}
+          </button>
         </div>
       </div>
-
-      {/* Custom Date Filter */}
-      {dateFilter === "Custom" && (
-        <div className="flex flex-col sm:flex-row gap-2 items-center mb-4">
-          <input type="date" value={customDateRange.from} onChange={(e) => setCustomDateRange({ ...customDateRange, from: e.target.value })} className="rounded-lg border border-[#6667DD] px-3 py-1 text-sm outline-none w-full sm:w-auto" />
-          <span className="p-regular text-sm">to</span>
-          <input type="date" value={customDateRange.to} onChange={(e) => setCustomDateRange({ ...customDateRange, to: e.target.value })} className="rounded-lg border border-[#6667DD] px-3 py-1 text-sm outline-none w-full sm:w-auto" />
-        </div>
-      )}
-
-      {/* Stats & Download */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-        <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-center sm:justify-start">
-          <div className="bg-[#D4F5E9] text-gray-700 px-4 py-1.5 rounded-lg text-sm p-medium">💰 Income: {currencySymbols["USD"]} {totalIncome}</div>
-          <div className="bg-[#FFDADA] text-gray-700 px-4 py-1.5 rounded-lg text-sm p-medium">💸 Expense: {currencySymbols["USD"]} {totalExpense}</div>
-        </div>
-        <button onClick={handleDownload} disabled={isDownloading || transactions.length === 0} className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2 cursor-pointer rounded-lg text-sm p-medium transition-all duration-300 w-full sm:w-auto ${isDownloading || transactions.length === 0 ? "bg-gray-300 text-gray-700 hover:cursor-not-allowed" : "bg-[#E0E2FD] hover:bg-[#C8CBFC] text-[#4447AA]"}`}>
-          <DownloadCloud size={16} className="sm:size-[18px]" />
-          {isDownloading ? "Downloading..." : transactions.length === 0 ? "No Transactions" : "Download PDF"}
-        </button>
-      </div>
+      {/* <div className="flex flex-col items-end">
+        {dateFilter === "Custom" && (
+          <div className="flex gap-2 mb-2">
+            <input type="date" value={customDateRange.from} onChange={(e) => setCustomDateRange({ ...customDateRange, from: e.target.value })} className="rounded-lg border border-[#6667DD] px-2 py-1 text-sm outline-none" />
+            <input type="date" value={customDateRange.to} onChange={(e) => setCustomDateRange({ ...customDateRange, to: e.target.value })} className="rounded-lg border border-[#6667DD] px-2 py-1 text-sm outline-none" />
+          </div>
+        )}
+      </div> */}
 
       {/* Data Table */}
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto pt-4">
         {isLoadingTransactions && !data ? (
           <p className="text-[#6667DD] text-center mt-10 sm:mt-20 text-base sm:text-lg p-regular animate-pulse">Loading Transactions...</p>
         ) : (
@@ -317,12 +375,7 @@ const Transactions = () => {
               paginationServer
               sortServer
               paginationTotalRows={data?.totalTransactions}
-
-              // --- THE FIX IS HERE ---
-              // This prop tells the table how many rows to display per page,
-              // fixing both the dropdown and the next page button issues.
               paginationPerPage={limit}
-
               onSort={handleSort}
               onChangePage={handlePageChange}
               onChangeRowsPerPage={handlePerRowsChange}
@@ -336,14 +389,14 @@ const Transactions = () => {
       </div>
 
       {/* Modals */}
-      <AddTransactionModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} handleSubmit={handleSubmit} handleChange={handleChange} formData={formData} isAdding={isAdding || isUpdating} isEditing={!!editingTransaction} />
+      <AddTransactionModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} handleSubmit={handleSubmit} handleChange={handleChange} formData={formData} isAdding={isSubmitting} isEditing={!!editingTransaction} />
 
       <ConfirmDeleteModal isOpen={isDeleteModalOpen} setIsOpen={setIsDeleteModalOpen} onConfirm={() => { deleteTransactionMutate(transactionToDelete); setIsDeleteModalOpen(false); }} title="Are you sure?" description="Do you really want to delete this transaction? This action cannot be undone." />
 
       <ConfirmDeleteModal isOpen={isDeleteAllModalOpen} setIsOpen={setIsDeleteAllModalOpen} onConfirm={() => { deleteAllMutate(); setIsDeleteAllModalOpen(false); }} title="Are you sure?" description="Do you really want to delete all transactions? This action cannot be undone." />
 
       <ImagePreviewModal image={selectedImage} onClose={() => setSelectedImage(null)} />
-    </div>
+    </div >
   );
 };
 

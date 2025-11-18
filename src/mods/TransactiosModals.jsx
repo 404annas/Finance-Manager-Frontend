@@ -141,7 +141,7 @@ export const AddTransactionModal = ({
                             : "bg-gradient-to-r from-[#6667DD] to-[#7C81F8] hover:scale-98 cursor-pointer"
                             }`}
                     >
-                        {isAdding ? "Saving..." : (isEditing ? "Save Changes" : "Add Transaction")}
+                        {isAdding ? "Saving Transaction..." : (isEditing ? "Save Changes" : "Add Transaction")}
                     </button>
                 </form>
             </div>

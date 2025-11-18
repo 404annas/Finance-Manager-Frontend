@@ -204,34 +204,36 @@ const UsersInRecipients = () => {
                 <ConnectionRequests />
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between my-6">
-                <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Share Payments With Your Connections</h2>
-                <div className="flex flex-col items-end">
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Search recipients by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 shadow-sm outline-none text-sm"
-                        />
-                    </div>
-                    <div className="flex gap-3 mt-4">
-                        {["All", "Accepted", "Pending"].map((filter) => (
-                            <button
-                                key={filter}
-                                onClick={() => setSelectedFilter(filter)}
-                                className={`px-4 py-1.5 rounded-full text-xs cursor-pointer p-medium transition-all duration-300 ${selectedFilter === filter
-                                    ? "bg-[#6667DD] text-white shadow-md scale-105"
-                                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                    }`}
-                            >
-                                {filter}
-                            </button>
-                        ))}
+            {filteredUsers.length > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between my-6">
+                    <h2 className="text-lg sm:text-2xl p-bold text-[#6667DD]">Share Payments With Your Connections</h2>
+                    <div className="flex flex-col items-end">
+                        <div>
+                            <input
+                                type="text"
+                                placeholder="Search recipients by name or email..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full sm:w-96 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 shadow-sm outline-none text-sm"
+                            />
+                        </div>
+                        <div className="flex gap-3 mt-4">
+                            {["All", "Accepted", "Pending"].map((filter) => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setSelectedFilter(filter)}
+                                    className={`px-4 py-1.5 rounded-full text-xs cursor-pointer p-medium transition-all duration-300 ${selectedFilter === filter
+                                        ? "bg-[#6667DD] text-white shadow-md scale-105"
+                                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                        }`}
+                                >
+                                    {filter}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {filteredUsers.length > 0 ? (
@@ -347,7 +349,7 @@ const UsersInRecipients = () => {
                 )}
             </div>
 
-            
+
 
             {selectedUser && (
                 <ManageUserSharesModal

@@ -31,22 +31,23 @@ export const fetchTransactions = async ({ page = 1, limit = 10, sort = 'date', o
     return data;
 }
 
+export const transactionPictureUploadSignature = async () => {
+    const { data } = await axios.get(`${API_URL}/api/upload-signature`, {
+        headers: getAuthHeaders()
+    });
+    return data;
+}
+
 export const addTransactions = async (formData) => {
     const { data } = await axios.post(`${API_URL}/api/transactions`, formData, {
-        headers: {
-            ...getAuthHeaders(),
-            "Content-Type": "multipart/form-data",
-        },
+        headers: getAuthHeaders()
     });
     return data;
 }
 
 export const updateTransaction = async ({ id, formData }) => {
     const { data } = await axios.put(`${API_URL}/api/transactions/${id}`, formData, {
-        headers: {
-            ...getAuthHeaders(),
-            "Content-Type": "multipart/form-data",
-        },
+        headers: getAuthHeaders()
     });
     return data;
 }

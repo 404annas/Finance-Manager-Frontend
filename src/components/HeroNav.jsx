@@ -23,7 +23,7 @@ const HeroNav = ({ role }) => {
 
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <Link to={"/contact"}>
-                    <button className='p-regular bg-[#F6F9FC] hover:bg-blue-50 transition-all duration-300 p-2.5 sm:p-3 rounded-xl cursor-pointer text-[#6667DD]'><span><Phone size={20}/></span></button>
+                    <button className='p-regular bg-[#F6F9FC] hover:bg-blue-50 transition-all duration-300 p-2.5 sm:p-3 rounded-xl cursor-pointer text-[#6667DD]'><span><Phone size={20} /></span></button>
                 </Link>
 
                 <button className="bg-purple-100 p-2.5 sm:p-3 rounded-xl hover:bg-purple-200 transition duration-300 cursor-pointer flex-shrink-0">
@@ -40,20 +40,22 @@ const HeroNav = ({ role }) => {
 
                 {user ? (
                     <div className="relative group flex-shrink-0">
-                        <img
-                            loading="lazy"
-                            className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full border-2 border-gray-200 cursor-pointer"
-                            src={user.profileImage || "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bWFufGVufDB8fDB8fHww"}
-                            alt={"User"}
-                        />
+                        <Link to={"/profile"}>
+                            <img
+                                loading="lazy"
+                                className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full border-2 border-gray-200 cursor-pointer"
+                                src={user.profileImage || "https://images.unsplash.com/photo-1615109398623-88346a601842?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bWFufGVufDB8fDB8fHww"}
+                                alt={"User"}
+                            />
+                        </Link>
 
-                        <Link to={role === "admin" ? "/admin-dashboard/profile" : "/profile"}
+                        {/* <Link to={role === "admin" ? "/admin-dashboard/profile" : "/profile"}
                             className="absolute left-1/2 -translate-x-1/2 mt-0 hidden group-hover:flex
                         px-3 py-1.5 bg-[#F6F9FC] border border-blue-50 shadow-md rounded-lg
                         text-sm text-[#5556cc] p-medium whitespace-nowrap cursor-pointer z-50"
                         >
                             My Profile
-                        </Link>
+                        </Link> */}
                     </div>
                 ) : ""}
 

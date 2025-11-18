@@ -60,7 +60,7 @@ const Login = () => {
             {/* Login Box */}
             <div className="w-full max-w-md sm:max-w-xl bg-[#F6F9FC] py-10 px-4 sm:p-8 rounded-xl shadow-md relative z-10">
 
-                <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">Login into FinSync</h1>
+                <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 text-center">Login into Finantic</h1>
 
                 <Formik
                     initialValues={{ email: '', password: '' }}
@@ -142,7 +142,7 @@ const Login = () => {
                     >
                         Forgot Password?
                     </button>
-                
+
                     <p className="text-center text-gray-600 p-regular text-sm sm:text-base">
                         Account not exists?{' '}
                         <Link to="/register" className="text-[#6667DD] p-medium hover:underline">

@@ -82,7 +82,7 @@ const Register = () => {
 
             <div className="w-full max-w-md sm:max-w-xl md:max-w-4xl bg-[#F6F9FC] p-4 sm:p-8 md:p-10 my-4 sm:my-0 rounded-xl shadow-md relative z-10">
                 <h1 className="text-[#6667DD] text-2xl sm:text-3xl p-bold mb-6 sm:mb-8 text-center">
-                    Register into FinSync
+                    Register into Finantic
                 </h1>
 
                 <Formik
