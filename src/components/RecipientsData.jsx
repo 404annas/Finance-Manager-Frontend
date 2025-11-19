@@ -10,6 +10,18 @@ import {
     deletePayment,
     updatePayment,
 } from "../hooks/recipientsPaymentsShareData";
+import { transactionPictureUploadSignature } from "../hooks/transactions";
+import axios from "axios";
+
+const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
+    if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message);
+    } else if (error.message) {
+        toast.error(error.message);
+    } else {
+        toast.error(customMessage);
+    }
+};
 
 const RecipientsData = () => {
     const navigate = useNavigate();
@@ -24,6 +36,8 @@ const RecipientsData = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [paymentToDelete, setPaymentToDelete] = useState(null);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     // Form fields state
     const [title, setTitle] = useState("");
     const [category, setCategory] = useState("");
@@ -34,18 +48,27 @@ const RecipientsData = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
 
+    // Pagination & Filter State
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [sortConfig, setSortConfig] = useState({ field: 'createdAt', order: 'desc' });
+    const [searchTerm, setSearchTerm] = useState("");
+
     // --- Data Fetching and Mutations ---
-    const {
-        data: payments = [],
-        isPending: isLoadingPayments,
-    } = useQuery({
-        queryKey: ["sharePayments", shareId],
-        queryFn: () => fetchPaymentsForShare(shareId),
+    const { data, isPending: isLoadingPayments } = useQuery({
+        queryKey: ["sharePayments", shareId, page, limit, sortConfig, searchTerm],
+        queryFn: () => fetchPaymentsForShare({
+            shareId, page, limit,
+            sort: sortConfig.field, order: sortConfig.order,
+            searchTerm
+        }),
+        keepPreviousData: true,
         onError: (err) => {
-            toast.error(err.response?.data?.message || "Failed to load payments.");
+            handleApiError(err, "Failed to load payments.");
             navigate("/recipients");
         },
     });
+    const payments = data?.payments || [];
 
     // 1. ADD the missing resetFormState function
     const resetFormState = () => {
@@ -63,54 +86,79 @@ const RecipientsData = () => {
         mutationFn: addPaymentToShare,
         onSuccess: () => {
             toast.success("Payment added successfully!");
-            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
             setIsOpen(false);
+        },
+        onError: (err) => handleApiError(err, "Failed to add payment."),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
+            setIsSubmitting(false);
             resetFormState();
         },
-        onError: (err) =>
-            toast.error(err.response?.data?.message || "Failed to add payment."),
     });
 
     const { mutate: updatePaymentMutate, isPending: isUpdating } = useMutation({
         mutationFn: updatePayment,
         onSuccess: () => {
             toast.success("Payment updated successfully!");
-            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
             setIsOpen(false);
+        },
+        onError: (err) => handleApiError(err, "Failed to update payment."),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
+            setIsSubmitting(false);
             setEditingPayment(null);
         },
-        onError: (err) =>
-            toast.error(err.response?.data?.message || "Failed to update payment."),
     });
 
     const { mutate: deletePaymentMutate, isPending: isDeleting } = useMutation({
         mutationFn: deletePayment,
         onSuccess: () => {
             toast.success("Payment deleted!");
-            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
             setIsDeleteModalOpen(false);
-            setPaymentToDelete(null);
         },
-        onError: (err) =>
-            toast.error(err.response?.data?.message || "Failed to delete payment."),
+        onError: (err) => handleApiError(err, "Failed to delete payment."),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["sharePayments", shareId] });
+            setPaymentToDelete(null);
+        }
     });
 
-    const handleSubmit = () => {
-        if (!title || !category || !currency || !amount || !status)
-            return toast.error("Please fill in all fields!");
+    const handleSubmit = async () => {
+        if (!title || !category || !currency || !amount || !status) return toast.error("Please fill in all fields!");
+        setIsSubmitting(true);
 
-        const paymentFormData = new FormData();
-        paymentFormData.append("title", title);
-        paymentFormData.append("category", category);
-        paymentFormData.append("currency", currency);
-        paymentFormData.append("amount", amount);
-        paymentFormData.append("status", status);
-        if (imageFile) paymentFormData.append("image", imageFile);
+        let finalImageUrl = editingPayment ? editingPayment.image : null;
+
+        if (imageFile) {
+            try {
+                toast.info("Uploading image...");
+                const signatureData = await transactionPictureUploadSignature();
+                const cloudinaryFormData = new FormData();
+                cloudinaryFormData.append("file", imageFile);
+                cloudinaryFormData.append("api_key", signatureData.api_key);
+                cloudinaryFormData.append("timestamp", signatureData.timestamp);
+                cloudinaryFormData.append("signature", signatureData.signature);
+                cloudinaryFormData.append("folder", "user_uploads");
+
+                const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`;
+                const cloudinaryRes = await axios.post(cloudinaryUrl, cloudinaryFormData);
+
+                finalImageUrl = cloudinaryRes.data.secure_url;
+                toast.success("Image uploaded!");
+            } catch (error) {
+                console.error("Cloudinary upload failed:", error);
+                handleApiError(error, "Failed to upload image.");
+                setIsSubmitting(false);
+                return;
+            }
+        }
+
+        const paymentData = { title, category, currency, amount, status, imageUrl: finalImageUrl };
 
         if (editingPayment) {
-            updatePaymentMutate({ paymentId: editingPayment._id, paymentFormData });
+            updatePaymentMutate({ paymentId: editingPayment._id, paymentData });
         } else {
-            addPaymentMutate({ shareId, paymentFormData });
+            addPaymentMutate({ shareId, paymentData });
         }
     };
 
@@ -141,6 +189,10 @@ const RecipientsData = () => {
         const addedByMatch = payment.createdBy?.name?.toLowerCase().includes(lowerTerm);
         return categoryMatch || addedByMatch;
     });
+
+    const handleSort = (column, sortDirection) => setSortConfig({ field: column.selector, order: sortDirection });
+    const handlePageChange = (newPage) => setPage(newPage);
+    const handlePerRowsChange = (newLimit, newPage) => { setLimit(newLimit); setPage(newPage); };
 
     const columns = [
         {
@@ -239,8 +291,7 @@ const RecipientsData = () => {
         },
     };
 
-    const isSubmitDisabled =
-        !title || !category || !currency || !amount || !status || isAdding || isUpdating;
+    const isSubmitDisabled = !title || !category || !currency || !amount || !status || isSubmitting;
 
     return (
         <div className="w-full px-4 sm:px-6 lg:px-8 py-6 bg-[#F6F9FC]">
@@ -289,8 +340,16 @@ const RecipientsData = () => {
                     <div className="max-h-[60vh] overflow-y-auto">
                         <DataTable
                             columns={columns}
-                            data={filteredPayments}
+                            data={payments}
+                            progressPending={isLoadingPayments}
                             pagination
+                            paginationServer
+                            sortServer
+                            paginationTotalRows={data?.totalPayments}
+                            paginationPerPage={limit}
+                            onSort={handleSort}
+                            onChangePage={handlePageChange}
+                            onChangeRowsPerPage={handlePerRowsChange}
                             highlightOnHover
                             striped
                             fixedHeader
@@ -409,15 +468,11 @@ const RecipientsData = () => {
                             onClick={handleSubmit}
                             disabled={isSubmitDisabled}
                             className={`w-full py-3 rounded-lg shadow-md p-medium cursor-pointer transition-all duration-300 ${isSubmitDisabled
-                                ? "bg-[#9BA0E0] cursor-not-allowed"
+                                ? "bg-[#9BA0E0] hover:cursor-not-allowed"
                                 : "bg-[#6667DD] hover:bg-[#5152b8] cursor-pointer"
                                 } text-white`}
                         >
-                            {isAdding || isUpdating
-                                ? "Saving..."
-                                : editingPayment
-                                    ? "Save Changes"
-                                    : "Add Payment"}
+                            {isSubmitting ? "Saving Payment..." : editingPayment ? "Save Changes" : "Add Payment"}
                         </button>
                     </div>
                 </div>

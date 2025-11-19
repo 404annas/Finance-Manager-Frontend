@@ -17,6 +17,7 @@ import {
   ConfirmDeleteModal,
   ImagePreviewModal,
 } from "../mods/TransactiosModals";
+import TableSkeleton from "../mods/TableSkeleton";
 import axios from "axios";
 
 const handleApiError = (error, customMessage = "An unexpected error occurred.") => {
@@ -364,7 +365,7 @@ const Transactions = () => {
       {/* Data Table */}
       <div className="flex-1 overflow-x-auto pt-4">
         {isLoadingTransactions && !data ? (
-          <p className="text-[#6667DD] text-center mt-10 sm:mt-20 text-base sm:text-lg p-regular animate-pulse">Loading Transactions...</p>
+          <TableSkeleton />
         ) : (
           <div className="max-w-full mx-auto">
             <DataTable

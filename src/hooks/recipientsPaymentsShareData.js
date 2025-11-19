@@ -14,28 +14,27 @@ const getApiClient = () => {
 };
 
 // 1. READ: Fetch all payments for a specific share
-export const fetchPaymentsForShare = async (shareId) => {
-    if (!shareId) return []; // Don't fetch if there's no ID
+export const fetchPaymentsForShare = async ({ shareId, page, limit, sort, order, searchTerm }) => {
+    if (!shareId) return { payments: [], totalPayments: 0 };
     const apiClient = getApiClient();
-    const { data } = await apiClient.get(`/api/shares/${shareId}/payments`);
-    return data.payments || [];
+    const params = new URLSearchParams({ page, limit, sort, order, searchTerm });
+    const { data } = await apiClient.get(`/api/shares/${shareId}/payments?${params.toString()}`);
+    return data;
 };
 
 // 2. CREATE: Add a new payment to a specific share (handles FormData)
-export const addPaymentToShare = async ({ shareId, paymentFormData }) => {
+export const addPaymentToShare = async ({ shareId, paymentData }) => {
     const apiClient = getApiClient();
-    const { data } = await apiClient.post(`/api/shares/${shareId}/payments`, paymentFormData, {
-        headers: {
-            // No need to set Content-Type for FormData, axios handles it
-        },
+    const { data } = await apiClient.post(`/api/shares/${shareId}/payments`, paymentData, {
+        headers: { "Content-Type": "application/json" },
     });
     return data;
 };
 
-export const updatePayment = async ({ paymentId, paymentFormData }) => {
+export const updatePayment = async ({ paymentId, paymentData }) => {
     const apiClient = getApiClient();
-    const { data } = await apiClient.put(`/api/payments/${paymentId}`, paymentFormData, {
-        headers: { /* Axios handles Content-Type for FormData */ },
+    const { data } = await apiClient.put(`/api/payments/${paymentId}`, paymentData, {
+        headers: { "Content-Type": "application/json" },
     });
     return data;
 };
